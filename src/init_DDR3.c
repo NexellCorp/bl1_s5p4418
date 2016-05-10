@@ -71,6 +71,7 @@
 #define DDR_WRITE_DQ_MARGIN_VIEW        (0)
 #endif  // #if defined(CHIPID_S5P4418)
 
+#define MEM_CALIBRAION_INFO 		(1)
 
 #define CFG_ODT_ENB                     (1)
 
@@ -681,6 +682,55 @@ void DDR_Write_Leveling(void)
 #endif
 
 #if (DDR_GATE_LEVELING_EN == 1)
+
+#if (MEM_CALIBRAION_INFO == 1)
+void Gate_Leveling_Information(void)
+{
+	unsigned int DQ_FailStatus, DQ_Calibration;
+	unsigned int GateCycle[4], GateCode[4], GT_VWMC[4];
+	unsigned int MaxSlice = 4, Slice;
+	unsigned int LockValue = g_DDRLock;	//
+
+	/* DQ Calibration Fail Status */
+	WriteIO32(&pReg_DDRPHY->PHY_CON[5], VWM_FAIL_STATUS); 
+	DQ_FailStatus = ReadIO32(&pReg_DDRPHY->PHY_CON[19 + 1]);
+
+	/* Gate Center Cycle */	
+	WriteIO32(&pReg_DDRPHY->PHY_CON[5], GATE_CENTER_CYCLE);
+	DQ_Calibration = ReadIO32(&pReg_DDRPHY->PHY_CON[19+1]);
+	for(Slice = 0; Slice < MaxSlice; Slice++)
+		GateCycle[Slice] = (DQ_Calibration >> (Slice*8)) & 0xFF;
+
+	/* Gate Code */
+	WriteIO32(&pReg_DDRPHY->PHY_CON[5], GATE_CENTER_CODE);
+	DQ_Calibration = ReadIO32(&pReg_DDRPHY->PHY_CON[19+1]);
+	for(Slice = 0; Slice < MaxSlice; Slice++)
+		GateCode[Slice] = (DQ_Calibration >> (Slice*8)) & 0xFF;
+
+	/* Gate Vaile Window Margin Center */
+	WriteIO32(&pReg_DDRPHY->PHY_CON[5], GATE_VWMC);
+	DQ_Calibration = ReadIO32(&pReg_DDRPHY->PHY_CON[19+1]);
+	for(Slice = 0; Slice < MaxSlice; Slice++)
+		GT_VWMC[Slice] = (DQ_Calibration >> (Slice*8)) & 0xFF;	
+
+	printf("\r\n");
+	printf("\r\n####### Gate Leveling - Information #######\r\n");
+	printf("Gate Leveling %s!! \r\n", 
+		(DQ_FailStatus == 0) ? "Success" : "Failed" );
+	printf("Gate Cycle : %d/%d/%d/%d \r\n", GateCycle[0], GateCycle[1],
+		GateCycle[2], GateCycle[3]);
+	printf("Gate Code  : %d/%d/%d/%d \r\n", GateCode[0], GateCode[1],
+		GateCode[2], GateCode[3]);	
+	printf("Gate Delay %d, %d, %d, %d\r\n",
+		((GateCycle[0]>>0) & 0x7)*LockValue + GT_VWMC[0],
+		((GateCycle[1]>>3) & 0x7)*LockValue + GT_VWMC[1],
+		((GateCycle[2]>>6) & 0x7)*LockValue + GT_VWMC[2],
+		((GateCycle[3]>>9) & 0x7)*LockValue + GT_VWMC[3]);	
+	printf("\r\n###########################################\r\n");
+	
+	printf("\r\n");
+}
+#endif
 CBOOL DDR_Gate_Leveling(U32 isResume)
 {
 #if defined(MEM_TYPE_DDR3)
@@ -901,6 +951,9 @@ gate_err_ret:
 #endif // #if defined(MEM_TYPE_DDR3)
 	}
 
+#if (MEM_CALIBRAION_INFO == 1)
+		Gate_Leveling_Information();
+#endif
 	MEMMSG("\r\n########## Gate Leveling - End ##########\r\n");
 
 	return ret;
@@ -908,6 +961,89 @@ gate_err_ret:
 #endif // #if (DDR_GATE_LEVELING_EN == 1)
 
 #if (DDR_READ_DQ_CALIB_EN == 1)
+
+#if (MEM_CALIBRAION_INFO == 1)
+void Read_DQ_Calibration_Information(void)
+{
+	unsigned int DQ_FailStatus, DQ_Calibration;
+	unsigned int VWML[4], VWMR[4];
+	unsigned int VWMC[4], Deskew[4];
+//	unsigned int RDCenter[8];
+	unsigned int MaxSlice = 4, Slice;
+#if 0	// Each DQ Line	
+	unsigned int MaxLane = 4, MaxSlice = 8, Lane, Slice;
+#endif
+	/* DQ Calibration Fail Status */
+	WriteIO32(&pReg_DDRPHY->PHY_CON[5], VWM_FAIL_STATUS); 
+	DQ_FailStatus = ReadIO32(&pReg_DDRPHY->PHY_CON[19 + 1]);
+
+	/* Vaile Window Margin Left */
+	WriteIO32(&pReg_DDRPHY->PHY_CON[5], VWM_LEFT);
+	DQ_Calibration = ReadIO32(&pReg_DDRPHY->PHY_CON[19+1]);
+	for(Slice = 0; Slice < MaxSlice; Slice++)
+		VWML[Slice] = (DQ_Calibration >> (Slice*8)) & 0xFF ;
+
+
+	/* Vaile Window Margin Right */
+	WriteIO32(&pReg_DDRPHY->PHY_CON[5], VWM_RIGHT);
+	DQ_Calibration = ReadIO32(&pReg_DDRPHY->PHY_CON[19+1]);
+	for(Slice = 0; Slice < MaxSlice; Slice++)
+		VWMR[Slice] = (DQ_Calibration >> (Slice*8)) & 0xFF ;
+
+
+	/* Vaile Window Margin Center */
+	WriteIO32(&pReg_DDRPHY->PHY_CON[5], RD_VWMC);
+	DQ_Calibration = ReadIO32(&pReg_DDRPHY->PHY_CON[19+1]);
+	for(Slice = 0; Slice < MaxSlice; Slice++)
+		VWMC[Slice] = (DQ_Calibration >> (Slice*8)) & 0xFF ;
+
+
+	/* Vaile Window Margin Deskew */
+	WriteIO32(&pReg_DDRPHY->PHY_CON[5], WR_DESKEW_CODE);
+	DQ_Calibration = ReadIO32(&pReg_DDRPHY->PHY_CON[19+1]);
+	for(Slice = 0; Slice < MaxSlice; Slice++)
+		Deskew[Slice] = (DQ_Calibration >> (Slice*8)) & 0xFF ;
+
+#if 0	// Each DQ Line	
+	for(Lane = 0; Lane < MaxLane; Lane) {
+		unsigned int Code = 0x1;
+		for(Slice = 0; Slice < MaxSlice; Slice++, Code+=0x10) {
+			WriteIO32(&pReg_DDRPHY->PHY_CON[5], Code);	
+			RDCenter[Slice] = ReadIO32(pReg_DDRPHY->PHY_CON[18+1]);
+		}
+	}
+#endif
+	printf("\r\n#### Read DQ Calibration - Information ####\r\n");
+
+	printf("Read DQ Calibration %s!! \r\n", 
+		(DQ_FailStatus == 0) ? "Success" : "Failed" );
+#if 0	// Display Type
+	for(Slice = 0; Slice < MaxSlice; Slice++)
+		printf("VWML0: %d, VWMC0: %d, VWML0: %d, Deskew0: %d \r\n",
+			VWML[Slice], VWMC[Slice], VWMR[Slice], Deskew[Slice]);
+#else
+	unsigned int Range;
+	for(Slice = 0; Slice < MaxSlice; Slice++) {
+		Range = VWMR[Slice] - VWML[Slice];
+		printf("SLICE%d: %d ~ %d ~ %d (Range: %d)(Deskew: %d) \r\n",
+			Slice, VWML[Slice], VWMC[Slice], VWMR[Slice], 
+			Range, Deskew[Slice]);
+	}
+
+#endif	
+
+#if 0	// Each Byte
+	for(Lane = 0; Lane < MaxLane; Lane) {
+		printf("Lane Number : %d \r\n", Lane );
+		for(Slice = 0; Slice < MaxSlice; Slice++)
+			printf("DQ%d : %d \r\n", Slice, RDCenter[Slice]);
+	}	
+#endif
+	printf("\r\n###########################################\r\n");
+
+}
+#endif
+
 CBOOL DDR_Read_DQ_Calibration(U32 isResume)
 {
 #if defined(MEM_TYPE_DDR3)
@@ -1157,27 +1293,31 @@ rd_err_ret:
     ClearIO32( &pReg_Drex->PHYCONTROL[0],   (0x1    <<   3) );      // Force DLL Resyncronization
 
 
-    if (isResume == 0)
-    {
+	if (isResume == 0)
+	{
 #if defined(MEM_TYPE_DDR3)
 
-        /* Set MPR mode disable */
-        MR.Reg          = 0;
-        MR.MR3.MPR      = 0;
-        MR.MR3.MPR_RF   = 0;
+		/* Set MPR mode disable */
+		MR.Reg          = 0;
+		MR.MR3.MPR      = 0;
+		MR.MR3.MPR_RF   = 0;
 
-		SendDirectCommand(SDRAM_CMD_MRS, 0, SDRAM_MODE_REG_MR3, MR.Reg);
+			SendDirectCommand(SDRAM_CMD_MRS, 0, SDRAM_MODE_REG_MR3, MR.Reg);
 #if (CFG_NSIH_EN == 0)
 #if (_DDR_CS_NUM > 1)
-		SendDirectCommand(SDRAM_CMD_MRS, 1, SDRAM_MODE_REG_MR3, MR.Reg);
+			SendDirectCommand(SDRAM_CMD_MRS, 1, SDRAM_MODE_REG_MR3, MR.Reg);
 #endif
 #else
-        if(pSBI->DII.ChipNum > 1)
-            SendDirectCommand(SDRAM_CMD_MRS, 1, SDRAM_MODE_REG_MR3, MR.Reg);
+		if(pSBI->DII.ChipNum > 1)
+		    SendDirectCommand(SDRAM_CMD_MRS, 1, SDRAM_MODE_REG_MR3, MR.Reg);
 #endif
 #endif
 	}
-    ClearIO32( &pReg_DDRPHY->PHY_CON[14],   (0xF << 0));              // ctrl_pulld_dqs[3:0]=0
+	ClearIO32( &pReg_DDRPHY->PHY_CON[14],   (0xF << 0));              // ctrl_pulld_dqs[3:0]=0
+
+#if (MEM_CALIBRAION_INFO == 1)
+	Read_DQ_Calibration_Information();
+#endif
 
 	MEMMSG("\r\n########## Read DQ Calibration - End ##########\r\n");
 
@@ -1193,6 +1333,69 @@ void DDR_Write_Leveling_Calibration(void)
 #endif
 
 #if (DDR_WRITE_DQ_CALIB_EN == 1)
+
+#if (MEM_CALIBRAION_INFO == 1)
+void Write_DQ_Calibration_Information(void)
+{
+	unsigned int DQ_FailStatus, DQ_Calibration;
+	unsigned int VWML[4], VWMR[4];
+	unsigned int VWMC[4], Deskew[4];
+	unsigned int MaxSlice = 4, Slice;
+#if 0	// Each DQ Line	
+	unsigned int MaxLane = 4, MaxSlice = 8, Lane, Slice;
+#endif
+	/* DQ Calibration Fail Status */
+	WriteIO32(&pReg_DDRPHY->PHY_CON[5], VWM_FAIL_STATUS); 
+	DQ_FailStatus = ReadIO32(&pReg_DDRPHY->PHY_CON[19 + 1]);
+
+	/* Vaile Window Margin Left */
+	WriteIO32(&pReg_DDRPHY->PHY_CON[5], VWM_LEFT);
+	DQ_Calibration = ReadIO32(&pReg_DDRPHY->PHY_CON[19+1]);
+	for(Slice = 0; Slice < MaxSlice; Slice++)
+		VWML[Slice] = (DQ_Calibration >> (Slice*8)) & 0xFF ;
+
+
+	/* Vaile Window Margin Right */
+	WriteIO32(&pReg_DDRPHY->PHY_CON[5], VWM_RIGHT);
+	DQ_Calibration = ReadIO32(&pReg_DDRPHY->PHY_CON[19+1]);
+	for(Slice = 0; Slice < MaxSlice; Slice++)
+		VWMR[Slice] = (DQ_Calibration >> (Slice*8)) & 0xFF ;
+
+
+	/* Vaile Window Margin Center */
+	WriteIO32(&pReg_DDRPHY->PHY_CON[5], WR_VWMC);
+	DQ_Calibration = ReadIO32(&pReg_DDRPHY->PHY_CON[19+1]);
+	for(Slice = 0; Slice < MaxSlice; Slice++)
+		VWMC[Slice] = (DQ_Calibration >> (Slice*8)) & 0xFF ;
+
+
+	/* Vaile Window Margin Deskew */
+	WriteIO32(&pReg_DDRPHY->PHY_CON[5], WR_DESKEW_CODE);
+	DQ_Calibration = ReadIO32(&pReg_DDRPHY->PHY_CON[19+1]);
+	for(Slice = 0; Slice < MaxSlice; Slice++)
+		Deskew[Slice] = (DQ_Calibration >> (Slice*8)) & 0xFF ;
+
+	printf("\r\n### Write DQ Calibration - Information ####\r\n");
+
+	printf("Write DQ Calibration %s!! \r\n", 
+		(DQ_FailStatus == 0) ? "Success" : "Failed" );
+#if 0	// Display Type
+	for(Slice = 0; Slice < MaxSlice; Slice++)
+		printf("VWML0: %d, VWMC0: %d, VWML0: %d, Deskew0: %d \r\n",
+			VWML[Slice], VWMC[Slice], VWMR[Slice], Deskew[Slice]);
+#else
+	unsigned int Range;
+	for(Slice = 0; Slice < MaxSlice; Slice++) {
+		Range = VWMR[Slice] - VWML[Slice];
+		printf("SLICE%d: %d ~ %d ~ %d (Range: %d)(Deskew: %d) \r\n",
+			Slice, VWML[Slice], VWMC[Slice], VWMR[Slice], 
+			Range, Deskew[Slice]);
+	}
+#endif	
+	printf("\r\n###########################################\r\n");
+}
+#endif
+
 CBOOL DDR_Write_DQ_Calibration(U32 isResume)
 {
     volatile U32 cal_count = 0;
@@ -1431,6 +1634,10 @@ wr_err_ret:
 
     SetIO32  ( &pReg_Drex->PHYCONTROL[0],   (0x1    <<   3) );              // Force DLL Resyncronization
     ClearIO32( &pReg_Drex->PHYCONTROL[0],   (0x1    <<   3) );              // Force DLL Resyncronization
+
+#if (MEM_CALIBRAION_INFO == 1)
+		    Write_DQ_Calibration_Information();
+#endif
 
     MEMMSG("\r\n########## Write DQ Calibration - End ##########\r\n");
 
