@@ -623,68 +623,51 @@ void BootMain(U32 CPUID)
 	//simple_memtest((U32*)0x80000000UL, (U32*)0x90000000UL);
 #endif
 
-#if defined(LOAD_FROM_USB)
-	printf("Loading from usb...\r\n");
-	Result = iUSBBOOT(pTBI); // for USB boot
-#endif
-#if defined(LOAD_FROM_SPI)
-	printf("Loading from spi...\r\n");
-	Result = iSPIBOOT(pTBI); // for SPI boot
-#endif
-#if defined(LOAD_FROM_SDMMC)
-	printf("Loading from sdmmc...\r\n");
-	Result = iSDXCBOOT(pTBI); // for SD boot
-#endif
-#if defined(LOAD_FROM_SDFS)
-	printf("Loading from sd FATFS...\r\n");
-	Result = iSDXCFSBOOT(pTBI); // for SDFS boot
-#endif
-#if defined(LOAD_FROM_NAND)
-	printf("Loading from nand...\r\n");
-	Result = iNANDBOOTEC(pTBI); // for NAND boot
-#endif
-#if defined(LOAD_FROM_UART)
-	printf("Loading from uart...\r\n");
-	Result = iUARTBOOT(pTBI); // for UART boot
-#endif
-
-#if defined(LOAD_FROM_ALL) && defined(CHIPID_S5P4418)
+	
 	switch (pSBI->DBI.SPIBI.LoadDevice) {
+#if defined(SUPPORT_USB_BOOT)
 	case BOOT_FROM_USB:
 		printf("Loading from usb...\r\n");
 		Result = iUSBBOOT(pTBI); // for USB boot
 		break;
+#endif
+
+#if defined(SUPPORT_SPI_BOOT)
 	case BOOT_FROM_SPI:
 		printf("Loading from spi...\r\n");
 		Result = iSPIBOOT(pTBI); // for SPI boot
 		break;
-#if 0
+#endif
+
+#if defined(SUPPORT_NAND_BOOT)
 	case BOOT_FROM_NAND:
 		printf( "Loading from nand...\r\n" );
-		Result = iNANDBOOTEC(pTBI);     // for NAND boot
+		Result = iNANDBOOTEC(pTBI);	// for NAND boot
 		break;
 #endif
+
+#if defined(SUPPORT_SDMMC_BOOT)
 	case BOOT_FROM_SDMMC:
 		printf("Loading from sdmmc...\r\n");
 		Result = iSDXCBOOT(pTBI); // for SD boot
 		break;
+#endif
+
+#if defined(SUPPORT_SDFS_BOOT)
 	case BOOT_FROM_SDFS:
 		printf("Loading from sd FATFS...\r\n");
 		Result = iSDXCFSBOOT(pTBI); // for SDFS boot
 		break;
-#if 0
-		case BOOT_FROM_UART:
-			printf( "Loading from uart...\r\n" );
-			Result = iUARTBOOT(pTBI);       // for UART boot
-			break;
+#endif
+
+#if defined(SUPPORT_UART_BOOT)
+	case BOOT_FROM_UART:
+		printf( "Loading from uart...\r\n" );
+		Result = iUARTBOOT(pTBI);	// for UART boot
+		break;
 #endif
 	}
-#endif
-
-#if defined(LOAD_FROM_ALL) && defined(CHIPID_NXP4330)
-#error "Does not support compile option!!!"
-#endif
-
+	
 	if (Result) {
 		void (*pLaunch)(U32, U32) =
 		    (void (*)(U32, U32))pTBI->LAUNCHADDR;
