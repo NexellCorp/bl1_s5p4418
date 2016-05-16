@@ -52,7 +52,7 @@ else
 #BOARD				= DRONE
 #BOARD				= AVN
 #BOARD				= LAVENDA
-BOARD				= RAPTOR
+BOARD				?= RAPTOR
 endif
 
 # cross-tool pre-header
