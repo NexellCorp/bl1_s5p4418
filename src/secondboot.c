@@ -479,7 +479,7 @@ void BootMain(U32 CPUID)
 
 	CPUID = CPUID;
 
-#if defined(AVN) || defined(NAVI)
+#if defined(AVN) || defined(NAVI) || defined(RAPTOR)
 	debug_ch = 3;
 #endif
 
