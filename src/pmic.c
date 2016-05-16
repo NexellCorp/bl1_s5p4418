@@ -31,12 +31,13 @@ void DMC_Delay(int milisecond);
 //#define NAVI_PMIC_INIT
 
 #define AXP_I2C_GPIO_GRP (-1)
+#define NXE1500_I2C_GPIO_GRP (-1)
 #define NXE2000_I2C_GPIO_GRP (-1)
 
 #if defined(DRONE_PMIC_INIT)
 #if 0
 #undef NXE2000_I2C_GPIO_GRP
-#define NXE2000_I2C_GPIO_GRP 	4 // E group, NXE2000
+#define NXE2000_I2C_GPIO_GRP 		4 // E group, NXE2000
 #define NXE2000_I2C_SCL 		14
 #define NXE2000_I2C_SDA 		15
 #else
@@ -49,47 +50,56 @@ void DMC_Delay(int milisecond);
 
 #if defined(LEPUS_PMIC_INIT)
 #undef NXE2000_I2C_GPIO_GRP
-#define NXE2000_I2C_GPIO_GRP 	4 // E group, NXE2000
+#define NXE2000_I2C_GPIO_GRP 		4 // E group, NXE2000
 #define NXE2000_I2C_SCL 		14
 #define NXE2000_I2C_SDA 		15
 #endif
 
 #if defined(AVN_PMIC_INIT)
-#define MP8845_CORE_I2C_GPIO_GRP 4 // E group, FineDigital VDDA_1.2V (core)
-#define MP8845_CORE_I2C_SCL 	11
-#define MP8845_CORE_I2C_SDA 	10
+#define MP8845_CORE_I2C_GPIO_GRP 	4 // E group, FineDigital VDDA_1.2V (core)
+#define MP8845_CORE_I2C_SCL 		11
+#define MP8845_CORE_I2C_SDA 		10
 
-#define MP8845_ARM_I2C_GPIO_GRP 4 // E group, FineDigital VDDB_1.2V (arm)
+#define MP8845_ARM_I2C_GPIO_GRP 	4 // E group, FineDigital VDDB_1.2V (arm)
 #define MP8845_ARM_I2C_SCL 		9
 #define MP8845_ARM_I2C_SDA 		8
 
 #define MP8845_PMIC_INIT (1)
 #endif
 
+#if defined(RAPTOR_PMIC_INIT)
+#undef NXE1500_I2C_GPIO_GRP
+#define NXE1500_I2C_GPIO_GRP 		2 // C group, NXE2000
+#define NXE1500_I2C_SCL 		15
+#define NXE1500_I2C_SDA 		16
+#endif
 
 #if 0//defined(LAVENDA_PMIC_INIT)
 #undef NXE2000_I2C_GPIO_GRP
-#define NXE2000_I2C_GPIO_GRP 	3 // D group, NXE2000
+#define NXE2000_I2C_GPIO_GRP 		3 // D group, NXE2000
 #define NXE2000_I2C_SCL 		20
 #define NXE2000_I2C_SDA 		16
 #endif
 
 #if defined(NAVI_PMIC_INIT)
 #undef NXE2000_I2C_GPIO_GRP
-#define NXE2000_I2C_GPIO_GRP 	4 // E group, NXE2000
+#define NXE2000_I2C_GPIO_GRP 		4 // E group, NXE2000
 #define NXE2000_I2C_SCL 		9
 #define NXE2000_I2C_SDA 		8
 #endif
 
 #if defined(SVT_PMIC_INIT) || defined(ASB_PMIC_INIT)
 #undef NXE2000_I2C_GPIO_GRP
-#define NXE2000_I2C_GPIO_GRP	3 // D group, NXE2000
+#define NXE2000_I2C_GPIO_GRP		3 // D group, NXE2000
 #define NXE2000_I2C_SCL 		2
 #define NXE2000_I2C_SDA			3
 #endif
 
 #if (AXP_I2C_GPIO_GRP > -1)
 #include "pmic_axp228.h"
+#endif
+#if (NXE1500_I2C_GPIO_GRP > -1)
+#include "pmic_nxe1500.h"
 #endif
 #if (NXE2000_I2C_GPIO_GRP > -1)
 #include "pmic_nxe2000.h"
@@ -140,6 +150,26 @@ static U8 nxe2000_get_dcdc_step(int want_vol)
 	return (U8)(vol_step & 0xFF);
 }
 #endif
+
+#if (NXE1500_I2C_GPIO_GRP > -1)
+static U8 nxe1500_get_dcdc_step(int want_vol)
+{
+	U32 vol_step = 0;
+
+	if (want_vol < NXE1500_DEF_DDCx_VOL_MIN) {
+		want_vol = NXE1500_DEF_DDCx_VOL_MIN;
+	} else if (want_vol > NXE1500_DEF_DDCx_VOL_MAX) {
+		want_vol = NXE1500_DEF_DDCx_VOL_MAX;
+	}
+
+	vol_step = (want_vol - NXE1500_DEF_DDCx_VOL_MIN +
+		    NXE1500_DEF_DDCx_VOL_STEP - 1) /
+		   NXE1500_DEF_DDCx_VOL_STEP;
+
+	return (U8)(vol_step & 0xFF);
+}
+#endif
+
 
 #if (AXP_I2C_GPIO_GRP > -1)
 /************************************************
@@ -245,6 +275,37 @@ void PMIC_MP8845(void)
 }
 #endif
 
+#if (NXE1500_I2C_GPIO_GRP > -1)
+/************************************************
+ * RAPTOR Board (PMIC: NXE1500)  - Reference 2016.04.05
+ * ARM  : 1.25V
+ * CORE : 1.10V
+ ************************************************/
+void PMIC_NXE1500(void)
+{
+	U8 pData[4];
+
+	I2C_Init(NXE1500_I2C_GPIO_GRP, NXE1500_I2C_SCL, NXE1500_I2C_SDA);
+
+	// ARM Voltage (Default: 1.25V)
+	pData[0] = nxe1500_get_dcdc_step(NXE1500_DEF_DDC1_VOL);
+	I2C_Write(I2C_ADDR_NXE1500, NXE1500_REG_DC1VOL, pData, 1);
+
+	// Core Voltage (Default: 1.1V)
+	pData[0] = nxe1500_get_dcdc_step(NXE1500_DEF_DDC2_VOL);
+	I2C_Write(I2C_ADDR_NXE1500, NXE1500_REG_DC2VOL, pData, 1);
+
+	// DDR I/O Voltage (Default: 1.5V)
+	pData[0] = nxe1500_get_dcdc_step(NXE1500_DEF_DDC3_VOL);
+	I2C_Write(I2C_ADDR_NXE1500, NXE1500_REG_DC3VOL, pData, 1);
+
+	// DDR Voltage (Default: 1.5V)
+	pData[0] = nxe1500_get_dcdc_step(NXE1500_DEF_DDC4_VOL);
+	I2C_Write(I2C_ADDR_NXE1500, NXE1500_REG_DC4VOL, pData, 1);
+
+}
+#endif
+
 #if (NXE2000_I2C_GPIO_GRP > -1)
 /************************************************
  * SVT Board (PMIC: NXE2000)  - Reference 2016.04.05
@@ -279,6 +340,10 @@ void initPMIC(void)
 {
 #if (AXP_I2C_GPIO_GRP > -1)
 	PMIC_AXP228();
+#endif
+
+#if (NXE1500_I2C_GPIO_GRP > -1)
+	PMIC_NXE1500();
 #endif
 
 #if (NXE2000_I2C_GPIO_GRP > -1)
