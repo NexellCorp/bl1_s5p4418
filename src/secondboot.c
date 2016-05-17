@@ -18,8 +18,6 @@
 
 #include "sysheader.h"
 
-//#define SIMPLE_MEMTEST	1
-
 #define CPU_BRINGUP_CHECK   (1)
 #if defined(CHIPID_NXP4330)
 #define AUTO_DETECT_EMA     (0)
@@ -65,6 +63,12 @@ extern void     buildinfo(void);
 extern void     printClkInfo(void);
 
 extern void     ResetCon(U32 devicenum, CBOOL en);
+
+#if defined(STANDARD_MEMTEST)
+extern int memtester_main(unsigned int start, unsigned int end, int repeat);
+#else
+extern void simple_memtest(U32 *pStart, U32 *pEnd);
+#endif
 
 extern U32  g_GateCycle;
 extern U32  g_GateCode;
@@ -215,9 +219,7 @@ static void dowakeup(void)
 			jumpkernel();
 		}
 	} else {
-		printf("Suspend Signature is different\r\nRead Signature "
-		       ":0x%08X\r\n",
-		       sign);
+		printf("Suspend Signature is different\r\nRead Signature :0x%08X\r\n", sign);
 	}
 
 	printf("It's COLD BOOT\r\n");
@@ -269,65 +271,41 @@ void SubCPUBoot(U32 CPUID)
 #if (CONFIG_SUSPEND_RESUME == 1)
 void vddPowerOff(void)
 {
-	ClearIO32(&pReg_ClkPwr->PWRCONT,
-		  (0xFF << 8)); //; Clear USE_WFI & USE_WFE bits for STOP mode.
+	ClearIO32( &pReg_ClkPwr->PWRCONT,           (0xFF   <<   8) );  //; Clear USE_WFI & USE_WFE bits for STOP mode.
 
-	WriteIO32(&pReg_Alive->ALIVEPWRGATEREG,
-		  0x00000001); //; alive power gate open
+	WriteIO32( &pReg_Alive->ALIVEPWRGATEREG,    0x00000001 );       //; alive power gate open
 
 //----------------------------------
 // Save leveling & training values.
 #if 1
-	WriteIO32(&pReg_Alive->ALIVESCRATCHRST5,
-		  0xFFFFFFFF); // clear - ctrl_shiftc
-	WriteIO32(&pReg_Alive->ALIVESCRATCHRST6,
-		  0xFFFFFFFF); // clear - ctrl_offsetC
-	WriteIO32(&pReg_Alive->ALIVESCRATCHRST7,
-		  0xFFFFFFFF); // clear - ctrl_offsetr
-	WriteIO32(&pReg_Alive->ALIVESCRATCHRST8,
-		  0xFFFFFFFF); // clear - ctrl_offsetw
+	WriteIO32(&pReg_Alive->ALIVESCRATCHRST5,    0xFFFFFFFF);        // clear - ctrl_shiftc
+	WriteIO32(&pReg_Alive->ALIVESCRATCHRST6,    0xFFFFFFFF);        // clear - ctrl_offsetC
+	WriteIO32(&pReg_Alive->ALIVESCRATCHRST7,    0xFFFFFFFF);        // clear - ctrl_offsetr
+	WriteIO32(&pReg_Alive->ALIVESCRATCHRST8,    0xFFFFFFFF);        // clear - ctrl_offsetw
 
-	WriteIO32(&pReg_Alive->ALIVESCRATCHSET5,
-		  g_GateCycle); // store - ctrl_shiftc
-	WriteIO32(&pReg_Alive->ALIVESCRATCHSET6,
-		  g_GateCode); // store - ctrl_offsetc
-	WriteIO32(&pReg_Alive->ALIVESCRATCHSET7,
-		  g_RDvwmc); // store - ctrl_offsetr
-	WriteIO32(&pReg_Alive->ALIVESCRATCHSET8,
-		  g_WRvwmc); // store - ctrl_offsetw
+	WriteIO32(&pReg_Alive->ALIVESCRATCHSET5,    g_GateCycle);       // store - ctrl_shiftc
+	WriteIO32(&pReg_Alive->ALIVESCRATCHSET6,    g_GateCode);        // store - ctrl_offsetc
+	WriteIO32(&pReg_Alive->ALIVESCRATCHSET7,    g_RDvwmc);          // store - ctrl_offsetr
+	WriteIO32(&pReg_Alive->ALIVESCRATCHSET8,    g_WRvwmc);          // store - ctrl_offsetw
 #endif
 
-	WriteIO32(&pReg_Alive->VDDOFFCNTVALUERST,
-		  0xFFFFFFFF); //; clear delay counter, refrence rtc clock
-	WriteIO32(&pReg_Alive->VDDOFFCNTVALUESET,
-		  0x00000001); //; set minimum delay
-	// time for VDDPWRON
-	// pin. 1 cycle per
-	// 32.768Kh (about 30us)
+	WriteIO32( &pReg_Alive->VDDOFFCNTVALUERST,  0xFFFFFFFF );       //; clear delay counter, refrence rtc clock
+	WriteIO32( &pReg_Alive->VDDOFFCNTVALUESET,  0x00000001 );       //; set minimum delay time for VDDPWRON pin. 1 cycle per 32.768Kh (about 30us)
 
-	__asm__ __volatile__("cpsid i"); //; core interrupt off.
-	WriteIO32(&pReg_Alive->VDDCTRLSETREG,
-		  0x000003FC); //; Retention off (Pad hold off)
-	WriteIO32(&pReg_Alive->VDDCTRLRSTREG,
-		  0x00000001); //; vddpoweron off, start counting down.
+	__asm__ __volatile__ ("cpsid i");                               //; core interrupt off.
+	WriteIO32( &pReg_Alive->VDDCTRLSETREG,      0x000003FC );       //; Retention off (Pad hold off)
+	WriteIO32( &pReg_Alive->VDDCTRLRSTREG,      0x00000001 );       //; vddpoweron off, start counting down.
 
-	DMC_Delay(600); // 600 : 110us, Delay for Pending Clear. When CPU clock is
-		  	// 400MHz, this value is minimum delay value.
+	DMC_Delay(600);     // 600 : 110us, Delay for Pending Clear. When CPU clock is 400MHz, this value is minimum delay value.
 
-	WriteIO32(&pReg_Alive->ALIVEGPIODETECTPENDREG,
-		  0xFF); //; all alive pend pending clear until power down.
-	//    WriteIO32( &pReg_Alive->ALIVEPWRGATEREG,    0x00000000 ); //;
-	//    alive power gate close
+	WriteIO32( &pReg_Alive->ALIVEGPIODETECTPENDREG, 0xFF );         //; all alive pend pending clear until power down.
+//    WriteIO32( &pReg_Alive->ALIVEPWRGATEREG,    0x00000000 );       //; alive power gate close
 
-	while (1) {
-		//        SetIO32  ( &pReg_ClkPwr->PWRMODE,       (0x1    <<
-		//        1) );  //;
-		//        enter STOP mode.
-		WriteIO32(&pReg_ClkPwr->PWRMODE,
-			  (0x1 << 1)); //; enter STOP mode.
-		__asm__ __volatile__(
-		    "wfi"); //; now real entering point to stop mode.
-	} //; this time, core power will off and so cpu will die.
+	while(1) {
+		//        SetIO32  ( &pReg_ClkPwr->PWRMODE,       (0x1    <<   1) );  //; enter STOP mode.
+		WriteIO32( &pReg_ClkPwr->PWRMODE,       (0x1    <<   1) );  //; enter STOP mode.
+		__asm__ __volatile__ ("wfi");                               //; now real entering point to stop mode.
+	}                                                               //; this time, core power will off and so cpu will die.
 }
 #endif // #if (CONFIG_SUSPEND_RESUME == 1)
 
@@ -357,113 +335,6 @@ void sleepMain(void)
 	vddPowerOff();
 #endif
 }
-
-#if (SIMPLE_MEMTEST == 1)
-#define MPTRS unsigned int
-
-char progress[] = "-\\|/";
-#define PROGRESSLEN 4
-#define PROGRESSOFTEN 2500
-#define ONE 0x00000001L
-
-void simple_memtest(U32 *pStart, U32 *pEnd)
-{
-	volatile U32 *ptr = pStart;
-	unsigned int j = 0;
-
-	printf("[mtest] memory test start!\r\n");
-	printf("memory write data to own address\r\n");
-	printf("\r\b");
-	while (ptr < pEnd) {
-		*ptr = (U32)((MPTRS)ptr);
-#if 0
-		if (((U32)((MPTRS)ptr) & 0x3FFFFFL) == 0)
-			printf("0x%16X:\r\n", ptr);
-#endif
-#if 0
-		if (((U32)((MPTRS)ptr) % PROGRESSOFTEN) == 0) {
-			printf("\b");
-			printf("%c", progress[++j%  PROGRESSLEN]);	
-		}
-#endif
-		ptr++;
-	}
-
-	printf("\r\nmemory compare with address and own data\r\n");
-	ptr = pStart;
-	while (ptr < pEnd) {
-#if 0
-		if (*ptr != (U32)((MPTRS)ptr))
-			printf("0x%08X: %16X\r\n", (U32)((MPTRS)ptr), *ptr);
-#else
-		unsigned int data0 = *ptr, data1 = (U32)((MPTRS)ptr);
-		unsigned int mask_bit = 0, i = 0;
-
-		for (i = 0; i < 32; i++) {
-			data0 &= 1UL << i;
-			data1 &= 1UL << i;
-
-			if (data0 != data1) {
-				// printf("[%dbit] 0x%08X: %08X\r\n", i,
-				// (U32)((MPTRS)ptr), *ptr);
-				printf("--------------------------------------"
-				       "\r\n");
-				printf("[%dbit] 0x%08X: %08X(0x%08X: %08X)\r\n",
-				       i, data1, data0, (U32)((MPTRS)ptr),
-				       *ptr);
-				printf("--------------------------------------"
-				       "\r\n");
-				// mask_bit |= 1UL << i;
-			}
-#if 0
-			if ( (mask_bit != 0) && (i == 31) ) {
-				printf("[%Xbit] 0x%08X: %08X(0x%08X: %08X)\r\n", 
-					mask_bit, data1, data0, (U32)((MPTRS)ptr), *ptr);
-			}
-#endif
-		}
-
-		ptr++;
-#endif
-
-#if 0
-		if ((((MPTRS)ptr) & 0xFFFFFL) == 0)
-			printf("0x%16X:\r\n", ptr);
-#endif
-	}
-
-	printf("bit shift test....\r\n");
-	printf("write data....\r\n");
-	ptr = pStart;
-	while (ptr < pEnd) {
-		*ptr = (1UL << ((((MPTRS)ptr) & 0x1F << 2) >> 2));
-		ptr++;
-	}
-	printf("compare data....\r\n");
-	ptr = pStart;
-	while (ptr < pEnd) {
-		if (*ptr != (1UL << ((((MPTRS)ptr) & 0x1F << 2) >> 2)))
-			printf("0x%16x : 0x%16x\r\n", ptr, *ptr);
-		ptr++;
-	}
-	printf("reverse bit test\r\n");
-	printf("write data....\r\n");
-	ptr = pStart;
-	while (ptr < pEnd) {
-		*ptr = ~(1UL << ((((MPTRS)ptr) & 0x1F << 2) >> 2));
-		ptr++;
-	}
-	printf("compare data....\r\n");
-	ptr = pStart;
-	while (ptr < pEnd) {
-		if (*ptr != ~(1UL << ((((MPTRS)ptr) & 0x1F << 2) >> 2)))
-			printf("0x%16x : 0x%16x\r\n", ptr, *ptr);
-		ptr++;
-	}
-
-	printf("\r\nmemory test done\r\n");
-}
-#endif
 
 //------------------------------------------------------------------------------
 void BootMain(U32 CPUID)
@@ -511,7 +382,7 @@ void BootMain(U32 CPUID)
 #if defined(INITPMIC_YES)
 	initPMIC();
 #endif
-#endif //#if (CONFIG_SUSPEND_RESUME == 1)
+#endif  //#if (CONFIG_SUSPEND_RESUME == 1)
 
 	initClock();
 
@@ -618,9 +489,17 @@ void BootMain(U32 CPUID)
 	if (pSBI->SIGNATURE != HEADER_ID)
 		printf("2nd Boot Header is invalid, Please check it out!\r\n");
 
-#if (SIMPLE_MEMTEST == 1)
-	simple_memtest((U32 *)0x40000000UL, (U32 *)0x80000000 - 1);
-	//simple_memtest((U32*)0x80000000UL, (U32*)0x90000000UL);
+
+#ifdef STANDARD_MEMTEST
+	memtester_main((U32)0x40000000UL, (U32)0x60000000UL, 0x10);
+#else
+	simple_memtest((U32*)0x40000000UL, (U32*)0x60000000UL);
+#endif
+	//SelfRefresh_Test();
+
+#if defined( LOAD_FROM_USB )
+	printf( "Loading from usb...\r\n" );
+	Result = iUSBBOOT(pTBI);            // for USB boot
 #endif
 
 	
@@ -669,8 +548,7 @@ void BootMain(U32 CPUID)
 	}
 	
 	if (Result) {
-		void (*pLaunch)(U32, U32) =
-		    (void (*)(U32, U32))pTBI->LAUNCHADDR;
+		void (*pLaunch)(U32, U32) = (void (*)(U32, U32))pTBI->LAUNCHADDR;
 		printf(" Image Loading Done!\r\n");
 		printf("Launch to 0x%08X\r\n", (U32)pLaunch);
 	#if 0

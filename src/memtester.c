@@ -13,6 +13,7 @@
  *
  */
 #include "sysheader.h"
+#if defined(STANDARD_MEMTEST)
 #include "memtester.h"
 
 #if (0)
@@ -56,6 +57,16 @@ struct test tests[] = {{"Random Value", test_random_value},
 int use_phys = 0;
 long physaddrbase = 0;
 
+int __aeabi_idivmod(void)
+{
+	return 0;
+}
+
+static void fflush(void)
+{
+	while(!DebugIsUartTxDone());
+}
+	
 /* Function definitions. */
 int compare_regions(ulv *bufa, ulv *bufb, int count)
 {
@@ -71,13 +82,10 @@ int compare_regions(ulv *bufa, ulv *bufb, int count)
 		if (*p1 != *p2) {
 			if (use_phys) {
 				physaddr = physaddrbase + (i * sizeof(ul));
-				pr_dbg("FAILURE: 0x%08lx != 0x%08lx at "
+				printf("FAILURE: 0x%08lx != 0x%08lx at "
 				       "physical address 0x%08lx.\r\n",
 				       (ul)*p1, (ul)*p2, (ul)physaddr);
 			} else {
-				printf("FAILURE: address : 0x%p  0x%p\n", p1,
-				       p2);
-
 				printf("FAILURE: 0x%08lx != 0x%08lx at offset "
 				       "0x%08lx.\r\n",
 				       (ul)*p1, (ul)*p2, (ul)(i * sizeof(ul)));
@@ -96,14 +104,18 @@ int test_stuck_address(ulv *bufa, int count)
 	unsigned int j;
 	int i;
 	int physaddr;
-
+	
 	for (j = 0; j < 16; j++) {
+	        printf("\b\b\b\b\b\b\b\b\b\b\b");
 		p1 = (ulv *)bufa;
+		printf("setting %3u", j);
 		for (i = 0; i < count; i++) {
 			*p1 = ((j + i) % 2) == 0 ? (ul)p1 : ~((ul)p1);
 			*p1++;
 		}
-
+		printf("\b\b\b\b\b\b\b\b\b\b\b");
+		printf("testing %3u", j);
+		fflush();
 		p1 = (ulv *)bufa;
 		for (i = 0; i < count; i++, p1++) {
 			if (*p1 != (((j + i) % 2) == 0 ? (ul)p1 : ~((ul)p1))) {
@@ -125,7 +137,8 @@ int test_stuck_address(ulv *bufa, int count)
 			}
 		}
 	}
-;
+	printf("\b\b\b\b\b\b\b\b\b\b\b		 \b\b\b\b\b\b\b\b\b\b\b");
+
 	return 0;
 }
 #endif // MEMTEST_UNSUPPORT_FEATUE
@@ -134,16 +147,19 @@ int test_random_value(ulv *bufa, ulv *bufb, int count)
 {
 	ulv *p1 = bufa;
 	ulv *p2 = bufb;
-	int i;
+	int i, j = 0;
 
+	putchar(' ');
+	fflush();
 	for (i = 0; i < count; i++) {
 		*p1++ = *p2++ = (ulv)rand_ul();
-
 		if (!(i % PROGRESSOFTEN)) {
 			printf("\b");
-			printf("progress[++j  PROGRESSLEN]\r\n");
+			printf("%c", progress[++j % PROGRESSLEN]);
+			fflush();
 		}
 	}
+	printf("\b \b");
 
 	return compare_regions(bufa, bufb, count);
 }
@@ -252,24 +268,34 @@ int test_solidbits_comparison(ulv *bufa, ulv *bufb, int count)
 {
 	ulv *p1 = bufa;
 	ulv *p2 = bufb;
-	unsigned int j;
 	ul q;
 	int i;
+	unsigned int j = 0;
 
+	printf("	   ");
+	fflush();
+	
 	for (j = 0; j < 64; j++) {
+		printf("\b\b\b\b\b\b\b\b\b\b\b");		
 		q = (j % 2) == 0 ? UL_ONEBITS : 0;
-
+		printf("setting %3u", j);
+		fflush();
 		p1 = (ulv *)bufa;
 		p2 = (ulv *)bufb;
 		for (i = 0; i < count; i++) {
 			*p1++ = *p2++ = (i % 2) == 0 ? q : ~q;
 		}
-		
-		if (compare_regions(bufa, bufb, count)) {
+        	printf("\b\b\b\b\b\b\b\b\b\b\b");
+	        printf("testing %3u", j);
+		fflush();
+		if (compare_regions(bufa, bufb, count))
 			return -1;
-		}
+		
 	}
-
+	printf("\b\b\b\b\b\b\b\b\b\b\b		 \b\b\b\b\b\b\b\b\b\b\b");
+	printf("\b\b\b\b\b\b           \b\b\b\b\b\b\b\b\b\b\b");
+	fflush();
+	
 	return 0;
 }
 
@@ -281,20 +307,30 @@ int test_checkerboard_comparison(ulv *bufa, ulv *bufb, int count)
 	ul q;
 	int i;
 
+	printf("	   ");
+	fflush();
+	
 	for (j = 0; j < 64; j++) {
-		q = (j % 2) == 0 ? CHECKERBOARD1 : CHECKERBOARD2;
-
-		p1 = (ulv *)bufa;
-		p2 = (ulv *)bufb;
-		for (i = 0; i < count; i++) {
-			*p1++ = *p2++ = (i % 2) == 0 ? q : ~q;
-		}
-		
-		if (compare_regions(bufa, bufb, count)) {
-			return -1;
-		}
+	    printf("\b\b\b\b\b\b\b\b\b\b\b");
+	    q = (j % 2) == 0 ? CHECKERBOARD1 : CHECKERBOARD2;
+	    printf("setting %3u", j);
+	    fflush();
+	    p1 = (ulv *) bufa;
+	    p2 = (ulv *) bufb;
+	    for (i = 0; i < count; i++) {
+		*p1++ = *p2++ = (i % 2) == 0 ? q : ~q;
+	    }
+	    printf("\b\b\b\b\b\b\b\b\b\b\b");
+	    printf("testing %3u", j);
+	    fflush();
+	    if (compare_regions(bufa, bufb, count)) {
+		return -1;
+	    }
 	}
-
+	printf("\b\b\b\b\b\b\b\b\b\b\b		 \b\b\b\b\b\b\b\b\b\b\b");
+	printf("\b\b\b\b\b\b           \b\b\b\b\b\b\b\b\b\b\b");
+	fflush();
+	
 	return 0;
 }
 
@@ -305,19 +341,29 @@ int test_blockseq_comparison(ulv *bufa, ulv *bufb, int count)
 	unsigned int j;
 	int i;
 
+	printf("	   ");
+	fflush();
+	
 	for (j = 0; j < 256; j++) {
-		p1 = (ulv *)bufa;
-		p2 = (ulv *)bufb;
-		
-		for (i = 0; i < count; i++) {
-			*p1++ = *p2++ = (ul)UL_BYTE(j);
-		}
-		
-		if (compare_regions(bufa, bufb, count)) {
-			return -1;
-		}
+	    printf("\b\b\b\b\b\b\b\b\b\b\b");
+	    p1 = (ulv *) bufa;
+	    p2 = (ulv *) bufb;
+	    printf("setting %3u", j);
+	    fflush();
+	    for (i = 0; i < count; i++) {
+		*p1++ = *p2++ = (ul) UL_BYTE(j);
+	    }
+	    printf("\b\b\b\b\b\b\b\b\b\b\b");
+	    printf("testing %3u", j);
+	    fflush();
+	    if (compare_regions(bufa, bufb, count)) {
+		return -1;
+	    }
 	}
-
+	printf("\b\b\b\b\b\b\b\b\b\b\b		 \b\b\b\b\b\b\b\b\b\b\b");
+	printf("\b\b\b\b\b\b           \b\b\b\b\b\b\b\b\b\b\b");
+	fflush();
+	
 	return 0;
 }
 
@@ -328,24 +374,33 @@ int test_walkbits0_comparison(ulv *bufa, ulv *bufb, int count)
 	unsigned int j;
 	int i;
 
+	printf("	   ");
+	fflush();
+	
 	for (j = 0; j < UL_LEN * 2; j++) {
-		p1 = (ulv *)bufa;
-		p2 = (ulv *)bufb;
-
-		for (i = 0; i < count; i++) {
-			if (j < UL_LEN) { 			/* Walk it up. */
-				*p1++ = *p2++ = ONE << j;
-			} else { 				/* Walk it back down. */
-				*p1++ = *p2++ = ONE << (UL_LEN * 2 - j - 1);
-			}
+	    printf("\b\b\b\b\b\b\b\b\b\b\b");
+	    p1 = (ulv *) bufa;
+	    p2 = (ulv *) bufb;
+	    printf("setting %3u", j);
+	    fflush();
+	    for (i = 0; i < count; i++) {
+		if (j < UL_LEN) { /* Walk it up. */
+		    *p1++ = *p2++ = ONE << j;
+		} else { /* Walk it back down. */
+		    *p1++ = *p2++ = ONE << (UL_LEN * 2 - j - 1);
 		}
-
-
-		if (compare_regions(bufa, bufb, count)) {
-			return -1;
-		}
+	    }
+	    printf("\b\b\b\b\b\b\b\b\b\b\b");
+	    printf("testing %3u", j);
+	    fflush();
+	    if (compare_regions(bufa, bufb, count)) {
+		return -1;
+	    }
 	}
-
+	printf("\b\b\b\b\b\b\b\b\b\b\b		 \b\b\b\b\b\b\b\b\b\b\b");
+	printf("\b\b\b\b\b\b           \b\b\b\b\b\b\b\b\b\b\b");
+	fflush();
+	
 	return 0;
 }
 
@@ -356,24 +411,31 @@ int test_walkbits1_comparison(ulv *bufa, ulv *bufb, int count)
 	unsigned int j;
 	int i;
 
+	printf("	   ");
+	fflush();
 	for (j = 0; j < UL_LEN * 2; j++) {
-		p1 = (ulv *)bufa;
-		p2 = (ulv *)bufb;
-
-		for (i = 0; i < count; i++) {
-			if (j < UL_LEN) { /* Walk it up. */
-				*p1++ = *p2++ = UL_ONEBITS ^ (ONE << j);
-			} else { /* Walk it back down. */
-				*p1++ = *p2++ =
-				    UL_ONEBITS ^ (ONE << (UL_LEN * 2 - j - 1));
-			}
+	    printf("\b\b\b\b\b\b\b\b\b\b\b");
+	    p1 = (ulv *) bufa;
+	    p2 = (ulv *) bufb;
+	    printf("setting %3u", j);
+	    fflush();
+	    for (i = 0; i < count; i++) {
+		if (j < UL_LEN) { /* Walk it up. */
+		    *p1++ = *p2++ = UL_ONEBITS ^ (ONE << j);
+		} else { /* Walk it back down. */
+		    *p1++ = *p2++ = UL_ONEBITS ^ (ONE << (UL_LEN * 2 - j - 1));
 		}
-
-		//	printf("testing %3u", j);
-		if (compare_regions(bufa, bufb, count)) {
-			return -1;
-		}
+	    }
+	    printf("\b\b\b\b\b\b\b\b\b\b\b");
+	    printf("testing %3u", j);
+		fflush();
+	    if (compare_regions(bufa, bufb, count)) {
+		return -1;
+	    }
 	}
+	printf("\b\b\b\b\b\b\b\b\b\b\b		 \b\b\b\b\b\b\b\b\b\b\b");
+	printf("\b\b\b\b\b\b           \b\b\b\b\b\b\b\b\b\b\b");
+	fflush();
 
 	return 0;
 }
@@ -385,34 +447,37 @@ int test_bitspread_comparison(ulv *bufa, ulv *bufb, int count)
 	unsigned int j;
 	int i;
 
+	printf("	   ");
+	fflush();
 	for (j = 0; j < UL_LEN * 2; j++) {
-		p1 = (ulv *)bufa;
-		p2 = (ulv *)bufb;
-
-		for (i = 0; i < count; i++) {
-			if (j < UL_LEN) { 					/* Walk it up. */
-				*p1++ = *p2++ =
-				    (i % 2 == 0)
-					? (ONE << j) | (ONE << (j + 2))
-					: (int)UL_ONEBITS ^			/* UL_ONEBITS (Type Define) */
-					      ((ONE << j) | (ONE << (j + 2)));
-			} else { 						/* Walk it back down. */
-				*p1++ = *p2++ =
-				    (i % 2 == 0)
-					? (ONE << (UL_LEN * 2 - 1 - j)) |
-					      (ONE << (UL_LEN * 2 + 1 - j))
-					: (int)UL_ONEBITS ^
-					      (ONE << (UL_LEN * 2 - 1 - j) |
-					       (ONE << (UL_LEN * 2 + 1 - j)));
-			}
+	    printf("\b\b\b\b\b\b\b\b\b\b\b");
+	    p1 = (ulv *) bufa;
+	    p2 = (ulv *) bufb;
+	    printf("setting %3u", j);
+		fflush();
+	    for (i = 0; i < count; i++) {
+		if (j < UL_LEN) { /* Walk it up. */
+		    (U32)(*p1++ = *p2++ = (i % 2 == 0))
+			? (U32)((ONE << j) | (ONE << (j + 2)))
+			: (U32)(UL_ONEBITS ^ ((ONE << j)
+					| (ONE << (j + 2))));
+		} else { /* Walk it back down. */
+		    (U32)(*p1++ = *p2++ = (i % 2 == 0))
+			? (U32)((ONE << (UL_LEN * 2 - 1 - j)) | (ONE << (UL_LEN * 2 + 1 - j)))
+			: (U32)(UL_ONEBITS ^ (ONE << (UL_LEN * 2 - 1 - j)
+					| (ONE << (UL_LEN * 2 + 1 - j))));
 		}
-
-
-		if (compare_regions(bufa, bufb, count)) {
-			return -1;
-		}
+	    }
+	    printf("\b\b\b\b\b\b\b\b\b\b\b");
+	    printf("testing %3u", j);
+	    if (compare_regions(bufa, bufb, count)) {
+		return -1;
+	    }
 	}
-
+	printf("\b\b\b\b\b\b\b\b\b\b\b		 \b\b\b\b\b\b\b\b\b\b\b");
+	printf("\b\b\b\b\b\b           \b\b\b\b\b\b\b\b\b\b\b");
+	fflush();
+	
 	return 0;
 }
 
@@ -424,23 +489,33 @@ int test_bitflip_comparison(ulv *bufa, ulv *bufb, int count)
 	ul q;
 	int i;
 
+	printf("	   ");
+	fflush();
+	
 	for (k = 0; k < UL_LEN; k++) {
-		q = ONE << k;
-		for (j = 0; j < 8; j++) {
-			q = ~q;
-
-			p1 = (ulv *)bufa;
-			p2 = (ulv *)bufb;
-			for (i = 0; i < count; i++) {
-				*p1++ = *p2++ = (i % 2) == 0 ? q : ~q;
-			}
-
-			if (compare_regions(bufa, bufb, count)) {
-				return -1;
-			}
+	    q = ONE << k;
+	    for (j = 0; j < 8; j++) {
+		printf("\b\b\b\b\b\b\b\b\b\b\b");
+		q = ~q;
+		printf("setting %3u", k * 8 + j);
+		fflush();
+		p1 = (ulv *) bufa;
+		p2 = (ulv *) bufb;
+		for (i = 0; i < count; i++) {
+		    *p1++ = *p2++ = (i % 2) == 0 ? q : ~q;
 		}
+		printf("\b\b\b\b\b\b\b\b\b\b\b");
+		printf("testing %3u", k * 8 + j);
+		fflush();
+		if (compare_regions(bufa, bufb, count)) {
+		    return -1;
+		}
+	    }
 	}
-
+	printf("\b\b\b\b\b\b\b\b\b\b\b		 \b\b\b\b\b\b\b\b\b\b\b");
+	printf("\b\b\b\b\b\b           \b\b\b\b\b\b\b\b\b\b\b");
+	fflush();
+	
 	return 0;
 }
 
@@ -450,32 +525,37 @@ int test_8bit_wide_random(ulv *bufa, ulv *bufb, int count)
 	u8v *p1, *t;
 	ulv *p2;
 	int attempt;
-	unsigned int b; //, j = 0;
+	unsigned int b, j = 0;
 	int i;
 
-	for (attempt = 0; attempt < 2; attempt++) {
-		if (attempt & 1) {
-			p1 = (u8v *)bufa;
-			p2 = bufb;
-		} else {
-			p1 = (u8v *)bufb;
-			p2 = bufa;
+	putchar(' ');
+	fflush();
+	for (attempt = 0; attempt < 2;	attempt++) {
+	    if (attempt & 1) {
+		p1 = (u8v *) bufa;
+		p2 = bufb;
+	    } else {
+		p1 = (u8v *) bufb;
+		p2 = bufa;
+	    }
+	    for (i = 0; i < count; i++) {
+		t = mword8.bytes;
+		*p2++ = mword8.val = rand_ul();
+		for (b=0; b < UL_LEN/8; b++) {
+		    *p1++ = *t++;
 		}
-		for (i = 0; i < count; i++) {
-			t = mword8.bytes;
-			*p2++ = mword8.val = rand_ul();
-			for (b = 0; b < UL_LEN / 8; b++) {
-				*p1++ = *t++;
-			}
-			if (!(i % PROGRESSOFTEN)) {
-				printf("\b");
-				printf("progress[++j//%// PROGRESSLEN] \r\n");
-			}
+		if (!(i % PROGRESSOFTEN)) {
+		    putchar('\b');
+		    printf("%c", progress[++j % PROGRESSLEN]);
+		    fflush();
 		}
-		if (compare_regions(bufa, bufb, count)) {
-			return -1;
-		}
+	    }
+	    if (compare_regions(bufa, bufb, count)) {
+		return -1;
+	    }
 	}
+	printf("\b \b");
+	fflush();
 
 	return 0;
 }
@@ -485,9 +565,11 @@ int test_16bit_wide_random(ulv *bufa, ulv *bufb, int count)
 	u16v *p1, *t;
 	ulv *p2;
 	int attempt;
-	unsigned int b; //, j = 0;
+	unsigned int b, j = 0;
 	int i;
 
+	putchar( ' ' );
+	fflush();
 	for (attempt = 0; attempt < 2; attempt++) {
 		if (attempt & 1) {
 			p1 = (u16v *)bufa;
@@ -503,15 +585,17 @@ int test_16bit_wide_random(ulv *bufa, ulv *bufb, int count)
 				*p1++ = *t++;
 			}
 			if (!(i % PROGRESSOFTEN)) {
-				printf("\b");
-				printf("progress[++j//%// PROGRESSLEN] \r\n");
-
+				putchar('\b');
+				printf("%c", progress[++j % PROGRESSLEN]);
+				fflush();
 			}
 		}
 		if (compare_regions(bufa, bufb, count)) {
 			return -1;
 		}
 	}
+	printf("\b \b");
+	fflush();
 
 	return 0;
 }
@@ -532,7 +616,7 @@ ulv g_bufb[8];
 /*
  * each of the memory test function. (single)
  */
-int memtester_main(unsigned int start, unsigned int end)
+int memtester_main(unsigned int start, unsigned int end, int repeat)
 {
 	ulv bufa = (ulv )start;
 	ulv bufb = (ulv )end;
@@ -540,87 +624,153 @@ int memtester_main(unsigned int start, unsigned int end)
 	int count = sizeof(tests) / sizeof(struct test) - 1; // Sub - NULL(1)
 	int pagesize = 1024;
 	int size = (end - start)/2 & pagesize;
-	int i, ret = 0;
+	int i, k, ret = 0;
 
 	srand(1024);
 	g_mem_info.start_addr = start;
 	g_mem_info.end_addr = end;
 
-	for (i = 0; i < count; i++) {
-		if (!tests[i].name)
-			break;
-
-		if (!tests[i].fp(((ulv *)bufa), ((ulv *)bufb), size))
-			g_mem_info.memtest_done[i] = 0;
-		else {
-			g_mem_info.memtest_done[i] = -1;
-			ret = -1;
+	for(k = 0; k < repeat; k++) {
+		printf("Loop [%d]St. \r\n", k);
+		for (i = 0; i < count; i++) {
+			if (!tests[i].name)
+				break;
+			
+			printf("  %-20s: ", tests[i].name);
+			if (!tests[i].fp(((ulv *)bufa), ((ulv *)bufb), size)) {
+				g_mem_info.memtest_done[i] = 0;
+				printf("OK!!");
+			}
+			else {
+				g_mem_info.memtest_done[i] = -1;
+				ret = -1;
+				printf("Failed!!");
+			}
+			printf("\r\n");
 		}
+		if (ret < 0)
+			break;
 	}
+	
 	if (ret < 0)
-		printf("memtest failed! \r\n");
+		printf("Memtest Failed!! \r\n");
 	else
-		printf("memtest success!! \r\n");
+		printf("Memtest Success!! \r\n");
 
 	return ret;
 }
 
+#else
+
+#define MPTRS unsigned int
 void simple_memtest(U32 *pStart, U32 *pEnd)
 {
 	volatile U32 *ptr = pStart;
 
-	printf("memory test start!\r\n");
+	printf("Simple Memory Test Start!!\r\n");
 
-	printf("\r\nmemory write data to own address\r\n");
+	printf("Read/Write : ");
+	printf("Write  ");
 	while (ptr < pEnd) {
 		*ptr = (U32)((MPTRS)ptr);
-		#if 0
+#if 0
 		if (((U32)((MPTRS)ptr) & 0x3FFFFFL) == 0)
 			printf("0x%16X:\r\n", ptr);
-		#endif
+#endif
+#if 0
+		if (((U32)((MPTRS)ptr) % PROGRESSOFTEN) == 0) {
+			printf("\b");
+			printf("%c", progress[++j%  PROGRESSLEN]);	
+		}
+#endif
 		ptr++;
 	}
+	printf("\b\b\b\b\b\b\b");		
 
-	printf("\r\nmemory compare with address and own data\r\n");
+	printf("Compare  ");
 	ptr = pStart;
 	while (ptr < pEnd) {
+#if 0
 		if (*ptr != (U32)((MPTRS)ptr))
-			printf("0x%08X: %16x\r\n", (U32)((MPTRS)ptr), *ptr);
+			printf("0x%08X: %16X\r\n", (U32)((MPTRS)ptr), *ptr);
+#else
+		unsigned int data0 = *ptr, data1 = (U32)((MPTRS)ptr);
+		unsigned int i = 0;
+
+		for (i = 0; i < 32; i++) {
+			data0 &= 1UL << i;
+			data1 &= 1UL << i;
+
+			if (data0 != data1) {
+				// printf("[%dbit] 0x%08X: %08X\r\n", i,
+				// (U32)((MPTRS)ptr), *ptr);
+				printf("--------------------------------------"
+				       "\r\n");
+				printf("[%dbit] 0x%08X: %08X(0x%08X: %08X)\r\n",
+				       i, data1, data0, (U32)((MPTRS)ptr),
+				       *ptr);
+				printf("--------------------------------------"
+				       "\r\n");
+				// mask_bit |= 1UL << i;
+			}			
+#if 0
+			if ( (mask_bit != 0) && (i == 31) ) {
+				printf("[%Xbit] 0x%08X: %08X(0x%08X: %08X)\r\n", 
+					mask_bit, data1, data0, (U32)((MPTRS)ptr), *ptr);
+			}
+#endif
+		}
+
 		ptr++;
-		#if 0
+#endif
+
+#if 0
 		if ((((MPTRS)ptr) & 0xFFFFFL) == 0)
 			printf("0x%16X:\r\n", ptr);
-		#endif
+#endif
 	}
+	printf("\b\b\b\b\b\b\b\b\b");
+	printf("Done!   \r\n");
 
-	printf("bit shift test....\r\n");
-	printf("write data....\r\n");
+	printf("Bit Shift  : ");
+	printf("Write  ");
 	ptr = pStart;
 	while (ptr < pEnd) {
-		*ptr = (1UL << ((((MPTRS)ptr) & 0x1F << 2) >> 2));
+		*ptr = (1UL << ((((MPTRS)ptr) & 0x1F << 2) >> 2));		
 		ptr++;
 	}
-	printf("compare data....\r\n");
+	printf("\b\b\b\b\b\b\b");
+
+	printf("Compare  ");
 	ptr = pStart;
 	while (ptr < pEnd) {
 		if (*ptr != (1UL << ((((MPTRS)ptr) & 0x1F << 2) >> 2)))
-			printf("0x%16x\r\n", *ptr);
+			printf("0x%16x : 0x%16x\r\n", ptr, *ptr);		
 		ptr++;
 	}
-	printf("reverse bit test\r\n");
-	printf("write data....\r\n");
+	printf("\b\b\b\b\b\b\b\b\b");	
+	printf("Done!   \r\n");
+	
+	printf("Reverse Bit: ");
+	printf("Write  ");
 	ptr = pStart;
 	while (ptr < pEnd) {
-		*ptr = ~(1UL << ((((MPTRS)ptr) & 0x1F << 2) >> 2));
+		*ptr = ~(1UL << ((((MPTRS)ptr) & 0x1F << 2) >> 2));		
 		ptr++;
 	}
-	printf("compare data....\r\n");
+	printf("\b\b\b\b\b\b\b");
+	
+	printf("Compare  ");
 	ptr = pStart;
 	while (ptr < pEnd) {
 		if (*ptr != ~(1UL << ((((MPTRS)ptr) & 0x1F << 2) >> 2)))
-			printf("0x%16x\r\n", *ptr);
+			printf("0x%16x : 0x%16x\r\n", ptr, *ptr);	
 		ptr++;
 	}
+	printf("\b\b\b\b\b\b\b\b\b");	
+	printf("Done!   \r\n");
 
-	printf("\r\nmemory test done\r\n");
+	printf("Simple Memory Test Done!!\r\n");
 }
+#endif
+
