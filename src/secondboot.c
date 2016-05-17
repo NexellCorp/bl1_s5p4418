@@ -66,7 +66,7 @@ extern void     ResetCon(U32 devicenum, CBOOL en);
 
 #if defined(STANDARD_MEMTEST)
 extern int memtester_main(unsigned int start, unsigned int end, int repeat);
-#else
+#elif defined(SIMPLE_MEMTEST)
 extern void simple_memtest(U32 *pStart, U32 *pEnd);
 #endif
 
@@ -490,19 +490,18 @@ void BootMain(U32 CPUID)
 		printf("2nd Boot Header is invalid, Please check it out!\r\n");
 
 
-#ifdef STANDARD_MEMTEST
+#if defined(STANDARD_MEMTEST)
 	memtester_main((U32)0x40000000UL, (U32)0x60000000UL, 0x10);
-#else
+#elif defined(SIMPLE_MEMTEST)
 	simple_memtest((U32*)0x40000000UL, (U32*)0x60000000UL);
 #endif
-	//SelfRefresh_Test();
+	SelfRefresh_Test();
 
 #if defined( LOAD_FROM_USB )
 	printf( "Loading from usb...\r\n" );
 	Result = iUSBBOOT(pTBI);            // for USB boot
 #endif
 
-	
 	switch (pSBI->DBI.SPIBI.LoadDevice) {
 #if defined(SUPPORT_USB_BOOT)
 	case BOOT_FROM_USB:
@@ -546,7 +545,7 @@ void BootMain(U32 CPUID)
 		break;
 #endif
 	}
-	
+
 	if (Result) {
 		void (*pLaunch)(U32, U32) = (void (*)(U32, U32))pTBI->LAUNCHADDR;
 		printf(" Image Loading Done!\r\n");
