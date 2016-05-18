@@ -491,7 +491,7 @@ void BootMain(U32 CPUID)
 
 
 #if defined(STANDARD_MEMTEST)
-	memtester_main((U32)0x40000000UL, (U32)0x60000000UL, 0x10);
+	memtester_main((U32)0x40000000UL, (U32)0x50000000UL, 0x10);
 #elif defined(SIMPLE_MEMTEST)
 	simple_memtest((U32*)0x40000000UL, (U32*)0x60000000UL);
 #endif
