@@ -495,7 +495,6 @@ void BootMain(U32 CPUID)
 #elif defined(SIMPLE_MEMTEST)
 	simple_memtest((U32*)0x40000000UL, (U32*)0x60000000UL);
 #endif
-	SelfRefresh_Test();
 
 #if defined( LOAD_FROM_USB )
 	printf( "Loading from usb...\r\n" );
