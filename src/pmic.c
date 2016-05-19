@@ -45,6 +45,9 @@ void DMC_Delay(int milisecond);
 #define AXP_I2C_GPIO_GRP 		3 // D group
 #define AXP_I2C_SCL 			20
 #define AXP_I2C_SDA 			16
+#define AXP_I2C_SCL_ALT			0
+#define AXP_I2C_SDA_ALT			0
+
 #endif
 #endif
 
@@ -53,16 +56,23 @@ void DMC_Delay(int milisecond);
 #define NXE2000_I2C_GPIO_GRP 		4 // E group, NXE2000
 #define NXE2000_I2C_SCL 		14
 #define NXE2000_I2C_SDA 		15
+#define NXE2000_I2C_SCL_ALT		0
+#define NXE2000_I2C_SDA_ALT		0
+
 #endif
 
 #if defined(AVN_PMIC_INIT)
 #define MP8845_CORE_I2C_GPIO_GRP 	4 // E group, FineDigital VDDA_1.2V (core)
 #define MP8845_CORE_I2C_SCL 		11
 #define MP8845_CORE_I2C_SDA 		10
+#define MP8845_CORE_I2C_SCL_ALT		0
+#define MP8845_CORE_I2C_SDA_ALT		0
 
 #define MP8845_ARM_I2C_GPIO_GRP 	4 // E group, FineDigital VDDB_1.2V (arm)
 #define MP8845_ARM_I2C_SCL 		9
 #define MP8845_ARM_I2C_SDA 		8
+#define MP8845_ARM_I2C_SCL_ALT		0
+#define MP8845_ARM_I2C_SDA_ALT		0
 
 #define MP8845_PMIC_INIT (1)
 #endif
@@ -72,27 +82,35 @@ void DMC_Delay(int milisecond);
 #define NXE1500_I2C_GPIO_GRP 		2 // C group, NXE2000
 #define NXE1500_I2C_SCL 		15
 #define NXE1500_I2C_SDA 		16
+#define NXE1500_I2C_SCL_ALT		1	// GPIO ALT Function 1
+#define NXE1500_I2C_SDA_ALT		1	// GPIO ALT Function 1
 #endif
 
 #if 0//defined(LAVENDA_PMIC_INIT)
 #undef NXE2000_I2C_GPIO_GRP
-#define NXE2000_I2C_GPIO_GRP 		3 // D group, NXE2000
+#define NXE2000_I2C_GPIO_GRP 	3 // D group, NXE2000
 #define NXE2000_I2C_SCL 		20
 #define NXE2000_I2C_SDA 		16
+#define NXE2000_I2C_SCL_ALT		0
+#define NXE2000_I2C_SDA_ALT		0
 #endif
 
 #if defined(NAVI_PMIC_INIT)
 #undef NXE2000_I2C_GPIO_GRP
-#define NXE2000_I2C_GPIO_GRP 		4 // E group, NXE2000
+#define NXE2000_I2C_GPIO_GRP 	4 // E group, NXE2000
 #define NXE2000_I2C_SCL 		9
 #define NXE2000_I2C_SDA 		8
+#define NXE2000_I2C_SCL_ALT		0
+#define NXE2000_I2C_SDA_ALT		0
 #endif
 
 #if defined(SVT_PMIC_INIT) || defined(ASB_PMIC_INIT)
 #undef NXE2000_I2C_GPIO_GRP
-#define NXE2000_I2C_GPIO_GRP		3 // D group, NXE2000
+#define NXE2000_I2C_GPIO_GRP	3 // D group, NXE2000
 #define NXE2000_I2C_SCL 		2
 #define NXE2000_I2C_SDA			3
+#define NXE2000_I2C_SCL_ALT		0
+#define NXE2000_I2C_SDA_ALT		0
 #endif
 
 #if (AXP_I2C_GPIO_GRP > -1)
@@ -108,8 +126,8 @@ void DMC_Delay(int milisecond);
 #include "pmic_mp8845.h"
 #endif
 
-extern void I2C_Init(U8 gpioGRP, U8 gpioSCL, U8 gpioSDA);
-// extern void  I2C_Deinit( void );
+extern void I2C_Init(U8 gpioGRP, U8 gpioSCL, U8 gpioSDA, U32 gpioSCLAlt, U32 gpioSDAAlt);
+extern void  I2C_Deinit( void );
 extern CBOOL I2C_Read(U8 DeviceAddress, U8 RegisterAddress, U8 *pData,
 		      U32 Length);
 extern CBOOL I2C_Write(U8 DeviceAddress, U8 RegisterAddress, U8 *pData,
@@ -181,7 +199,8 @@ void PMIC_AXP228(void)
 {
 	U8 pData[4];
 
-	I2C_Init(AXP_I2C_GPIO_GRP, AXP_I2C_SCL, AXP_I2C_SDA);
+	I2C_Init(AXP_I2C_GPIO_GRP, AXP_I2C_SCL, AXP_I2C_SDA,
+		AXP_I2C_SCL_ALT, AXP_I2C_SDA_ALT);
 
 	I2C_Read(I2C_ADDR_AXP228, 0x80, pData, 1);
 	pData[0] = (pData[0] & 0x1F) | DCDC_SYS | DCDC_DDR;
@@ -209,6 +228,7 @@ void PMIC_AXP228(void)
 	pData[0] = axp228_get_dcdc_step(AXP228_DEF_DDC5_VOL, AXP228_DEF_DDC5_VOL_STEP, AXP228_DEF_DDC5_VOL_MIN, AXP228_DEF_DDC5_VOL_MAX);
 	I2C_Write(I2C_ADDR_AXP228, AXP228_REG_DC5VOL, pData, 1);
 #endif
+	I2C_Deinit();
 }
 #endif
 
@@ -223,8 +243,8 @@ void PMIC_MP8845(void)
 	U8 pData[4];
 
 	/* I2C init for CORE power. */
-	I2C_Init(MP8845_CORE_I2C_GPIO_GRP, MP8845_CORE_I2C_SCL,
-		 MP8845_CORE_I2C_SDA);
+	I2C_Init(MP8845_CORE_I2C_GPIO_GRP, MP8845_CORE_I2C_SCL, MP8845_CORE_I2C_SDA, 
+		 MP8845_CORE_I2C_SCL_ALT, MP8845_CORE_I2C_SDA_ALT);
 
 	/* PFM -> PWM mode */
 	I2C_Read(I2C_ADDR_MP8845, MP8845C_REG_SYSCNTL1, pData, 1);
@@ -248,8 +268,8 @@ void PMIC_MP8845(void)
 	I2C_Write(I2C_ADDR_MP8845, MP8845C_REG_VSEL, pData, 1);
 
 	/* I2C init for ARM power. */
-	I2C_Init(MP8845_ARM_I2C_GPIO_GRP, MP8845_ARM_I2C_SCL,
-		 MP8845_ARM_I2C_SDA);
+	I2C_Init(MP8845_ARM_I2C_GPIO_GRP, MP8845_ARM_I2C_SCL, MP8845_ARM_I2C_SDA, 
+		 MP8845_ARM_I2C_SCL_ALT, MP8845_CORE_I2C_SDA_ALT);
 
 	/* PFM -> PWM mode */
 	I2C_Read(I2C_ADDR_MP8845, MP8845C_REG_SYSCNTL1, pData, 1);
@@ -272,6 +292,8 @@ void PMIC_MP8845(void)
 	// pData[0] = 80 | 1<<7;   // 80: 1.135V
 	// pData[0] = 75 | 1 << 7; // 75: 1.1V
 	I2C_Write(I2C_ADDR_MP8845, MP8845C_REG_VSEL, pData, 1);
+
+	I2C_Deinit();
 }
 #endif
 
@@ -285,7 +307,8 @@ void PMIC_NXE1500(void)
 {
 	U8 pData[4];
 
-	I2C_Init(NXE1500_I2C_GPIO_GRP, NXE1500_I2C_SCL, NXE1500_I2C_SDA);
+	I2C_Init(NXE1500_I2C_GPIO_GRP, NXE1500_I2C_SCL, NXE1500_I2C_SDA, 
+		NXE1500_I2C_SCL_ALT, NXE1500_I2C_SDA_ALT);
 
 	// ARM Voltage (Default: 1.25V)
 	pData[0] = nxe1500_get_dcdc_step(NXE1500_DEF_DDC1_VOL);
@@ -316,7 +339,8 @@ void PMIC_NXE2000(void)
 {
 	U8 pData[4];
 
-	I2C_Init(NXE2000_I2C_GPIO_GRP, NXE2000_I2C_SCL, NXE2000_I2C_SDA);
+	I2C_Init(NXE2000_I2C_GPIO_GRP, NXE2000_I2C_SCL, NXE2000_I2C_SDA,
+		NXE2000_I2C_SCL_ALT, NXE2000_I2C_SDA_ALT);
 
 #if 1
 	pData[0] = nxe2000_get_dcdc_step(NXE2000_DEF_DDC1_VOL);
@@ -332,6 +356,8 @@ void PMIC_NXE2000(void)
 
 	pData[0] = nxe2000_get_dcdc_step(NXE2000_DEF_DDC5_VOL);
 	I2C_Write(I2C_ADDR_NXE2000, NXE2000_REG_DC5VOL, pData, 1);
+
+	I2C_Deinit();
 #endif
 }
 #endif
