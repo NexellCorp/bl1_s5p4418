@@ -145,6 +145,20 @@ CBOOL isEMA3(U32 ecid_1, U32 ecid_2)
 }
 #endif // #if (AUTO_DETECT_EMA == 1)
 
+void enableL2Cache(unsigned int enb)
+{
+	unsigned int reg;
+
+	// L2 Cache
+	reg = ReadIO32(&pReg_Tieoff->TIEOFFREG[0]);
+	if (enb)
+		reg |= (3UL << 12);
+	else
+		reg &= ~(3UL << 12);
+
+	WriteIO32(&pReg_Tieoff->TIEOFFREG[0], reg);
+}
+
 void setEMA(void)
 {
 #if (AUTO_DETECT_EMA == 1)
@@ -401,7 +415,12 @@ void BootMain(U32 CPUID)
 	//---------------------------------------------------------------
 	setEMA();
 
-#if 0 // Clock Information Display.
+	//---------------------------------------------------------------
+	// L2 Cache Enable
+	//---------------------------------------------------------------
+	enableL2Cache(CTRUE);
+
+#if 1 // Clock Information Display.
 	//---------------------------------------------------------------
 	// print clock information
 	//---------------------------------------------------------------
