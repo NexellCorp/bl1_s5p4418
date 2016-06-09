@@ -26,6 +26,8 @@
 #define dprintf(x, ...)
 #endif
 
+extern U32 iget_fcs(U32 fcs, U32 data);
+
 void ResetCon(U32 devicenum, CBOOL en);
 
 static NX_USB20OTG_APB_RegisterSet *const pUSB20OTGAPBReg =
@@ -179,12 +181,27 @@ static void nx_usb_write_in_fifo(U32 ep, U8 *buf, S32 num)
 		pUOReg->EPFifo[ep][0] = dwbuf[i];
 }
 
+/*
+ * CRC Check for modifications.
+ * A global variable for a CRC check.
+ * */
+static struct NX_SecondBootInfo *g_TBI;
+static USBBOOTSTATUS *g_USBBootStatus;
+static unsigned int g_fcs = 0;
+
 static void nx_usb_read_out_fifo(U32 ep, U8 *buf, S32 num)
 {
 	S32 i;
 	U32 *dwbuf = (U32 *)buf;
-	for (i = 0; i < (num + 3) / 4; i++)
+
+	for (i = 0; i < (num + 3) / 4; i++) {
 		dwbuf[i] = pUOReg->EPFifo[ep][0];
+		/* Data other than the HEADER. */
+		if (CTRUE == g_USBBootStatus->bHeaderReceived)
+			g_fcs = iget_fcs(g_fcs, dwbuf[i]);
+	}
+	/* Save the CRC Check Value  */
+	g_TBI->DBI.SDMMCBI.CRC32 = g_fcs;
 }
 
 static void nx_usb_ep0_int_hndlr(USBBOOTSTATUS *pUSBBootStatus)
@@ -657,6 +674,8 @@ static void nx_usb_pkt_receive(USBBOOTSTATUS *pUSBBootStatus,
 	U32 fifo_cnt_byte;
 
 	rx_status = pUOReg->GCSR.GRXSTSP;
+	/* CRC Check for Global Boot Status */
+	g_USBBootStatus = pUSBBootStatus;
 
 	if ((rx_status & (0xf << 17)) == SETUP_PKT_RECEIVED) {
 		dprintf("SETUP_PKT_RECEIVED\r\n");
@@ -800,11 +819,14 @@ CBOOL iUSBBOOT(struct NX_SecondBootInfo *pTBI)
 	ResetCon(RESETINDEX_OF_USB20OTG_MODULE_i_nRST, CTRUE);  // reset on
 	ResetCon(RESETINDEX_OF_USB20OTG_MODULE_i_nRST, CFALSE); // reset negate
 
-    pReg_Tieoff->TIEOFFREG[12] &= ~0x3;         // scale mode ( 0: real silicon, 1: test simul, 2, 3)
-    pReg_Tieoff->TIEOFFREG[14] |= 3<<8;         // 8: enable, 9:phy word interface (0: 8 bit, 1: 16 bit)
-    pReg_Tieoff->TIEOFFREG[13] = 0xA3006C00;    // VBUSVLDEXT=1,VBUSVLDEXTSEL=1,POR=0
-    pReg_Tieoff->TIEOFFREG[13] = 0xA3006C80;    // POR_ENB=1
-    udelay(40);     // 40us delay need.
+	/* CRC Check for variables */
+	g_TBI = pTBI;
+
+	pReg_Tieoff->TIEOFFREG[12] &= ~0x3;         // scale mode ( 0: real silicon, 1: test simul, 2, 3)
+	pReg_Tieoff->TIEOFFREG[14] |= 3<<8;         // 8: enable, 9:phy word interface (0: 8 bit, 1: 16 bit)
+	pReg_Tieoff->TIEOFFREG[13] = 0xA3006C00;    // VBUSVLDEXT=1,VBUSVLDEXTSEL=1,POR=0
+	pReg_Tieoff->TIEOFFREG[13] = 0xA3006C80;    // POR_ENB=1
+	udelay(40);     // 40us delay need.
 
 	pReg_Tieoff->TIEOFFREG[13] = 0xA3006C88; // nUtmiResetSync : 00000001
 	udelay(1);				 // 10 clock need

@@ -70,6 +70,8 @@ extern int memtester_main(unsigned int start, unsigned int end, int repeat);
 extern void simple_memtest(U32 *pStart, U32 *pEnd);
 #endif
 
+extern int CRC_Check(void* buf, unsigned int size, unsigned int ref_crc);
+
 extern U32  g_GateCycle;
 extern U32  g_GateCode;
 extern U32  g_RDvwmc;
@@ -564,6 +566,10 @@ void BootMain(U32 CPUID)
 #endif
 	}
 
+#ifdef CRC_CHECK_ON
+	Result = CRC_Check((void*)pTBI->LOADADDR, (unsigned int)pTBI->LOADSIZE
+				,(unsigned int)pTBI->DBI.SDMMCBI.CRC32);
+#endif
 	if (Result) {
 		void (*pLaunch)(U32, U32) = (void (*)(U32, U32))pTBI->LAUNCHADDR;
 		printf(" Image Loading Done!\r\n");
