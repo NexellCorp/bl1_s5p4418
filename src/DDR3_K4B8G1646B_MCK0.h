@@ -38,19 +38,14 @@
 // Refer to Memory Datasheet
 #define cs_size         (0x40000000>>24)
 
-#define chip_row                                                               \
-	(_DDR_ROW_NUM - 12) // ROW address bit : 15bit : 3(Tabletx2), 16bit :
-			    // 4(Tabletx4, Elcomtech)
-#define chip_col                                                               \
-	(_DDR_COL_NUM -                                                        \
-	 7)	   // Column Address Bit. 2:9bit, 3:10bit, others:Reserved
-#define chip_bank (3) // Bank bit : 3:8bank, 2:4bank
-#define chip_base0 0x040
-#define chip_base1 (chip_base0 + cs_size)
+#define chip_row        (_DDR_ROW_NUM-12)       // ROW address bit : 15bit : 3(Tabletx2), 16bit : 4(Tabletx4, Elcomtech)
+#define chip_col        (_DDR_COL_NUM-7)        // Column Address Bit. 2:9bit, 3:10bit, others:Reserved
+#define chip_bank       (3)                     // Bank bit : 3:8bank, 2:4bank
+#define chip_base0      0x040
+#define chip_base1      (chip_base0+cs_size)
 
 #if 1
-#define chip_mask                                                              \
-	(0x800 - cs_size) // Capacity per nCS: 2G=0x780, 1G=0x7C0(Tabletx2, VTK)
+#define chip_mask       (0x800-cs_size)         // Capacity per nCS: 2G=0x780, 1G=0x7C0(Tabletx2, VTK)
 #else
 #define chip_mask       (0x800-(cs_size<<1))    // for Timing Calculation.
 #endif

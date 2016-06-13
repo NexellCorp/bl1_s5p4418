@@ -65,16 +65,18 @@
 // SPEC1.1
 
 // configuration descriptor: bmAttributes
-enum CONFIG_ATTRIBUTES {
-	CONF_ATTR_DEFAULT = 0x80,
-	CONF_ATTR_REMOTE_WAKEUP = 0x20,
-	CONF_ATTR_SELFPOWERED = 0x40
+enum CONFIG_ATTRIBUTES
+{
+	CONF_ATTR_DEFAULT			= 0x80,
+	CONF_ATTR_REMOTE_WAKEUP 	= 0x20,
+	CONF_ATTR_SELFPOWERED		= 0x40
 };
 
 // endpoint descriptor
-enum ENDPOINT_ATTRIBUTES {
-	EP_ADDR_IN = 0x80,
-	EP_ADDR_OUT = 0x00,
+enum ENDPOINT_ATTRIBUTES
+{
+	EP_ADDR_IN				= 0x80,
+	EP_ADDR_OUT				= 0x00,
 
 	EP_ATTR_CONTROL			= 0x00,
 	EP_ATTR_ISOCHRONOUS		= 0x01,
@@ -83,28 +85,30 @@ enum ENDPOINT_ATTRIBUTES {
 };
 
 // Standard bRequest codes
-enum STANDARD_REQUEST_CODE {
-	STANDARD_GET_STATUS 	= 0,
-	STANDARD_CLEAR_FEATURE 	= 1,
-	STANDARD_RESERVED_1 	= 2,
-	STANDARD_SET_FEATURE 	= 3,
-	STANDARD_RESERVED_2 	= 4,
-	STANDARD_SET_ADDRESS 	= 5,
-	STANDARD_GET_DESCRIPTOR = 6,
-	STANDARD_SET_DESCRIPTOR = 7,
-	STANDARD_GET_CONFIGURATION = 8,
-	STANDARD_SET_CONFIGURATION = 9,
-	STANDARD_GET_INTERFACE 	= 10,
-	STANDARD_SET_INTERFACE 	= 11,
-	STANDARD_SYNCH_FRAME =	 12
+enum STANDARD_REQUEST_CODE
+{
+	STANDARD_GET_STATUS			= 0,
+	STANDARD_CLEAR_FEATURE		= 1,
+	STANDARD_RESERVED_1			= 2,
+	STANDARD_SET_FEATURE		= 3,
+	STANDARD_RESERVED_2			= 4,
+	STANDARD_SET_ADDRESS		= 5,
+	STANDARD_GET_DESCRIPTOR		= 6,
+	STANDARD_SET_DESCRIPTOR		= 7,
+	STANDARD_GET_CONFIGURATION	= 8,
+	STANDARD_SET_CONFIGURATION	= 9,
+	STANDARD_GET_INTERFACE		= 10,
+	STANDARD_SET_INTERFACE		= 11,
+	STANDARD_SYNCH_FRAME		= 12
 };
 
-enum DESCRIPTORTYPE {
-	DESCRIPTORTYPE_DEVICE 			= 1,
-	DESCRIPTORTYPE_CONFIGURATION 	= 2,
-	DESCRIPTORTYPE_STRING 			= 3,
-	DESCRIPTORTYPE_INTERFACE 		= 4,
-	DESCRIPTORTYPE_ENDPOINT 		= 5
+enum DESCRIPTORTYPE
+{
+	DESCRIPTORTYPE_DEVICE			= 1,
+	DESCRIPTORTYPE_CONFIGURATION	= 2,
+	DESCRIPTORTYPE_STRING			= 3,
+	DESCRIPTORTYPE_INTERFACE		= 4,
+	DESCRIPTORTYPE_ENDPOINT			= 5
 };
 
 #define CONTROL_EP		0
@@ -212,44 +216,40 @@ struct NX_USB_OTG_DMCSR_RegisterSet {
 	struct NX_USB_OTG_Device_EPO_RegisterSet DEPOR[16]; /* 0xB00 ~ 0xCFC */
 };
 
-struct NX_USB_OTG_PHYCTRL_RegisterSet {
-	volatile U32 PCReserved0[0x40 / 4]; /* 0x00 ~ 0x3C	Reserved */
-	volatile U32 PHYPOR;		    /* 0x40 */
-	volatile U32 VBUSINTENB;	    /* 0x44 */
-	volatile U32 VBUSPEND;		    /* 0x48 */
-	volatile U32 TESTPARM3;		    /* 0x4C */
-	volatile U32 TESTPARM4;		    /* 0x50 */
-	volatile U32 LINKCTL;		    /* 0x54 */
-	volatile U32 TESTPARM6;		    /* 0x58 */
-	volatile U32 TESTPARM7;		    /* 0x5C */
-	volatile U32 TESTPARM8;		    /* 0x60 */
-	volatile U32 TESTPARM9;		    /* 0x64 */
-	volatile U32
-	    PCReserved4[(0x100 - 0x68) / 4]; /* 0x68 ~ 0xFC	Reserved */
+struct NX_USB_OTG_PHYCTRL_RegisterSet
+{
+	volatile U32 PCReserved0[0x40/4];			/* 0x00 ~ 0x3C	Reserved */
+	volatile U32 PHYPOR;						/* 0x40 */
+	volatile U32 VBUSINTENB;					/* 0x44 */
+	volatile U32 VBUSPEND;						/* 0x48 */
+	volatile U32 TESTPARM3;						/* 0x4C */
+	volatile U32 TESTPARM4;						/* 0x50 */
+	volatile U32 LINKCTL;						/* 0x54 */
+	volatile U32 TESTPARM6;						/* 0x58 */
+	volatile U32 TESTPARM7;						/* 0x5C */
+	volatile U32 TESTPARM8;						/* 0x60 */
+	volatile U32 TESTPARM9;						/* 0x64 */
+	volatile U32 PCReserved4[(0x100-0x68)/4];	/* 0x68 ~ 0xFC	Reserved */
 };
-struct NX_USB_OTG_IFCLK_RegisterSet {
-	volatile U32 IFReserved0[0xC0 / 4]; /* 0x00 ~ 0xBC	Reserved  */
-	volatile U32 IFCLK_MODE;	    /* 0xC0 */
-	volatile U32 IFCLKGEN;		    /* 0xC4 */
-	volatile U32 IFReserved1[(0x100 - 0xC8) / 4]; /* 0xC8 ~ 0xFC */
+struct NX_USB_OTG_IFCLK_RegisterSet
+{
+	volatile U32 IFReserved0[0xC0/4];			/* 0x00 ~ 0xBC	Reserved  */
+	volatile U32 IFCLK_MODE;					/* 0xC0 */
+	volatile U32 IFCLKGEN;						/* 0xC4 */
+	volatile U32 IFReserved1[(0x100-0xC8)/4];	/* 0xC8 ~ 0xFC */
 };
-struct NX_USB_OTG_RegisterSet {
-	struct NX_USB_OTG_GCSR_RegisterSet GCSR;  /* 0x0000 ~ 0x03FC */
-	struct NX_USB_OTG_HMCSR_RegisterSet HCSR; /* 0x0400 ~ 0x07FC */
-	struct NX_USB_OTG_DMCSR_RegisterSet DCSR; /* 0x0800 ~ 0x0CFC */
-	volatile U32
-	    GReserved0[(0xE00 - 0xD00) / 4]; /* 0x0D00 ~ 0x0DFC	Reserved */
-	volatile U32
-	    PCGCCTL; /* 0x0E00 R/W Power and Clock Gating Control Register */
-	volatile U32 GReserved1[(0x1000 - 0xE04) /
-				4];    /* 0x0E04 ~ 0x0FFC	Reserved */
-	volatile U32 EPFifo[15][1024]; /* 0x1000 ~ 0xFFFC Endpoint Fifo */
-	//	volatile U32 EPFifo[16][1024];					/*
-	//0x1000 ~ 0x10FFC Endpoint Fifo */
-	//	volatile U32 GReserved2[(0x20000-0x11000)/4];	/* 0x11000 ~
-	//0x20000 Reserved */
-	//	volatile U32 DEBUGFIFO[0x8000];					/*
-	//0x20000 ~ 0x3FFFC Debug Purpose Direct Fifo Acess Register */
+struct NX_USB_OTG_RegisterSet
+{
+	struct NX_USB_OTG_GCSR_RegisterSet  GCSR;		/* 0x0000 ~ 0x03FC */
+	struct NX_USB_OTG_HMCSR_RegisterSet HCSR;		/* 0x0400 ~ 0x07FC */
+	struct NX_USB_OTG_DMCSR_RegisterSet DCSR;		/* 0x0800 ~ 0x0CFC */
+	volatile U32 GReserved0[(0xE00-0xD00)/4];		/* 0x0D00 ~ 0x0DFC	Reserved */
+	volatile U32 PCGCCTL;							/* 0x0E00 R/W Power and Clock Gating Control Register */
+	volatile U32 GReserved1[(0x1000-0xE04)/4];		/* 0x0E04 ~ 0x0FFC	Reserved */
+	volatile U32 EPFifo[15][1024];					/* 0x1000 ~ 0xFFFC Endpoint Fifo */
+	//	volatile U32 EPFifo[16][1024];					/* 0x1000 ~ 0x10FFC Endpoint Fifo */
+	//	volatile U32 GReserved2[(0x20000-0x11000)/4];	/* 0x11000 ~ 0x20000 Reserved */
+	//	volatile U32 DEBUGFIFO[0x8000];					/* 0x20000 ~ 0x3FFFC Debug Purpose Direct Fifo Acess Register */
 };
 
 /*definitions related to CSR setting */
@@ -344,7 +344,9 @@ struct NX_USB_OTG_RegisterSet {
 #define AHB_ERROR						(0x1<<2)
 #define TRANSFER_DONE					(0x1<<0)
 
-typedef struct {
+
+typedef struct
+{
 	U8 bmRequestType;
 	U8 bRequest;
 	U16 wValue;
@@ -352,58 +354,60 @@ typedef struct {
 	U16 wLength;
 } SetupPacket;
 
-typedef enum {
+typedef enum
+{
 	USB_HIGH,
 	USB_FULL,
 	USB_LOW
-//	,0xFFFFFFFFUL
+		//	,0xFFFFFFFFUL
 } USB_SPEED;
 
-typedef enum {
-	EP_TYPE_CONTROL,
-	EP_TYPE_ISOCHRONOUS,
-	EP_TYPE_BULK,
-	EP_TYPE_INTERRUPT
+typedef enum
+{
+	EP_TYPE_CONTROL, EP_TYPE_ISOCHRONOUS, EP_TYPE_BULK, EP_TYPE_INTERRUPT
 } EP_TYPE;
 
 /*------------------------------------------------*/
 /* EP0 state */
-enum EP0_STATE {
-	EP0_STATE_INIT = 0,
-	EP0_STATE_GET_DSCPT = 1,
-	EP0_STATE_GET_INTERFACE = 2,
-	EP0_STATE_GET_CONFIG = 3,
-	EP0_STATE_GET_STATUS = 4
+enum EP0_STATE
+{
+	EP0_STATE_INIT					= 0,
+	EP0_STATE_GET_DSCPT				= 1,
+	EP0_STATE_GET_INTERFACE			= 2,
+	EP0_STATE_GET_CONFIG			= 3,
+	EP0_STATE_GET_STATUS			= 4
 };
 
-typedef struct __attribute__((aligned(4))) tag_USBBOOTSTATUS {
-	volatile CBOOL bDownLoading;
-	CBOOL bHeaderReceived;
-	U8 *RxBuffAddr;
-	S32 iRxSize;
-	S32 iRxHeaderSize;
+typedef struct __attribute__((aligned(4))) tag_USBBOOTSTATUS
+{
+	volatile CBOOL	bDownLoading;
+	CBOOL	bHeaderReceived;
+	U8		*RxBuffAddr;
+	S32		iRxSize;
+	S32		iRxHeaderSize;
 
-	U32 ep0_state;
+	U32		ep0_state;
 	USB_SPEED speed;
-	U32 ctrl_max_pktsize;
-	U32 bulkin_max_pktsize;
-	U32 bulkout_max_pktsize;
+	U32		ctrl_max_pktsize;
+	U32		bulkin_max_pktsize;
+	U32		bulkout_max_pktsize;
 
-	U8 *Current_ptr;
-	U32 Current_Fifo_Size;
-	U32 Remain_size;
+	U8*		Current_ptr;
+	U32		Current_Fifo_Size;
+	U32		Remain_size;
 
-	U32 up_addr;
-	U32 up_size;
-	U8 *up_ptr;
+	U32		up_addr;
+	U32		up_size;
+	U8*		up_ptr;
 
-	U8 CurConfig;
-	U8 CurInterface;
-	U8 CurSetting;
-	U8 __Reserved;
+	U8		CurConfig;
+	U8		CurInterface;
+	U8		CurSetting;
+	U8		__Reserved;
 
-	U8 *DeviceDescriptor;
-	const U8 *ConfigDescriptor;
+	U8* 		DeviceDescriptor;
+	const U8*	ConfigDescriptor;
 } USBBOOTSTATUS;
 
-#endif // __NX_OTG_HS_H__
+
+#endif	// __NX_OTG_HS_H__

@@ -243,19 +243,10 @@ FRESULT f_close (FIL*);								/* Close an open file object */
 
 /*--------------------------------*/
 /* Multi-byte word access macros  */
-#define LD_WORD(ptr)                                                    \
-	(U16)(((U16) * (U8 *)((ptr) + 1) << 8) | (U16) * (U8 *)(ptr))
-#define LD_DWORD(ptr)                                                   \
-	(U32)(((U32) * (U8 *)((ptr) + 3) << 24) |                           \
-	      ((U32) * (U8 *)((ptr) + 2) << 16) |                           \
-	      ((U16) * (U8 *)((ptr) + 1) << 8) | *(U8 *)(ptr))
-#define ST_WORD(ptr, val)                                               \
-	*(U8 *)(ptr) = (U8)(val);											\
-	*(U8 *)((ptr) + 1) = (U8)((U16)(val) >> 8)
-#define ST_DWORD(ptr, val)                                              \
-	*(U8 *)(ptr) = (U8)(val);                                           \
-	*(U8 *)((ptr) + 1) = (U8)((U16)(val) >> 8);                         \
-	*(U8 *)((ptr) + 2) = (U8)((U32)(val) >> 16);                        \
-	*(U8 *)((ptr) + 3) = (U8)((U32)(val) >> 24)
+#define	LD_WORD(ptr)		(U16)(((U16)*(U8*)((ptr)+1)<<8)|(U16)*(U8*)(ptr))
+#define	LD_DWORD(ptr)		(U32)(((U32)*(U8*)((ptr)+3)<<24)|((U32)*(U8*)((ptr)+2)<<16)|((U16)*(U8*)((ptr)+1)<<8)|*(U8*)(ptr))
+#define	ST_WORD(ptr,val)	*(U8*)(ptr)=(U8)(val); *(U8*)((ptr)+1)=(U8)((U16)(val)>>8)
+#define	ST_DWORD(ptr,val)	*(U8*)(ptr)=(U8)(val); *(U8*)((ptr)+1)=(U8)((U16)(val)>>8); *(U8*)((ptr)+2)=(U8)((U32)(val)>>16); *(U8*)((ptr)+3)=(U8)((U32)(val)>>24)
+
 
 #endif /* _FATFS */

@@ -11,7 +11,7 @@
  *      Module          : DDR3 Memory Device
  *      File            : ac_timing_lynx.h
  *      Description     :
- *      Author          : Deoks 
+ *      Author          : Kook 
  *      History         :
  */
 // Clock List

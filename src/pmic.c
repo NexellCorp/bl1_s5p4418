@@ -128,10 +128,8 @@ void DMC_Delay(int milisecond);
 
 extern void I2C_Init(U8 gpioGRP, U8 gpioSCL, U8 gpioSDA, U32 gpioSCLAlt, U32 gpioSDAAlt);
 extern void  I2C_Deinit( void );
-extern CBOOL I2C_Read(U8 DeviceAddress, U8 RegisterAddress, U8 *pData,
-		      U32 Length);
-extern CBOOL I2C_Write(U8 DeviceAddress, U8 RegisterAddress, U8 *pData,
-		       U32 Length);
+extern CBOOL I2C_Read(U8 DeviceAddress, U8 RegisterAddress, U8 *pData, U32 Length);
+extern CBOOL I2C_Write(U8 DeviceAddress, U8 RegisterAddress, U8 *pData, U32 Length);
 
 #if (AXP_I2C_GPIO_GRP > -1)
 static U8 axp228_get_dcdc_step(int want_vol, int step, int min, int max)
@@ -162,8 +160,8 @@ static U8 nxe2000_get_dcdc_step(int want_vol)
 	}
 
 	vol_step = (want_vol - NXE2000_DEF_DDCx_VOL_MIN +
-		    NXE2000_DEF_DDCx_VOL_STEP - 1) /
-		   NXE2000_DEF_DDCx_VOL_STEP;
+			NXE2000_DEF_DDCx_VOL_STEP - 1) /
+		NXE2000_DEF_DDCx_VOL_STEP;
 
 	return (U8)(vol_step & 0xFF);
 }
@@ -181,8 +179,8 @@ static U8 nxe1500_get_dcdc_step(int want_vol)
 	}
 
 	vol_step = (want_vol - NXE1500_DEF_DDCx_VOL_MIN +
-		    NXE1500_DEF_DDCx_VOL_STEP - 1) /
-		   NXE1500_DEF_DDCx_VOL_STEP;
+			NXE1500_DEF_DDCx_VOL_STEP - 1) /
+		NXE1500_DEF_DDCx_VOL_STEP;
 
 	return (U8)(vol_step & 0xFF);
 }
@@ -199,25 +197,25 @@ void PMIC_AXP228(void)
 {
 	U8 pData[4];
 
-	I2C_Init(AXP_I2C_GPIO_GRP, AXP_I2C_SCL, AXP_I2C_SDA,
+	I2C_Init(AXP_I2C_GPIO_GRP, AXP_I2C_SCL, AXP_I2C_SDA, 
 		AXP_I2C_SCL_ALT, AXP_I2C_SDA_ALT);
 
 	I2C_Read(I2C_ADDR_AXP228, 0x80, pData, 1);
 	pData[0] = (pData[0] & 0x1F) | DCDC_SYS | DCDC_DDR;
 	I2C_Write(I2C_ADDR_AXP228, 0x80, pData, 1);
 
-/* ARM voltage change */
+	/* ARM voltage change */
 #if (ARM_VOLTAGE_CONTROL_SKIP == 0)
 	pData[0] = axp228_get_dcdc_step(
-	    AXP228_DEF_DDC2_VOL, AXP228_DEF_DDC234_VOL_STEP,
-	    AXP228_DEF_DDC234_VOL_MIN, AXP228_DEF_DDC24_VOL_MAX);
+			AXP228_DEF_DDC2_VOL, AXP228_DEF_DDC234_VOL_STEP,
+			AXP228_DEF_DDC234_VOL_MIN, AXP228_DEF_DDC24_VOL_MAX);
 	I2C_Write(I2C_ADDR_AXP228, AXP228_REG_DC2VOL, pData, 1);
 #endif
 
 	/* Core Voltage Change */
 	pData[0] = axp228_get_dcdc_step(
-	    AXP228_DEF_DDC3_VOL, AXP228_DEF_DDC234_VOL_STEP,
-	    AXP228_DEF_DDC234_VOL_MIN, AXP228_DEF_DDC3_VOL_MAX);
+			AXP228_DEF_DDC3_VOL, AXP228_DEF_DDC234_VOL_STEP,
+			AXP228_DEF_DDC234_VOL_MIN, AXP228_DEF_DDC3_VOL_MAX);
 	I2C_Write(I2C_ADDR_AXP228, AXP228_REG_DC3VOL, pData, 1);
 #if 0
 	// Set voltage of DCDC4.
@@ -244,7 +242,7 @@ void PMIC_MP8845(void)
 
 	/* I2C init for CORE power. */
 	I2C_Init(MP8845_CORE_I2C_GPIO_GRP, MP8845_CORE_I2C_SCL, MP8845_CORE_I2C_SDA, 
-		 MP8845_CORE_I2C_SCL_ALT, MP8845_CORE_I2C_SDA_ALT);
+			MP8845_CORE_I2C_SCL_ALT, MP8845_CORE_I2C_SDA_ALT);
 
 	/* PFM -> PWM mode */
 	I2C_Read(I2C_ADDR_MP8845, MP8845C_REG_SYSCNTL1, pData, 1);
@@ -258,7 +256,7 @@ void PMIC_MP8845(void)
 
 #if defined(BF700_PMIC_INIT)
 	pData[0] = 75 | 1 << 7; // 1.1V
-// pData[0] = 90 | 1<<7;     // 1.2021V
+//	pData[0] = 90 | 1<<7;     // 1.2021V
 #endif
 #if defined(AVN_PMIC_INIT)
 	pData[0] = 75 | 1 << 7; // 1.1V
@@ -269,14 +267,14 @@ void PMIC_MP8845(void)
 
 	/* I2C init for ARM power. */
 	I2C_Init(MP8845_ARM_I2C_GPIO_GRP, MP8845_ARM_I2C_SCL, MP8845_ARM_I2C_SDA, 
-		 MP8845_ARM_I2C_SCL_ALT, MP8845_CORE_I2C_SDA_ALT);
+			MP8845_ARM_I2C_SCL_ALT, MP8845_CORE_I2C_SDA_ALT);
 
 	/* PFM -> PWM mode */
 	I2C_Read(I2C_ADDR_MP8845, MP8845C_REG_SYSCNTL1, pData, 1);
 	pData[0] |= 1 << 0;
 	I2C_Write(I2C_ADDR_MP8845, MP8845C_REG_SYSCNTL1, pData, 1);
 
-/* ARM voltage change */
+	/* ARM voltage change */
 #if (ARM_VOLTAGE_CONTROL_SKIP == 0)
 	I2C_Read(I2C_ADDR_MP8845, MP8845C_REG_SYSCNTL2, pData, 1);
 	pData[0] |= 1 << 5;
@@ -308,7 +306,7 @@ void PMIC_NXE1500(void)
 	U8 pData[4];
 
 	I2C_Init(NXE1500_I2C_GPIO_GRP, NXE1500_I2C_SCL, NXE1500_I2C_SDA, 
-		NXE1500_I2C_SCL_ALT, NXE1500_I2C_SDA_ALT);
+			NXE1500_I2C_SCL_ALT, NXE1500_I2C_SDA_ALT);
 
 	// ARM Voltage (Default: 1.25V)
 	pData[0] = nxe1500_get_dcdc_step(NXE1500_DEF_DDC1_VOL);
@@ -340,7 +338,7 @@ void PMIC_NXE2000(void)
 	U8 pData[4];
 
 	I2C_Init(NXE2000_I2C_GPIO_GRP, NXE2000_I2C_SCL, NXE2000_I2C_SDA,
-		NXE2000_I2C_SCL_ALT, NXE2000_I2C_SDA_ALT);
+			NXE2000_I2C_SCL_ALT, NXE2000_I2C_SDA_ALT);
 
 #if 1
 	pData[0] = nxe2000_get_dcdc_step(NXE2000_DEF_DDC1_VOL);

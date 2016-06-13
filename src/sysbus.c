@@ -51,27 +51,19 @@ void setBusConfig(void)
 #endif
 
 #if 1
-	miNum = 0;
-	WriteIO32(NX_BASE_ADDR_BOTT_QOS_TRDMARK + (0x20 * miNum),
-		  (1 << 0)); // wait count for MI0 QoS adjust.
-	//    ClearIO32( NX_BASE_ADDR_BOTT_QOS_CTRL       + (0x20 * miNum),   (1
-	//    << 6)
-	//    | (1 << 7) ); // org - coda960
-	ClearIO32(NX_BASE_ADDR_BOTT_QOS_CTRL + (0x20 * miNum),
-		  (1 << 6) | (1 << 5)); // patch - coda960
+    miNum = 0;
+    WriteIO32( NX_BASE_ADDR_BOTT_QOS_TRDMARK    + (0x20 * miNum),   (1 << 0) );    // wait count for MI0 QoS adjust.
+//    ClearIO32( NX_BASE_ADDR_BOTT_QOS_CTRL       + (0x20 * miNum),   (1 << 6) | (1 << 7) ); // org - coda960
+    ClearIO32( NX_BASE_ADDR_BOTT_QOS_CTRL       + (0x20 * miNum),   (1 << 6) | (1 << 5) ); // patch - coda960
 #else
 
-	miNum = 1; // MI1 of bottom bus.
-	WriteIO32(NX_BASE_ADDR_BOTT_QOS_TRDMARK + (0x20 * miNum),
-		  (1 << 0)); // wait count for MI1 QoS adjust.
-	WriteIO32(NX_BASE_ADDR_BOTT_QOS_CTRL + (0x20 * miNum),
-		  (1 << 3)); // SI3 - TOP bus
+    miNum = 1;  // MI1 of bottom bus.
+    WriteIO32( NX_BASE_ADDR_BOTT_QOS_TRDMARK    + (0x20 * miNum),   (1 << 0) );    // wait count for MI1 QoS adjust.
+    WriteIO32( NX_BASE_ADDR_BOTT_QOS_CTRL       + (0x20 * miNum),   (1 << 3) );    // SI3 - TOP bus
 
-	miNum = 0; // MI0 of bottom bus.
-	WriteIO32(NX_BASE_ADDR_TOP_QOS_TRDMARK + (0x20 * miNum),
-		  (1 << 0)); // wait count for MI0 QoS adjust.
-	WriteIO32(NX_BASE_ADDR_TOP_QOS_CTRL + (0x20 * miNum),
-		  (1 << 5));				       // SI5 - OTG
+    miNum = 0;  // MI0 of bottom bus.
+    WriteIO32( NX_BASE_ADDR_TOP_QOS_TRDMARK     + (0x20 * miNum),   (1 << 0) );    // wait count for MI0 QoS adjust.
+    WriteIO32( NX_BASE_ADDR_TOP_QOS_CTRL        + (0x20 * miNum),   (1 << 5) );    // SI5 - OTG
 #endif
 
     WriteIO32( NX_BASE_ADDR_DISP_AR,        (0 << 24) | (0 << 0) ); // VIP1
@@ -223,83 +215,68 @@ void setBusConfig(void)
 #else
 #endif
 
-/* ------------- DREX QoS -------------- */
-#if 1  //(CFG_BUS_RECONFIG_DREXQOS == 1)
+	/* ------------- DREX QoS -------------- */
+	#if 1   //(CFG_BUS_RECONFIG_DREXQOS == 1)
 	for (i_slot = 0; i_slot < 2; i_slot++) {
-		val = readl(NX_VA_BASE_REG_DREX + NX_DREX_QOS_OFFSET +
-			    (i_slot << 3));
+		val = readl(NX_VA_BASE_REG_DREX + NX_DREX_QOS_OFFSET + (i_slot<<3));
 		if (val != g_DrexQoS[i_slot])
-			writel(g_DrexQoS[i_slot],
-			       (NX_VA_BASE_REG_DREX + NX_DREX_QOS_OFFSET +
-				(i_slot << 3)));
+			writel( g_DrexQoS[i_slot], (NX_VA_BASE_REG_DREX + NX_DREX_QOS_OFFSET + (i_slot<<3)) );
 	}
-#endif /* (CFG_BUS_RECONFIG_DREXQOS == 1) */
+	#endif /* (CFG_BUS_RECONFIG_DREXQOS == 1) */
 
-/* ------------- Bottom BUS ------------ */
-/* MI1 - Set SI QoS */
-#if (CFG_BUS_RECONFIG_BOTTOMBUSQOS == 1)
+	/* ------------- Bottom BUS ------------ */
+	/* MI1 - Set SI QoS */
+    #if (CFG_BUS_RECONFIG_BOTTOMBUSQOS == 1)
 	val = readl(NX_BASE_REG_PL301_BOTT_QOS_TRDMARK + 0x20);
 	if (val != g_BottomQoSSI[0])
-		writel(g_BottomQoSSI[0],
-		       (NX_BASE_REG_PL301_BOTT_QOS_TRDMARK + 0x20));
+		writel(g_BottomQoSSI[0], (NX_BASE_REG_PL301_BOTT_QOS_TRDMARK + 0x20) );
 
 	val = readl(NX_BASE_REG_PL301_BOTT_QOS_CTRL + 0x20);
 	if (val != g_BottomQoSSI[1])
-		writel(g_BottomQoSSI[1],
-		       (NX_BASE_REG_PL301_BOTT_QOS_CTRL + 0x20));
-#endif
+		writel(g_BottomQoSSI[1], (NX_BASE_REG_PL301_BOTT_QOS_CTRL + 0x20) );
+    #endif
 
-#if (CFG_BUS_RECONFIG_BOTTOMBUSSI == 1)
+    #if (CFG_BUS_RECONFIG_BOTTOMBUSSI == 1)
 	num_si = readl(NX_VA_BASE_REG_PL301_BOTT + 0xFC0);
 	num_mi = readl(NX_VA_BASE_REG_PL301_BOTT + 0xFC4);
 
 	/* Set progamming for AR */
 	// MI0 - Slave Interface
 	for (i_slot = 0; i_slot < num_mi; i_slot++) {
-		writel((0xFF000000 | i_slot), NX_BASE_REG_PL301_BOTT_AR);
+		writel( (0xFF000000 | i_slot),  NX_BASE_REG_PL301_BOTT_AR );
 		val = readl(NX_BASE_REG_PL301_BOTT_AR);
 		if (val != i_slot)
-			writel((i_slot << SLOT_NUM_POS) |
-				   (i_slot << SI_IF_NUM_POS),
-			       NX_BASE_REG_PL301_BOTT_AR);
+			writel( (i_slot << SLOT_NUM_POS) | (i_slot << SI_IF_NUM_POS),  NX_BASE_REG_PL301_BOTT_AR );
 	}
 
 	// MI1 - Slave Interface
 	for (i_slot = 0; i_slot < num_si; i_slot++) {
-		writel((0xFF000000 | i_slot),
-		       (NX_BASE_REG_PL301_BOTT_AR + 0x20));
+		writel( (0xFF000000 | i_slot),  (NX_BASE_REG_PL301_BOTT_AR + 0x20) );
 		val = readl(NX_BASE_REG_PL301_BOTT_AR + 0x20);
 		if (val != g_BottomBusSI[i_slot])
-			writel((i_slot << SLOT_NUM_POS) |
-				   (g_BottomBusSI[i_slot] << SI_IF_NUM_POS),
-			       (NX_BASE_REG_PL301_BOTT_AR + 0x20));
+			writel( (i_slot << SLOT_NUM_POS) | (g_BottomBusSI[i_slot] << SI_IF_NUM_POS),  (NX_BASE_REG_PL301_BOTT_AR + 0x20) );
 	}
 
 	/* Set progamming for AW */
 	// MI0 - Slave Interface
 	for (i_slot = 0; i_slot < num_mi; i_slot++) {
-		writel((0xFF000000 | i_slot), NX_BASE_REG_PL301_BOTT_AW);
+		writel( (0xFF000000 | i_slot),  NX_BASE_REG_PL301_BOTT_AW );
 		val = readl(NX_BASE_REG_PL301_BOTT_AW);
 		if (val != i_slot)
-			writel((i_slot << SLOT_NUM_POS) |
-				   (i_slot << SI_IF_NUM_POS),
-			       NX_BASE_REG_PL301_BOTT_AW);
+			writel( (i_slot << SLOT_NUM_POS) | (i_slot << SI_IF_NUM_POS),  NX_BASE_REG_PL301_BOTT_AW );
 	}
 
 	// MI1 - Slave Interface
 	for (i_slot = 0; i_slot < num_si; i_slot++) {
-		writel((0xFF000000 | i_slot),
-		       (NX_BASE_REG_PL301_BOTT_AW + 0x20));
+		writel( (0xFF000000 | i_slot),  (NX_BASE_REG_PL301_BOTT_AW + 0x20) );
 		val = readl(NX_BASE_REG_PL301_BOTT_AW + 0x20);
 		if (val != g_BottomBusSI[i_slot])
-			writel((i_slot << SLOT_NUM_POS) |
-				   (g_BottomBusSI[i_slot] << SI_IF_NUM_POS),
-			       (NX_BASE_REG_PL301_BOTT_AW + 0x20));
+			writel( (i_slot << SLOT_NUM_POS) | (g_BottomBusSI[i_slot] << SI_IF_NUM_POS),  (NX_BASE_REG_PL301_BOTT_AW + 0x20) );
 	}
-#endif /* (CFG_BUS_RECONFIG_BOTTOMBUSSI == 1) */
+	#endif /* (CFG_BUS_RECONFIG_BOTTOMBUSSI == 1) */
 
-/* ------------- Top BUS ------------ */
-#if (CFG_BUS_RECONFIG_TOPBUSQOS == 1)
+	/* ------------- Top BUS ------------ */
+    #if (CFG_BUS_RECONFIG_TOPBUSQOS == 1)
 	/* MI0 - Set SI QoS */
 	val = readl(NX_BASE_REG_PL301_TOP_QOS_TRDMARK);
 	if (val != g_TopQoSSI[0])
@@ -308,24 +285,22 @@ void setBusConfig(void)
 	val = readl(NX_BASE_REG_PL301_TOP_QOS_CTRL);
 	if (val != g_TopQoSSI[1])
 		writel(g_TopQoSSI[1], NX_BASE_REG_PL301_TOP_QOS_CTRL);
-#endif
+    #endif
 
-#if (CFG_BUS_RECONFIG_TOPBUSSI == 1)
+	#if (CFG_BUS_RECONFIG_TOPBUSSI == 1)
 	num_si = readl(NX_VA_BASE_REG_PL301_TOP + 0xFC0);
 	num_mi = readl(NX_VA_BASE_REG_PL301_TOP + 0xFC4);
 
 	/* Set progamming for AR */
 	// MI0 - Slave Interface
 	for (i_slot = 0; i_slot < num_mi; i_slot++) {
-		writel((0xFF000000 | i_slot), NX_BASE_REG_PL301_TOP_AR);
+		writel( (0xFF000000 | i_slot),  NX_BASE_REG_PL301_TOP_AR );
 		val = readl(NX_BASE_REG_PL301_TOP_AR);
 		if (val != g_TopBusSI[i_slot])
-			writel((i_slot << SLOT_NUM_POS) |
-				   (g_TopBusSI[i_slot] << SI_IF_NUM_POS),
-			       NX_BASE_REG_PL301_TOP_AR);
+			writel( (i_slot << SLOT_NUM_POS) | (g_TopBusSI[i_slot] << SI_IF_NUM_POS),  NX_BASE_REG_PL301_TOP_AR );
 	}
 
-// MI1 - Slave Interface
+	// MI1 - Slave Interface
 #if 0
 	for (i_slot = 0; i_slot < num_si; i_slot++)
 	{
@@ -339,15 +314,13 @@ void setBusConfig(void)
 	/* Set progamming for AW */
 	// MI0 - Slave Interface
 	for (i_slot = 0; i_slot < num_mi; i_slot++) {
-		writel((0xFF000000 | i_slot), NX_BASE_REG_PL301_TOP_AW);
+		writel( (0xFF000000 | i_slot),  NX_BASE_REG_PL301_TOP_AW );
 		val = readl(NX_BASE_REG_PL301_TOP_AW);
 		if (val != g_TopBusSI[i_slot])
-			writel((i_slot << SLOT_NUM_POS) |
-				   (g_TopBusSI[i_slot] << SI_IF_NUM_POS),
-			       NX_BASE_REG_PL301_TOP_AW);
+			writel( (i_slot << SLOT_NUM_POS) | (g_TopBusSI[i_slot] << SI_IF_NUM_POS),  NX_BASE_REG_PL301_TOP_AW );
 	}
 
-// MI1 - Slave Interface
+	// MI1 - Slave Interface
 #if 0
 	for (i_slot = 0; i_slot < num_si; i_slot++)
 	{
@@ -370,9 +343,7 @@ void setBusConfig(void)
 		writel((0xFF000000 | i_slot), NX_BASE_REG_PL301_DISP_AR);
 		val = readl(NX_BASE_REG_PL301_DISP_AR);
 		if (val != g_DispBusSI[i_slot])
-			writel((i_slot << SLOT_NUM_POS) |
-				   (g_DispBusSI[i_slot] << SI_IF_NUM_POS),
-			       NX_BASE_REG_PL301_DISP_AR);
+			writel( (i_slot << SLOT_NUM_POS) | (g_DispBusSI[i_slot] << SI_IF_NUM_POS),  NX_BASE_REG_PL301_DISP_AR );
 	}
 
 	/* Set progamming for AW */
@@ -381,9 +352,7 @@ void setBusConfig(void)
 		writel((0xFF000000 | i_slot), NX_BASE_REG_PL301_DISP_AW);
 		val = readl(NX_BASE_REG_PL301_DISP_AW);
 		if (val != g_DispBusSI[i_slot])
-			writel((i_slot << SLOT_NUM_POS) |
-				   (g_DispBusSI[i_slot] << SI_IF_NUM_POS),
-			       NX_BASE_REG_PL301_DISP_AW);
+			writel( (i_slot << SLOT_NUM_POS) | (g_DispBusSI[i_slot] << SI_IF_NUM_POS),  NX_BASE_REG_PL301_DISP_AW );
 	}
 #endif /* (CFG_BUS_RECONFIG_DISPBUSSI == 1) */
 

@@ -76,11 +76,11 @@ int CRC_Check(void* buf, unsigned int size, unsigned int ref_crc)
 	crc = __calc_crc((void*)buf, (int)size);
 	if (ref_crc != crc) {
 		printf("CRC Check failed!! (%08X:%08X) \r\n"
-			,ref_crc, crc);
+				,ref_crc, crc);
 		return 0;
 	} else {
 		printf("CRC Check Success!! (%08X:%08X) \r\n"
-			,ref_crc, crc);
+				,ref_crc, crc);
 	}
 
 	return 1;

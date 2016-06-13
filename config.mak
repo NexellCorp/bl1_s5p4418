@@ -1,17 +1,17 @@
- #                                                                              
- #      Copyright (C) 2012 Nexell Co., All Rights Reserved                      
- #      Nexell Co. Proprietary & Confidential                                   
- #                                                                              
- #      NEXELL INFORMS THAT THIS CODE AND INFORMATION IS PROVIDED "AS IS" BASE  
+ #
+ #      Copyright (C) 2012 Nexell Co., All Rights Reserved
+ #      Nexell Co. Proprietary & Confidential
+ #
+ #      NEXELL INFORMS THAT THIS CODE AND INFORMATION IS PROVIDED "AS IS" BASE
  #      AND WITHOUT WARRANTY OF ANY KIND, EITHER EXPRESSED OR IMPLIED, INCLUDING
  #      BUT NOT LIMITED TO THE IMPLIED WARRANTIES OF MERCHANTABILITY AND/OR FITNESS
- #      FOR A PARTICULAR PURPOSE.                                               
- #                                                                              
- #      Moudle          : Base                                                      
+ #      FOR A PARTICULAR PURPOSE.
+ #
+ #      Moudle          : Base
  #      File            : config.mak
- #      Description     :                                                       
- #      Author          : Firware Team                                          
- #      History         :                                                       
+ #      Description     :
+ #      Author          : Firware Team
+ #      History         : 2016.06.10 Deoks Modify
  #
 ###########################################################################
 # Build Version info
@@ -21,7 +21,6 @@ VERINFO				= V062
 ###########################################################################
 # Build Environment
 ###########################################################################
-
 #CHIPNAME			= NXP4330
 CHIPNAME			= S5P4418
 
@@ -69,7 +68,7 @@ endif
 ###########################################################################
 # Top Names
 ###########################################################################
-PROJECT_NAME		= $(CHIPNAME)_2ndboot_$(MEMTYPE)_$(VERINFO)
+PROJECT_NAME			= $(CHIPNAME)_2ndboot_$(MEMTYPE)_$(VERINFO)
 TARGET_NAME			= bl1-$(shell echo $(BOARD) | tr A-Z a-z)
 LDS_NAME			= pyrope_2ndboot
 
@@ -86,11 +85,11 @@ CODE_MAIN_INCLUDE		=
 ###########################################################################
 # Build Environment
 ###########################################################################
-CPU					= cortex-a9
-CC					= $(CROSS_TOOL)gcc
-LD 					= $(CROSS_TOOL)ld
-AS 					= $(CROSS_TOOL)as
-AR 					= $(CROSS_TOOL)ar
+CPU				= cortex-a9
+CC				= $(CROSS_TOOL)gcc
+LD 				= $(CROSS_TOOL)ld
+AS 				= $(CROSS_TOOL)as
+AR 				= $(CROSS_TOOL)ar
 MAKEBIN				= $(CROSS_TOOL)objcopy
 OBJCOPY				= $(CROSS_TOOL)objcopy
 RANLIB 				= $(CROSS_TOOL)ranlib
@@ -99,10 +98,10 @@ GCC_LIB				= $(shell $(CC) -print-libgcc-file-name)
 
 ifeq ($(DEBUG), y)
 CFLAGS				= -DNX_DEBUG -O0
-Q					=
+Q				=
 else
 CFLAGS				= -DNX_RELEASE -Os
-Q					= @
+Q				= @
 endif
 
 ###########################################################################
@@ -110,18 +109,18 @@ endif
 ###########################################################################
 ifeq ($(OS),Windows_NT)
 MKDIR				= mkdir
-RM					= del /q /F
-MV					= move
-CD					= cd
-CP					= copy
+RM				= del /q /F
+MV				= move
+CD				= cd
+CP				= copy
 ECHO				= echo
 RMDIR				= rmdir /S /Q
 else
 MKDIR				= mkdir
-RM					= rm -f
-MV					= mv
-CD					= cd
-CP					= cp
+RM				= rm -f
+MV				= mv
+CD				= cd
+CP				= cp
 ECHO				= echo
 RMDIR				= rm -rf
 endif
@@ -134,25 +133,25 @@ ARLIBFLAGS			= -v -s
 
 ASFLAG				= -D__ASSEMBLY__
 
-CFLAGS				+=	-g -Wall							\
-					-Wextra -ffreestanding -fno-builtin		\
-					-msoft-float							\
-					-mlittle-endian							\
-					-mcpu=$(CPU)							\
-					-mstructure-size-boundary=32			\
-					$(CODE_MAIN_INCLUDE)					\
-					-D__arm -DLOAD_FROM_$(BOOTFROM)			\
-					-DMEMTYPE_$(MEMTYPE)					\
-					-DINITPMIC_$(INITPMIC)					\
-					-DCHIPID_$(CHIPNAME)					\
+CFLAGS				+=	-g -Wall				\
+					-Wextra -ffreestanding -fno-builtin	\
+					-msoft-float				\
+					-mlittle-endian				\
+					-mcpu=$(CPU)				\
+					-mstructure-size-boundary=32		\
+					$(CODE_MAIN_INCLUDE)			\
+					-D__arm -DLOAD_FROM_$(BOOTFROM)		\
+					-DMEMTYPE_$(MEMTYPE)			\
+					-DINITPMIC_$(INITPMIC)			\
+					-DCHIPID_$(CHIPNAME)			\
 					-D_2NDBOOT_MODE -D$(BOARD)
 
 ifeq ($(INITPMIC), YES)
 CFLAGS				+=	-D$(BOARD)_PMIC_INIT
 endif
 ifeq ($(MEMTEST), y)
-#MEMTEST_TYPE		+=	STANDARD
-MEMTEST_TYPE		+=	SIMPLE
+#MEMTEST_TYPE			+=	STANDARD
+MEMTEST_TYPE			+=	SIMPLE
 CFLAGS				+=	-D$(MEMTEST_TYPE)_MEMTEST
 endif
 

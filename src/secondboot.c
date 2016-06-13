@@ -224,7 +224,7 @@ static void dowakeup(void)
 	if (SUSPEND_SIGNATURE == sign) {
 		U32 ret = __calc_crc((void *)phy, len);
 
-//       SYSMSG("CRC: 0x%08X FN: 0x%08X phy: 0x%08X len: 0x%08X ret: 0x%08X\r\n", crc, fn, phy, len, ret);
+		//       SYSMSG("CRC: 0x%08X FN: 0x%08X phy: 0x%08X len: 0x%08X ret: 0x%08X\r\n", crc, fn, phy, len, ret);
 		printf("CRC: 0x%08X FN: 0x%08X phy: 0x%08X len: 0x%08X ret: 0x%08X\r\n", crc, fn, phy, len, ret);
 		if (fn && (crc == ret))
 		{
@@ -291,8 +291,8 @@ void vddPowerOff(void)
 
 	WriteIO32( &pReg_Alive->ALIVEPWRGATEREG,    0x00000001 );       //; alive power gate open
 
-//----------------------------------
-// Save leveling & training values.
+	//----------------------------------
+	// Save leveling & training values.
 #if 1
 	WriteIO32(&pReg_Alive->ALIVESCRATCHRST5,    0xFFFFFFFF);        // clear - ctrl_shiftc
 	WriteIO32(&pReg_Alive->ALIVESCRATCHRST6,    0xFFFFFFFF);        // clear - ctrl_offsetC
@@ -315,7 +315,7 @@ void vddPowerOff(void)
 	DMC_Delay(600);     // 600 : 110us, Delay for Pending Clear. When CPU clock is 400MHz, this value is minimum delay value.
 
 	WriteIO32( &pReg_Alive->ALIVEGPIODETECTPENDREG, 0xFF );         //; all alive pend pending clear until power down.
-//    WriteIO32( &pReg_Alive->ALIVEPWRGATEREG,    0x00000000 );       //; alive power gate close
+	//    WriteIO32( &pReg_Alive->ALIVEPWRGATEREG,    0x00000000 );       //; alive power gate close
 
 	while(1) {
 		//        SetIO32  ( &pReg_ClkPwr->PWRMODE,       (0x1    <<   1) );  //; enter STOP mode.
@@ -344,7 +344,7 @@ void sleepMain(void)
 	}
 #endif
 
-//    DebugInit();
+	//    DebugInit();
 
 #if (CONFIG_SUSPEND_RESUME == 1)
 	enterSelfRefresh();
@@ -379,22 +379,22 @@ void BootMain(U32 CPUID)
 	WriteIO32(&pReg_Alive->ALIVEPWRGATEREG, 1);
 	sign = ReadIO32(&pReg_Alive->ALIVESCRATCHREADREG);
 	if ((SUSPEND_SIGNATURE == sign) &&
-	    ReadIO32(&pReg_Alive->WAKEUPSTATUS)) {
+			ReadIO32(&pReg_Alive->WAKEUPSTATUS)) {
 		isResume = 1;
 	}
 
-//--------------------------------------------------------------------------
-// Initialize PMIC device.
-//--------------------------------------------------------------------------
+	//--------------------------------------------------------------------------
+	// Initialize PMIC device.
+	//--------------------------------------------------------------------------
 #if defined(INITPMIC_YES)
 	if (isResume == 0)
 		initPMIC();
 #endif
 #else
 
-//--------------------------------------------------------------------------
-// Initialize PMIC device.
-//--------------------------------------------------------------------------
+	//--------------------------------------------------------------------------
+	// Initialize PMIC device.
+	//--------------------------------------------------------------------------
 #if defined(INITPMIC_YES)
 	initPMIC();
 #endif
@@ -443,7 +443,7 @@ void BootMain(U32 CPUID)
 			if (delay == 0) {
 				if (retry > 3) {
 					printf("maybe cpu %d is dead. -_-;\r\n",
-					       CPUNumber);
+							CPUNumber);
 					retry = 0;
 					CPUNumber++;
 				} else {
@@ -472,7 +472,7 @@ void BootMain(U32 CPUID)
 
 	if (isResume) 
 		exitSelfRefresh();
-	
+
 	SYSMSG("DDR3 Init Done!\r\n");
 
 #if (CONFIG_BUS_RECONFIG == 1)
@@ -481,7 +481,7 @@ void BootMain(U32 CPUID)
 
 	if (isResume) {
 		printf(" DDR3 SelfRefresh exit Done!\r\n0x%08X\r\n",
-		       ReadIO32(&pReg_Alive->WAKEUPSTATUS));
+				ReadIO32(&pReg_Alive->WAKEUPSTATUS));
 		dowakeup();
 	}
 	WriteIO32(&pReg_Alive->ALIVEPWRGATEREG, 0);
@@ -524,60 +524,60 @@ void BootMain(U32 CPUID)
 
 	switch (pSBI->DBI.SPIBI.LoadDevice) {
 #if defined(SUPPORT_USB_BOOT)
-	case BOOT_FROM_USB:
-		printf("Loading from usb...\r\n");
-		Result = iUSBBOOT(pTBI); // for USB boot
-		break;
+		case BOOT_FROM_USB:
+			printf("Loading from usb...\r\n");
+			Result = iUSBBOOT(pTBI); // for USB boot
+			break;
 #endif
 
 #if defined(SUPPORT_SPI_BOOT)
-	case BOOT_FROM_SPI:
-		printf("Loading from spi...\r\n");
-		Result = iSPIBOOT(pTBI); // for SPI boot
-		break;
+		case BOOT_FROM_SPI:
+			printf("Loading from spi...\r\n");
+			Result = iSPIBOOT(pTBI); // for SPI boot
+			break;
 #endif
 
 #if defined(SUPPORT_NAND_BOOT)
-	case BOOT_FROM_NAND:
-		printf( "Loading from nand...\r\n" );
-		Result = iNANDBOOTEC(pTBI);	// for NAND boot
-		break;
+		case BOOT_FROM_NAND:
+			printf( "Loading from nand...\r\n" );
+			Result = iNANDBOOTEC(pTBI);	// for NAND boot
+			break;
 #endif
 
 #if defined(SUPPORT_SDMMC_BOOT)
-	case BOOT_FROM_SDMMC:
-		printf("Loading from sdmmc...\r\n");
-		Result = iSDXCBOOT(pTBI); // for SD boot
-		break;
+		case BOOT_FROM_SDMMC:
+			printf("Loading from sdmmc...\r\n");
+			Result = iSDXCBOOT(pTBI); // for SD boot
+			break;
 #endif
 
 #if defined(SUPPORT_SDFS_BOOT)
-	case BOOT_FROM_SDFS:
-		printf("Loading from sd FATFS...\r\n");
-		Result = iSDXCFSBOOT(pTBI); // for SDFS boot
-		break;
+		case BOOT_FROM_SDFS:
+			printf("Loading from sd FATFS...\r\n");
+			Result = iSDXCFSBOOT(pTBI); // for SDFS boot
+			break;
 #endif
 
 #if defined(SUPPORT_UART_BOOT)
-	case BOOT_FROM_UART:
-		printf( "Loading from uart...\r\n" );
-		Result = iUARTBOOT(pTBI);	// for UART boot
-		break;
+		case BOOT_FROM_UART:
+			printf( "Loading from uart...\r\n" );
+			Result = iUARTBOOT(pTBI);	// for UART boot
+			break;
 #endif
 	}
 
 #ifdef CRC_CHECK_ON
 	Result = CRC_Check((void*)pTBI->LOADADDR, (unsigned int)pTBI->LOADSIZE
-				,(unsigned int)pTBI->DBI.SDMMCBI.CRC32);
+			,(unsigned int)pTBI->DBI.SDMMCBI.CRC32);
 #endif
 	if (Result) {
 		void (*pLaunch)(U32, U32) = (void (*)(U32, U32))pTBI->LAUNCHADDR;
 		printf(" Image Loading Done!\r\n");
 		printf("Launch to 0x%08X\r\n", (U32)pLaunch);
-	#if 0
-	        while(!DebugIsTXEmpty());
-	        while(DebugIsBusy());
-	#endif
+#if 0
+		while(!DebugIsTXEmpty());
+		while(DebugIsBusy());
+#endif
 		while (!DebugIsUartTxDone());
 		pLaunch(0, 4330);
 	}

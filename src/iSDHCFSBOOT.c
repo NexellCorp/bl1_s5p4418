@@ -94,16 +94,14 @@ CBOOL ProcessNSIH(FIL *file, U8 *pOutData)
 			return CFALSE;
 	}
 
-	printf("ProcessNSIH : %d line, %d bytes generated.\r\n", line + 1,
-	       bytesize);
+	printf("ProcessNSIH : %d line, %d bytes generated.\r\n", line+1, bytesize);
 
 	return bytesize;
 }
 #endif
-static CBOOL FSBoot(SDXCBOOTSTATUS *pSDXCBootStatus,
-		    struct NX_SecondBootInfo *pTBI)
+static CBOOL FSBoot(SDXCBOOTSTATUS * pSDXCBootStatus, struct NX_SecondBootInfo * pTBI)
 {
-	FATFS FATFS; /* Pointer to the file system objects (logical drives) */
+	FATFS FATFS;	/* Pointer to the file system objects (logical drives) */
 	const char *diskname = "0:";
 	FATFS.fs_type = 0;
 	FATFS.drive = 0;
@@ -120,9 +118,8 @@ static CBOOL FSBoot(SDXCBOOTSTATUS *pSDXCBootStatus,
 			if (CFALSE != ProcessNSIH(&hfile, (U8 *)pTBI)) {
 				printf("open NXDATA.TBL\r\n");
 
-				if (pTBI->SIGNATURE == HEADER_ID) {
-					const char *loaderfilename =
-					    "NXDATA.TBL";
+				if(pTBI->SIGNATURE == HEADER_ID) {
+					const char *loaderfilename = "NXDATA.TBL";
 					FIL lfile;
 
 					if(FR_OK == f_open(&lfile, loaderfilename, FA_READ, &FATFS)) {
@@ -159,16 +156,13 @@ static CBOOL FSBoot(SDXCBOOTSTATUS *pSDXCBootStatus,
 
 	if (FR_OK == f_mount(&diskname, &FATFS, 0)) {
 		const char *loaderfilename = "NXDATA.TBL";
-		if (f_open(&file, loaderfilename, FA_READ, &FATFS) == FR_OK) {
-			if (pSBI->SIGNATURE == HEADER_ID) {
-				if (f_read(&file, (void *)pSBI->LOADADDR,
-					   file.fsize, &RSize) == FR_OK) {
-					if (RSize == file.fsize) {
+		if(f_open(&file, loaderfilename, FA_READ, &FATFS) == FR_OK) {
+			if(pSBI->SIGNATURE == HEADER_ID) {
+				if(f_read(&file, (void*)pSBI->LOADADDR, file.fsize, &RSize) == FR_OK) {
+					if(RSize == file.fsize) {
 						return CTRUE;
 					} else {
-						dprintf("NXDATA.TBL image read "
-							"error size is "
-							"different\r\n");
+						dprintf( "NXDATA.TBL image read error size is different\r\n" );
 					}
 				}
 			} else {
@@ -185,20 +179,18 @@ static CBOOL FSBoot(SDXCBOOTSTATUS *pSDXCBootStatus,
 }
 
 //------------------------------------------------------------------------------
-static CBOOL SDMMCFSBOOT(SDXCBOOTSTATUS *pSDXCBootStatus,
-			 struct NX_SecondBootInfo *pTBI)
+static	CBOOL	SDMMCFSBOOT( SDXCBOOTSTATUS * pSDXCBootStatus, struct NX_SecondBootInfo * pTBI )
 {
 	CBOOL result = CFALSE;
 	struct NX_SDMMC_RegisterSet *const pSDXCReg =
-	    pgSDXCReg[pSDXCBootStatus->SDPort];
+		pgSDXCReg[pSDXCBootStatus->SDPort];
 
-	dprintf("open SDMMC\r\n");
-	if (CTRUE == NX_SDMMC_Open(pSDXCBootStatus)) {
-		if (0 == (pSDXCReg->STATUS & NX_SDXC_STATUS_FIFOEMPTY)) {
-			dprintf("FIFO Reset!!!\r\n");
-			pSDXCReg->CTRL =
-			    NX_SDXC_CTRL_FIFORST; // Reset the FIFO.
-			while (pSDXCReg->CTRL & NX_SDXC_CTRL_FIFORST); // Wait until the FIFO reset is completed.
+	dprintf( "open SDMMC\r\n" );
+	if( CTRUE == NX_SDMMC_Open(pSDXCBootStatus) ) {
+		if( 0 == (pSDXCReg->STATUS & NX_SDXC_STATUS_FIFOEMPTY) ) {
+			dprintf( "FIFO Reset!!!\r\n" );
+			pSDXCReg->CTRL = NX_SDXC_CTRL_FIFORST;				// Reset the FIFO.
+			while( pSDXCReg->CTRL & NX_SDXC_CTRL_FIFORST );		// Wait until the FIFO reset is completed.
 		}
 		//		return CFALSE;
 		result = FSBoot(pSDXCBootStatus, pTBI);

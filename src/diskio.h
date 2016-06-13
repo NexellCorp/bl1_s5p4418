@@ -16,8 +16,8 @@
  */
 
 /*-----------------------------------------------------------------------
-/  Low level disk interface modlue include file  R0.07   (C)ChaN, 2009
-/-----------------------------------------------------------------------*/
+  /  Low level disk interface modlue include file  R0.07   (C)ChaN, 2009
+  /-----------------------------------------------------------------------*/
 
 #ifndef _DISKIO
 
@@ -43,9 +43,10 @@ DSTATUS disk_status(U8);
 DRESULT disk_read(U8, U8 *, U32, U8, U32);
 
 /* Disk Status Bits (DSTATUS) */
-#define STA_NOINIT 0x01  /* Drive not initialized */
-#define STA_NODISK 0x02  /* No medium in the drive */
-#define STA_PROTECT 0x04 /* Write protected */
+
+#define STA_NOINIT		0x01	/* Drive not initialized */
+#define STA_NODISK		0x02	/* No medium in the drive */
+#define STA_PROTECT		0x04	/* Write protected */
 
 /* Command code for disk_ioctrl() */
 

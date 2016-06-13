@@ -359,17 +359,17 @@ U32 NX_CLKPWR_GetDivideValue(U32 Divider)
 	       ((((regvalue >> DVO0) & 0x3F) + 1) << 0);
 }
 
-#define _GET_PLL01(_MHz, _val)                                                 \
-	_val = (U32)((1UL << 28) | (PLL01_PMS_##_MHz##MHZ_P << PLL_P) |        \
-		     (PLL01_PMS_##_MHz##MHZ_M << PLL_M) |                      \
+#define _GET_PLL01(_MHz, _val)													\
+	_val = (U32)((1UL << 28) | (PLL01_PMS_##_MHz##MHZ_P << PLL_P) |				\
+		     (PLL01_PMS_##_MHz##MHZ_M << PLL_M) |								\
 		     (PLL01_PMS_##_MHz##MHZ_S << PLL_S));
 
-#define _GET_PLL23(_MHz, _val)                                                 \
-	_val = (U32)((1UL << 28) | (PLL23_PMS_##_MHz##MHZ_P << PLL_P) |        \
-		     (PLL23_PMS_##_MHz##MHZ_M << PLL_M) |                      \
+#define _GET_PLL23(_MHz, _val)													\
+	_val = (U32)((1UL << 28) | (PLL23_PMS_##_MHz##MHZ_P << PLL_P) |				\
+		     (PLL23_PMS_##_MHz##MHZ_M << PLL_M) |								\
 		     (PLL23_PMS_##_MHz##MHZ_S << PLL_S));
 
-#define _GET_PLL23K(_MHz, _val)                                                \
+#define _GET_PLL23K(_MHz, _val)													\
 	_val = (U32)((PLL23_PMS_##_MHz##MHZ_K << PLL_K) | 0x0104);
 
 #if defined(MEM_TYPE_LPDDR23)
@@ -395,117 +395,100 @@ void setMemPLL(int CAafter)
 	pReg_ClkPwr->PLLSETREG_SSCG[3] = (U32)PLL23_K;
 #endif
 
-	__pllchange(
-	    pReg_ClkPwr->PWRMODE | 0x1 << 15, &pReg_ClkPwr->PWRMODE,
-	    0x20000); // 533 ==> 800MHz:#0xED00, 1.2G:#0x17000, 1.6G:#0x1E000
-	{
-		volatile U32 delay = 0x100000;
-		while ((pReg_ClkPwr->PWRMODE & 0x1 << 15) && delay--)
-			; // it's never checked here, just for insure
-		if (pReg_ClkPwr->PWRMODE & 0x1 << 15) {
-			//            printf("pll does not locked\r\nsystem
-			//            halt!\r\r\n");    //
-			//            in this point, it's not initialized uart
-			//            debug port yet
-			while (1)
-				; // system reset code need.
-		}
-	}
+    __pllchange(pReg_ClkPwr->PWRMODE | 0x1<<15, &pReg_ClkPwr->PWRMODE, 0x20000); //533 ==> 800MHz:#0xED00, 1.2G:#0x17000, 1.6G:#0x1E000
+    {
+        volatile U32 delay = 0x100000;
+        while((pReg_ClkPwr->PWRMODE & 0x1<<15) && delay--);    // it's never checked here, just for insure
+        if( pReg_ClkPwr->PWRMODE & 0x1<<15 )
+        {
+//            printf("pll does not locked\r\nsystem halt!\r\r\n");    // in this point, it's not initialized uart debug port yet
+            while(1);        // system reset code need.
+        }
+    }
 }
 #endif // #if defined(MEM_TYPE_LPDDR23)
 
 void initClock(void)
 {
 #if (CFG_NSIH_EN == 0)
-	U32 PLL_PMS;
+    U32 PLL_PMS;
 #endif
 
-	NX_CLKPWR_SetOSCFreq(OSC_KHZ);
+    NX_CLKPWR_SetOSCFreq( OSC_KHZ );
 
-// pll change
+    // pll change
 #if (CFG_NSIH_EN == 0)
-	// PLL0 for memory
-	_GET_PLL01(400, PLL_PMS);
-	pReg_ClkPwr->PLLSETREG[0] = (U32)PLL_PMS;
+    // PLL0 for memory
+    _GET_PLL01(400, PLL_PMS);
+    pReg_ClkPwr->PLLSETREG[0] = (U32)PLL_PMS;
 
-	// PLL1 for CPU
-	_GET_PLL01(800, PLL_PMS);
-	pReg_ClkPwr->PLLSETREG[1] = (U32)PLL_PMS;
+    // PLL1 for CPU
+    _GET_PLL01(800, PLL_PMS);
+    pReg_ClkPwr->PLLSETREG[1] = (U32)PLL_PMS;
 
-	// PLL2 for BCLK, 3DCLK
-	_GET_PLL23(614, PLL_PMS);
-	pReg_ClkPwr->PLLSETREG[2] = (U32)PLL_PMS;
+    // PLL2 for BCLK, 3DCLK
+    _GET_PLL23(614, PLL_PMS);
+    pReg_ClkPwr->PLLSETREG[2] = (U32)PLL_PMS;
 
-	// PLL3 for others (Audio)
-	_GET_PLL23(800, PLL_PMS);
-	pReg_ClkPwr->PLLSETREG[3] = (U32)PLL_PMS;
+    // PLL3 for others (Audio)
+    _GET_PLL23(800, PLL_PMS);
+    pReg_ClkPwr->PLLSETREG[3] = (U32)PLL_PMS;
 
-	pReg_ClkPwr->PLLSETREG_SSCG[2] = PLL23_PMS_614MHZ_K << 16 | 2 << 0;
-	//    pReg_ClkPwr->PLLSETREG_SSCG[3] = PLL23_PMS_614MHZ_K<<16 | 2<<0;
+    pReg_ClkPwr->PLLSETREG_SSCG[2] = PLL23_PMS_614MHZ_K<<16 | 2<<0;
+//    pReg_ClkPwr->PLLSETREG_SSCG[3] = PLL23_PMS_614MHZ_K<<16 | 2<<0;
 
-	// CPUDVOREG
-	pReg_ClkPwr->DVOREG[0] =
-	    (U32)((NX_CLKSRC_PLL_1 << CLKSRC) | // PLL Select
-		  ((1 - 1) << DVO0) |		// FCLK ==> CPU
-		  ((4 - 1) << DVO1));		// HCLK ==> CPU bus (max 250MHz)
+    // CPUDVOREG
+    pReg_ClkPwr->DVOREG[0] = (U32)((NX_CLKSRC_PLL_1<<CLKSRC)|    // PLL Select
+                            ((1-1)<<DVO0)|                  // FCLK ==> CPU
+                            ((4-1)<<DVO1));                 // HCLK ==> CPU bus (max 250MHz)
 
-	// BUSDVOREG
-	pReg_ClkPwr->DVOREG[1] =
-	    (U32)((NX_CLKSRC_PLL_3 << CLKSRC) | // PLL Select
-		  ((2 - 1) << DVO0) | // BCLK ==> System bus (max 333MHz)
-		  ((2 - 1) << DVO1)); // PCLK ==> Peripheral bus (max 166MHz)
+    // BUSDVOREG
+    pReg_ClkPwr->DVOREG[1] = (U32)((NX_CLKSRC_PLL_3<<CLKSRC)|    // PLL Select
+                            ((2-1)<<DVO0)|                  // BCLK ==> System bus (max 333MHz)
+                            ((2-1)<<DVO1));                 // PCLK ==> Peripheral bus (max 166MHz)
 
-	// MEMDVOREG
-	pReg_ClkPwr->DVOREG[2] = (U32)(
-	    (NX_CLKSRC_PLL_3 << CLKSRC) | // PLL Select
-	    ((1 - 1) << DVO0) |		  // MDCLK ==> Memory DLL (max 800MHz)
-	    ((1 - 1) << DVO1) |		  // MCLK  ==> Memory DDR (max 800MHz)
-	    ((2 - 1) << DVO2) |		  // MBCLK ==> MCU bus (max 400MHz)
-	    ((2 - 1) << DVO3)); // MPCLK ==> MCU Peripheral bus (max 200MHz)
+    // MEMDVOREG
+    pReg_ClkPwr->DVOREG[2] = (U32)((NX_CLKSRC_PLL_3<<CLKSRC)|    // PLL Select
+                            ((1-1)<<DVO0)|                  // MDCLK ==> Memory DLL (max 800MHz)
+                            ((1-1)<<DVO1)|                  // MCLK  ==> Memory DDR (max 800MHz)
+                            ((2-1)<<DVO2)|                  // MBCLK ==> MCU bus (max 400MHz)
+                            ((2-1)<<DVO3));                 // MPCLK ==> MCU Peripheral bus (max 200MHz)
 
-	pReg_ClkPwr->DVOREG[3] = (U32)(
-	    (NX_CLKSRC_PLL_3 << CLKSRC) | // GRP3DVOREG
-	    ((2 - 1) << DVO0) | // GR3DBCLK ==> GPU bus & core (max 333MHz)
-	    ((2 - 1) << DVO1)); // GR3DPCLK ==> not used
+    pReg_ClkPwr->DVOREG[3] = (U32)((NX_CLKSRC_PLL_3<<CLKSRC)|    // GRP3DVOREG
+                            ((2-1)<<DVO0)|                  // GR3DBCLK ==> GPU bus & core (max 333MHz)
+                            ((2-1)<<DVO1));                 // GR3DPCLK ==> not used
 
-	pReg_ClkPwr->DVOREG[4] = (U32)(
-	    (NX_CLKSRC_PLL_3 << CLKSRC) | // MPEGDVOREG
-	    ((2 - 1) << DVO0) | // MPEGBCLK ==> MPEG bus & core (max 300MHz)
-	    ((2 - 1) << DVO1)); // MPEGPCLK ==> MPEG control if (max 150MHz)
+    pReg_ClkPwr->DVOREG[4] = (U32)((NX_CLKSRC_PLL_3<<CLKSRC)|    // MPEGDVOREG
+                            ((2-1)<<DVO0)|                  // MPEGBCLK ==> MPEG bus & core (max 300MHz)
+                            ((2-1)<<DVO1));                 // MPEGPCLK ==> MPEG control if (max 150MHz)
 #else
 
-	pReg_ClkPwr->PLLSETREG[0] = pSBI->PLL[0] | (1UL << 28);
-	pReg_ClkPwr->PLLSETREG[1] = pSBI->PLL[1] | (1UL << 28);
-	pReg_ClkPwr->PLLSETREG[2] = pSBI->PLL[2] | (1UL << 28);
-	pReg_ClkPwr->PLLSETREG[3] = pSBI->PLL[3] | (1UL << 28);
+    pReg_ClkPwr->PLLSETREG[0] = pSBI->PLL[0] | (1UL<<28);
+    pReg_ClkPwr->PLLSETREG[1] = pSBI->PLL[1] | (1UL<<28);
+    pReg_ClkPwr->PLLSETREG[2] = pSBI->PLL[2] | (1UL<<28);
+    pReg_ClkPwr->PLLSETREG[3] = pSBI->PLL[3] | (1UL<<28);
 
-	pReg_ClkPwr->PLLSETREG_SSCG[2] = pSBI->PLLSPREAD[0];
-	pReg_ClkPwr->PLLSETREG_SSCG[3] = pSBI->PLLSPREAD[1];
+    pReg_ClkPwr->PLLSETREG_SSCG[2] = pSBI->PLLSPREAD[0];
+    pReg_ClkPwr->PLLSETREG_SSCG[3] = pSBI->PLLSPREAD[1];
 
-	pReg_ClkPwr->DVOREG[0] = pSBI->DVO[0];
-	pReg_ClkPwr->DVOREG[1] = pSBI->DVO[1];
-	pReg_ClkPwr->DVOREG[2] = pSBI->DVO[2];
-	pReg_ClkPwr->DVOREG[3] = pSBI->DVO[3];
-	pReg_ClkPwr->DVOREG[4] = pSBI->DVO[4];
+    pReg_ClkPwr->DVOREG[0] = pSBI->DVO[0];
+    pReg_ClkPwr->DVOREG[1] = pSBI->DVO[1];
+    pReg_ClkPwr->DVOREG[2] = pSBI->DVO[2];
+    pReg_ClkPwr->DVOREG[3] = pSBI->DVO[3];
+    pReg_ClkPwr->DVOREG[4] = pSBI->DVO[4];
 #endif
 
-	__pllchange(
-	    pReg_ClkPwr->PWRMODE | 0x1 << 15, &pReg_ClkPwr->PWRMODE,
-	    0x20000); // 533 ==> 800MHz:#0xED00, 1.2G:#0x17000, 1.6G:#0x1E000
+    __pllchange(pReg_ClkPwr->PWRMODE | 0x1<<15, &pReg_ClkPwr->PWRMODE, 0x20000); //533 ==> 800MHz:#0xED00, 1.2G:#0x17000, 1.6G:#0x1E000
 
-	{
-		volatile U32 delay = 0x100000;
-		while ((pReg_ClkPwr->PWRMODE & 0x1 << 15) && delay--)
-			; // it's never checked here, just for insure
-		if (pReg_ClkPwr->PWRMODE & 0x1 << 15) {
-			//            printf("pll does not locked\r\nsystem
-			//            halt!\r\r\n");    //
-			//            in this point, it's not initialized uart
-			//            debug port yet
-			while (1)
-				; // system reset code need.
-		}
-	}
+    {
+        volatile U32 delay = 0x100000;
+        while((pReg_ClkPwr->PWRMODE & 0x1<<15) && delay--);    // it's never checked here, just for insure
+        if( pReg_ClkPwr->PWRMODE & 0x1<<15 )
+        {
+//            printf("pll does not locked\r\nsystem halt!\r\r\n");    // in this point, it's not initialized uart debug port yet
+            while(1);        // system reset code need.
+        }
+    }
 }
 
 #if 0
@@ -557,10 +540,10 @@ void PLLDynamicChange(U32 Freq)
 
 
 
-//		4. Change to PLL clock
-//			 PLLSETREG0.NPLLBYPASS = 1; // Change PLL clock
-//			 CLKMODEREG.UPDATE_PLL[0] =1
-//			 while(CLKMODEREG.WAIT_UPDATE_PLL) {	// wait for change update pll; }
+	//		4. Change to PLL clock
+	//			 PLLSETREG0.NPLLBYPASS = 1; // Change PLL clock
+	//			 CLKMODEREG.UPDATE_PLL[0] =1
+	//			 while(CLKMODEREG.WAIT_UPDATE_PLL) {	// wait for change update pll; }
 
 	pReg_ClkPwr->PLLSETREG[CPU_CLKSRC] |= (1<<28);	// pll bypass off, pll clock use
 
@@ -573,52 +556,52 @@ void PLLDynamicChange(U32 Freq)
 void printClkInfo(void)
 {
 #if 0
-    SYSMSG(" PLL0: %d   PLL1: %d   PLL2: %d   PLL3: %d\r\n\r\n",
-            NX_CLKPWR_GetPLLFrequency(0),
-            NX_CLKPWR_GetPLLFrequency(1),
-            NX_CLKPWR_GetPLLFrequency(2),
-            NX_CLKPWR_GetPLLFrequency(3));
+	SYSMSG(" PLL0: %d   PLL1: %d   PLL2: %d   PLL3: %d\r\n\r\n",
+			NX_CLKPWR_GetPLLFrequency(0),
+			NX_CLKPWR_GetPLLFrequency(1),
+			NX_CLKPWR_GetPLLFrequency(2),
+			NX_CLKPWR_GetPLLFrequency(3));
 
-    SYSMSG(" Divider0 PLL: %d CPU:%d   CPU BUS:%d\r\n",
-            NX_CLKPWR_GetSrcPll(0),
-            getquotient(NX_CLKPWR_GetPLLFrequency(NX_CLKPWR_GetSrcPll(0)), ((NX_CLKPWR_GetDivideValue(0)>> 0)&0x3F)),
-            getquotient(getquotient(NX_CLKPWR_GetPLLFrequency(NX_CLKPWR_GetSrcPll(0)),
-                    ((NX_CLKPWR_GetDivideValue(0)>> 0)&0x3F)),
-                    ((NX_CLKPWR_GetDivideValue(0)>> 8)&0x3F)));
+	SYSMSG(" Divider0 PLL: %d CPU:%d   CPU BUS:%d\r\n",
+			NX_CLKPWR_GetSrcPll(0),
+			getquotient(NX_CLKPWR_GetPLLFrequency(NX_CLKPWR_GetSrcPll(0)), ((NX_CLKPWR_GetDivideValue(0)>> 0)&0x3F)),
+			getquotient(getquotient(NX_CLKPWR_GetPLLFrequency(NX_CLKPWR_GetSrcPll(0)),
+					((NX_CLKPWR_GetDivideValue(0)>> 0)&0x3F)),
+				((NX_CLKPWR_GetDivideValue(0)>> 8)&0x3F)));
 
-    SYSMSG(" Divider1 PLL: %d BCLK:%d   PCLK:%d\r\n",
-            NX_CLKPWR_GetSrcPll(1),
-            getquotient(NX_CLKPWR_GetPLLFrequency(NX_CLKPWR_GetSrcPll(1)),((NX_CLKPWR_GetDivideValue(1)>> 0)&0x3F)),
-            getquotient(getquotient(NX_CLKPWR_GetPLLFrequency(NX_CLKPWR_GetSrcPll(1))
-                    ,((NX_CLKPWR_GetDivideValue(1)>> 0)&0x3F))
-                    ,((NX_CLKPWR_GetDivideValue(1)>> 8)&0x3F)));
+	SYSMSG(" Divider1 PLL: %d BCLK:%d   PCLK:%d\r\n",
+			NX_CLKPWR_GetSrcPll(1),
+			getquotient(NX_CLKPWR_GetPLLFrequency(NX_CLKPWR_GetSrcPll(1)),((NX_CLKPWR_GetDivideValue(1)>> 0)&0x3F)),
+			getquotient(getquotient(NX_CLKPWR_GetPLLFrequency(NX_CLKPWR_GetSrcPll(1))
+					,((NX_CLKPWR_GetDivideValue(1)>> 0)&0x3F))
+				,((NX_CLKPWR_GetDivideValue(1)>> 8)&0x3F)));
 
-    SYSMSG(" Divider2 PLL: %d MDCLK:%d   MCLK:%d   \r\n\t\t MBCLK:%d   MPCLK:%d\r\n",
-            NX_CLKPWR_GetSrcPll(2),
-            getquotient(NX_CLKPWR_GetPLLFrequency(NX_CLKPWR_GetSrcPll(2))
-                    ,((NX_CLKPWR_GetDivideValue(2)>> 0)&0x3F)),
-            getquotient(getquotient(NX_CLKPWR_GetPLLFrequency(NX_CLKPWR_GetSrcPll(2))
-                    ,((NX_CLKPWR_GetDivideValue(2)>> 0)&0x3F))
-                    ,((NX_CLKPWR_GetDivideValue(2)>> 8)&0x3F)),
-            getquotient(getquotient(getquotient(NX_CLKPWR_GetPLLFrequency(NX_CLKPWR_GetSrcPll(2))
-                    ,((NX_CLKPWR_GetDivideValue(2)>> 0)&0x3F))
-                    ,((NX_CLKPWR_GetDivideValue(2)>> 8)&0x3F))
-                    ,((NX_CLKPWR_GetDivideValue(2)>>16)&0x3F)),
-            getquotient(getquotient(getquotient(getquotient(NX_CLKPWR_GetPLLFrequency(NX_CLKPWR_GetSrcPll(2))
-                    ,((NX_CLKPWR_GetDivideValue(2)>> 0)&0x3F))
-                    ,((NX_CLKPWR_GetDivideValue(2)>> 8)&0x3F))
-                    ,((NX_CLKPWR_GetDivideValue(2)>>16)&0x3F))
-                    ,((NX_CLKPWR_GetDivideValue(2)>>24)&0x3F)));
+	SYSMSG(" Divider2 PLL: %d MDCLK:%d   MCLK:%d   \r\n\t\t MBCLK:%d   MPCLK:%d\r\n",
+			NX_CLKPWR_GetSrcPll(2),
+			getquotient(NX_CLKPWR_GetPLLFrequency(NX_CLKPWR_GetSrcPll(2))
+				,((NX_CLKPWR_GetDivideValue(2)>> 0)&0x3F)),
+			getquotient(getquotient(NX_CLKPWR_GetPLLFrequency(NX_CLKPWR_GetSrcPll(2))
+					,((NX_CLKPWR_GetDivideValue(2)>> 0)&0x3F))
+				,((NX_CLKPWR_GetDivideValue(2)>> 8)&0x3F)),
+			getquotient(getquotient(getquotient(NX_CLKPWR_GetPLLFrequency(NX_CLKPWR_GetSrcPll(2))
+						,((NX_CLKPWR_GetDivideValue(2)>> 0)&0x3F))
+					,((NX_CLKPWR_GetDivideValue(2)>> 8)&0x3F))
+				,((NX_CLKPWR_GetDivideValue(2)>>16)&0x3F)),
+			getquotient(getquotient(getquotient(getquotient(NX_CLKPWR_GetPLLFrequency(NX_CLKPWR_GetSrcPll(2))
+							,((NX_CLKPWR_GetDivideValue(2)>> 0)&0x3F))
+						,((NX_CLKPWR_GetDivideValue(2)>> 8)&0x3F))
+					,((NX_CLKPWR_GetDivideValue(2)>>16)&0x3F))
+				,((NX_CLKPWR_GetDivideValue(2)>>24)&0x3F)));
 
-    SYSMSG(" Divider3 PLL: %d G3D BCLK:%d\r\n",
-            NX_CLKPWR_GetSrcPll(3),
-            getquotient(NX_CLKPWR_GetPLLFrequency(NX_CLKPWR_GetSrcPll(3)),((NX_CLKPWR_GetDivideValue(3)>> 0)&0x3F)));
+	SYSMSG(" Divider3 PLL: %d G3D BCLK:%d\r\n",
+			NX_CLKPWR_GetSrcPll(3),
+			getquotient(NX_CLKPWR_GetPLLFrequency(NX_CLKPWR_GetSrcPll(3)),((NX_CLKPWR_GetDivideValue(3)>> 0)&0x3F)));
 
-    SYSMSG(" Divider4 PLL: %d MPEG BCLK:%d   MPEG PCLK:%d\r\n\r\n",
-            NX_CLKPWR_GetSrcPll(4),
-            getquotient(NX_CLKPWR_GetPLLFrequency(NX_CLKPWR_GetSrcPll(4)),((NX_CLKPWR_GetDivideValue(4)>> 0)&0x3F)),
-            getquotient(getquotient(NX_CLKPWR_GetPLLFrequency(NX_CLKPWR_GetSrcPll(4))
-                    ,((NX_CLKPWR_GetDivideValue(4)>> 0)&0x3F))
-                    ,((NX_CLKPWR_GetDivideValue(4)>> 8)&0x3F)));
+	SYSMSG(" Divider4 PLL: %d MPEG BCLK:%d   MPEG PCLK:%d\r\n\r\n",
+			NX_CLKPWR_GetSrcPll(4),
+			getquotient(NX_CLKPWR_GetPLLFrequency(NX_CLKPWR_GetSrcPll(4)),((NX_CLKPWR_GetDivideValue(4)>> 0)&0x3F)),
+			getquotient(getquotient(NX_CLKPWR_GetPLLFrequency(NX_CLKPWR_GetSrcPll(4))
+					,((NX_CLKPWR_GetDivideValue(4)>> 0)&0x3F))
+				,((NX_CLKPWR_GetDivideValue(4)>> 8)&0x3F)));
 #endif
 }

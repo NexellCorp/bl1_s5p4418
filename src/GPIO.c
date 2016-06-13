@@ -34,10 +34,10 @@ static struct NXPYROPE_GPIO_RegSet (*const pBaseGPIOReg)[1] =
 void GPIOSetAltFunction(U32 AltFunc)
 {
 	register struct NX_GPIO_RegisterSet *pGPIOReg =
-	    &pBaseGPIOReg[(AltFunc >> 8) & 0x7]->NXGPIO;
+		&pBaseGPIOReg[(AltFunc >> 8) & 0x7]->NXGPIO;
 	pGPIOReg->GPIOxALTFN[(AltFunc >> 7) & 0x1] =
-	    (pGPIOReg->GPIOxALTFN[(AltFunc >> 7) & 0x1] &
-	     ~(0x3UL << (((AltFunc >> 3) & 0xF) * 2))) |
-	    ((AltFunc & 0x3) << (((AltFunc >> 3) & 0xF) * 2));
+		(pGPIOReg->GPIOxALTFN[(AltFunc >> 7) & 0x1] &
+		 ~(0x3UL << (((AltFunc >> 3) & 0xF) * 2))) |
+		((AltFunc & 0x3) << (((AltFunc >> 3) & 0xF) * 2));
 }
 #endif
