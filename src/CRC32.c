@@ -25,8 +25,9 @@ U32 get_fcs(U32 fcs, U8 data)
 	fcs ^= (U32)data;
 	for (i = 0; i < 8; i++) {
 		if (fcs & 0x01)
-			fcs ^= POLY;
-		fcs >>= 1;
+			fcs = (fcs >> 1) ^ POLY;
+		else
+			fcs >>= 1;
 	}
 
 	return fcs;
@@ -39,8 +40,9 @@ U32 iget_fcs(U32 fcs, U32 data)
 	fcs ^= data;
 	for (i = 0; i < 32; i++) {
 		if (fcs & 0x01)
-			fcs ^= POLY;
-		fcs >>= 1;
+			fcs = (fcs >> 1) ^ POLY;
+		else
+			fcs >>= 1;
 	}
 
 	return fcs;
