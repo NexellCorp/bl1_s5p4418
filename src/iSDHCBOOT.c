@@ -976,6 +976,7 @@ End:
 }
 
 //------------------------------------------------------------------------------
+extern void Decrypt(U32 *SrcAddr, U32 *DestAddr, U32 Size);
 static CBOOL SDMMCBOOT(SDXCBOOTSTATUS *pSDXCBootStatus, struct NX_SecondBootInfo *pTBI) // U32 option )
 {
 	CBOOL	result = CFALSE;
@@ -1022,6 +1023,11 @@ static CBOOL SDMMCBOOT(SDXCBOOTSTATUS *pSDXCBootStatus, struct NX_SecondBootInfo
 			dprintf("cannot read boot header! SDMMC boot failure\r\n");
 			return result;
 		}
+
+#ifdef SECURE_ON
+		if (pReg_ClkPwr->SYSRSTCONFIG & 1<<14)
+			Decrypt((U32 *)pTBI, (U32 *)pTBI, sizeof(struct NX_SecondBootInfo));
+#endif
 		if(pTBI->SIGNATURE != HEADER_ID ) {
 			dprintf("0x%08X\r\n3rd boot Sinature is wrong! SDMMC boot failure\r\n", pTBI->SIGNATURE);
 			return CFALSE;
@@ -1034,6 +1040,12 @@ static CBOOL SDMMCBOOT(SDXCBOOTSTATUS *pSDXCBootStatus, struct NX_SecondBootInfo
 				pTBI->LOADADDR, pTBI->LOADSIZE, pTBI->LAUNCHADDR);
 
 		result = NX_SDMMC_ReadSectors( pSDXCBootStatus, pSBI->DEVICEADDR/BLOCK_LENGTH+1, (pTBI->LOADSIZE+BLOCK_LENGTH-1)/BLOCK_LENGTH, (U32 *)pTBI->LOADADDR );
+
+#ifdef SECURE_ON
+		if (pReg_ClkPwr->SYSRSTCONFIG & 1<<14)
+			Decrypt((U32 *)pTBI->LOADADDR, (U32 *)pTBI->LOADADDR, pTBI->LOADSIZE);
+#endif
+
 		if(result == CFALSE) {
 			dprintf("Image Read Failure\r\n");
 		}

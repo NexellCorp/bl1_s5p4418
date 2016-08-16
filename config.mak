@@ -44,6 +44,9 @@ SUPPORT_SDFS_BOOT		= n
 SUPPORT_NAND_BOOT		= n
 SUPPORT_UART_BOOT		= n
 
+# Secure Boot
+SECURE_ON           ?= 0
+
 ifeq ($(CHIPNAME), NXP4330)
 BOARD				= LEPUS
 #BOARD				= NAVI
@@ -95,6 +98,10 @@ OBJCOPY				= $(CROSS_TOOL)objcopy
 RANLIB 				= $(CROSS_TOOL)ranlib
 
 GCC_LIB				= $(shell $(CC) -print-libgcc-file-name)
+
+ifeq ($(SECURE_ON), 1)
+CFLAGS              +=  -DSECURE_ON
+endif
 
 ifeq ($(DEBUG), y)
 CFLAGS				= -DNX_DEBUG -O0
