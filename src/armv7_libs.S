@@ -17,10 +17,9 @@
 #include "nx_pyrope.h"
 #include "cfgBootDefine.h"
 
-
-//;==================================================================
-//; PLL Change
-//;==================================================================
+//==================================================================
+// PLL Change
+//==================================================================
         .align 5                                    //; below instruction number is 8, 32bytes
 
 .global __pllchange
@@ -36,13 +35,13 @@ pllchangedelayloop:                                 //; this code will be alread
         nop
 
         .align 5
-//;==================================================================
-//; Cache Invalidation code for Cortex-A9
-//;==================================================================
+//==================================================================
+// Cache Invalidation code for Cortex-A9
+//==================================================================
 
-//;==================================================================
-//; Invalidate entire branch predictor
-//;==================================================================
+//==================================================================
+// Invalidate entire branch predictor
+//==================================================================
 .global Invalidate_entire_branch_predictor
 Invalidate_entire_branch_predictor:
         mov     r0, #0
@@ -52,9 +51,9 @@ Invalidate_entire_branch_predictor:
 
 .global InvalidateDataCache
 InvalidateDataCache:
-        //;----------------------------------------------------------------------
-        //; Invalidate Data/Unified Caches
-        //;----------------------------------------------------------------------
+        //----------------------------------------------------------------------
+        // Invalidate Data/Unified Caches
+        //----------------------------------------------------------------------
         mrc     p15, 1, r0, c0, c0, 1               //; Read CLIDR
         ands    r3, r0, #0x07000000
         mov     r3, r3, lsr #23                     //; Total cache levels << 1
@@ -106,10 +105,9 @@ finished:
 
         bx      lr
 
-//;==================================================================
-//; Cache control
-//;==================================================================
-
+//==================================================================
+// Cache control
+//==================================================================
 .global flushICache
 flushICache:
         mov     r0, #0
@@ -117,7 +115,6 @@ flushICache:
 
         mov     pc, lr
         b       .
-
 
 .global enableICache
 enableICache:
@@ -130,4 +127,65 @@ enableICache:
         mov     pc, lr
         b       .
 
+/* ------------------------------------------
+ * Non-Secure Access Control Register
+ * ------------------------------------------
+ */
+/*
+ * (SCR) set to secure configuration register
+ * switch to secure -> non-secure mode
+ */
+.global set_nonsecure_mode
+set_nonsecure_mode:
+	mrc	p15, 0, r0, c1, c1, 0
+	orr	r0, r0, #(1 << 0)
+	mcr	p15, 0, r0, c1, c1, 0
+	bx	lr
 
+.global set_secure_mode
+set_secure_mode:
+	mrc	p15, 0, r0, c1, c1, 0
+	bic	r0, r0, #(1 << 0)
+	mcr	p15, 0, r0, c1, c1, 0
+	bx	lr
+
+.global armv7_get_cpu_id
+armv7_get_cpu_id:
+        mrc     p15, 0, r0, c0, c0, 5		// Get our cpu id
+        ands    r0, r0, #0xF			// Save CPU id
+        bx	lr
+
+.global arm9_get_mpidr
+arm9_get_mpidr:
+	mrc	p15, 0, r0, c0, c0, 5		// Get MPIDR
+	bx	lr
+
+.global arm9_set_auxctrl
+arm9_set_auxctrl:
+	mcr 	p15, 0, r0, c1, c0, 1 		// write ACTLR
+	bx	lr
+
+.global arm9_get_auxctrl
+arm9_get_auxctrl:
+	mrc 	p15, 0, r0, c1, c0, 1		//Read ACTLR
+	bx	lr
+
+.global arm9_get_scr
+arm9_get_scr:
+	mrc	p15, 0, r0, c1, c1, 0		// Read SCR into Rt
+	bx	lr
+
+.global arm9_set_scr
+arm9_set_scr:
+	mcr	p15, 0, r0, c1, c1, 0		// Write Rt to SCR
+	bx	lr
+
+.global armv7_set_fiq_cpsr
+armv7_set_fiq_cpsr:
+	msr	CPSR_c,  #(MODE_MON|I_Bit)
+	bx	lr
+
+.global set_svc_mode
+set_svc_mode:
+	msr	CPSR_c,  #(Mode_SVC|I_Bit)
+	bx	lr

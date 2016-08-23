@@ -38,11 +38,7 @@ CRC_CHECK			= n
 CFLAGS				:=
 
 SUPPORT_USB_BOOT		= y
-SUPPORT_SPI_BOOT		= n
 SUPPORT_SDMMC_BOOT		= y
-SUPPORT_SDFS_BOOT		= n
-SUPPORT_NAND_BOOT		= n
-SUPPORT_UART_BOOT		= n
 
 # Secure Boot
 SECURE_ON           ?= 0
@@ -58,6 +54,8 @@ else
 #BOARD				= LAVENDA
 BOARD				?= RAPTOR
 endif
+
+SECURE				?= NO
 
 # cross-tool pre-header
 ifeq ($(OS),Windows_NT)
@@ -156,6 +154,11 @@ CFLAGS				+=	-g -Wall				\
 ifeq ($(INITPMIC), YES)
 CFLAGS				+=	-D$(BOARD)_PMIC_INIT
 endif
+
+ifeq ($(SECURE), YES)
+CFLAGS				+=	-DSECURE_MODE
+endif
+
 ifeq ($(MEMTEST), y)
 #MEMTEST_TYPE			+=	STANDARD
 MEMTEST_TYPE			+=	SIMPLE

@@ -24,11 +24,18 @@ LDFLAGS		=	-Bstatic							\
 			-Wl,--build-id=none						\
 			-nostdlib
 
-SYS_OBJS	=	startup.o secondboot.o armv7_libs.o		\
-			resetcon.o GPIO.o CRC32.o			\
-			clockinit.o debug.o util.o buildinfo.o		\
-			printf.o
+SYS_OBJS	+=	startup.o secondboot.o armv7_libs.o subcpu.o			\
+			clockinit.o resetcon.o GPIO.o CRC32.o				\
+			 debug.o util.o buildinfo.o					\
+			sleep.o ema.o printf.o
+
 #SYS_OBJS	+=	sysbus.o
+
+ifeq ($(SECURE), NO)
+SYS_OBJS	+=	gic.o non_secure.o smc_entry.o smc_handler.o sip_main.o std_svc_setup.o	\
+			arm_topology.o psci_system_off.o psci_off.o psci_on.o 			\
+			psci_suspend.o psci_common.o psci_main.o
+endif
 
 ifeq ($(MEMTYPE),DDR3)
 SYS_OBJS	+=	init_DDR3.o
@@ -49,29 +56,9 @@ CFLAGS		+= -DSUPPORT_USB_BOOT
 SYS_OBJS	+=	iUSBBOOT.o
 endif
 
-ifeq ($(SUPPORT_SPI_BOOT),y)
-CFLAGS		+= -DSUPPORT_SPI_BOOT
-SYS_OBJS	+=	iSPIBOOT.o
-endif
-
 ifeq ($(SUPPORT_SDMMC_BOOT),y)
 CFLAGS		+= -DSUPPORT_SDMMC_BOOT
 SYS_OBJS	+=	iSDHCBOOT.o
-endif
-
-ifeq ($(SUPPORT_SDFS_BOOT),y)
-CFLAGS		+= -DSUPPORT_SDFS_BOOT
-SYS_OBJS	+=	diskio.o fatfs.o iSDHCFSBOOT.o
-endif
-
-ifeq ($(SUPPORT_NAND_BOOT),y)
-CFLAGS		+= -DSUPPORT_NAND_BOOT
-SYS_OBJS	+=	iNANDBOOTEC.o
-endif
-
-ifeq ($(SUPPORT_UART_BOOT),y)
-CFLAGS		+= -DSUPPORT_UART_BOOT
-SYS_OBJS	+=	iUARTBOOT.o
 endif
 
 ifeq ($(MEMTEST),y)
@@ -81,6 +68,9 @@ endif
 SYS_OBJS_LIST	=	$(addprefix $(DIR_OBJOUTPUT)/,$(SYS_OBJS))
 
 SYS_INCLUDES	=	-I src				\
+			-I src/services			\
+			-I src/services/std_svc		\
+			-I src/services/std_svc/psci	\
 			-I prototype/base 		\
 			-I prototype/module
 
@@ -94,6 +84,37 @@ $(DIR_OBJOUTPUT)/%.o: src/%.S
 	$(Q)$(CC) -MMD $< -c -o $@ $(ASFLAG) $(CFLAGS) $(SYS_INCLUDES)
 ###################################################################################################
 
+###################################################################################################
+$(DIR_OBJOUTPUT)/%.o: src/pmic/%.c
+	@echo [compile....$<]
+	$(Q)$(CC) -MMD $< -c -o $@ $(CFLAGS) $(SYS_INCLUDES)
+###################################################################################################
+$(DIR_OBJOUTPUT)/%.o: src/memory/%.c
+	@echo [compile....$<]
+	$(Q)$(CC) -MMD $< -c -o $@ $(CFLAGS) $(SYS_INCLUDES)
+###################################################################################################
+
+###################################################################################################
+$(DIR_OBJOUTPUT)/%.o: src/services/%.c
+	@echo [compile....$<]
+	$(Q)$(CC) -MMD $< -c -o $@ $(CFLAGS) $(SYS_INCLUDES)
+###################################################################################################
+$(DIR_OBJOUTPUT)/%.o: src/services/%.S
+	@echo [compile....$<]
+	$(Q)$(CC) -MMD $< -c -o $@ $(ASFLAG) $(CFLAGS) $(SYS_INCLUDES)
+###################################################################################################
+$(DIR_OBJOUTPUT)/%.o: src/services/std_svc/%.c
+	@echo [compile....$<]
+	$(Q)$(CC) -MMD $< -c -o $@ $(CFLAGS) $(SYS_INCLUDES)
+###################################################################################################
+$(DIR_OBJOUTPUT)/%.o: src/services/std_svc/psci/%.c
+	@echo [compile....$<]
+	$(Q)$(CC) -MMD $< -c -o $@ $(CFLAGS) $(SYS_INCLUDES)
+###################################################################################################
+$(DIR_OBJOUTPUT)/%.o: src/services/std_svc/psci/%.S
+	@echo [compile....$<]
+	$(Q)$(CC) -MMD $< -c -o $@ $(ASFLAG) $(CFLAGS) $(SYS_INCLUDES)
+###################################################################################################
 
 all: mkobjdir $(SYS_OBJS_LIST) link bin
 
@@ -152,4 +173,3 @@ else
 endif
 
 -include $(SYS_OBJS_LIST:.o=.d)
-

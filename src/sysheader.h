@@ -36,10 +36,12 @@
 #include <nx_clkgen.h>
 #include <nx_ssp.h>
 #include <nx_uart.h>
+#include <nx_wdt.h>
 
 #include "secondboot.h"
 #include "printf.h"
 #include "debug.h"
+#include "type.h"
 
 //------------------------------------------------------------------------------
 //  Set DEBUG Macro
@@ -56,6 +58,13 @@
 #define MEMMSG  printf
 #else
 #define MEMMSG(x, ...)
+#endif
+
+// UserDebug Message
+#if 0
+#define DBGOUT  printf
+#else
+#define DBGOUT(x, ...)
 #endif
 
 //------------------------------------------------------------------------------
@@ -87,6 +96,9 @@ struct NX_DDRPHY_RegisterSet *const pReg_DDRPHY =
 struct NX_RTC_RegisterSet *const pReg_RTC =
     (struct NX_RTC_RegisterSet * const)PHY_BASEADDR_RTC_MODULE;
 
+struct NX_WDT_RegisterSet *const pReg_WDT =
+    (struct NX_WDT_RegisterSet * const)PHY_BASEADDR_WDT_MODULE;
+
 #else
 
 extern struct NX_SecondBootInfo *const pSBI; // second boot info
@@ -100,7 +112,6 @@ extern struct NX_RSTCON_RegisterSet *const pReg_RstCon;
 extern struct NX_DREXSDRAM_RegisterSet *const pReg_Drex;
 extern struct NX_DDRPHY_RegisterSet *const pReg_DDRPHY;
 extern struct NX_RTC_RegisterSet *const pReg_RTC;
-
 #endif
 
 #endif //	__SYS_HEADER_H__

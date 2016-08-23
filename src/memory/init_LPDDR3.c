@@ -188,7 +188,7 @@ void enterSelfRefresh(void)
 	MR.LP_MR11.PD_CON = 0;	// 0: ODT Disable by during power down.
 				// 1: ODT Enable  by during power down.
 	// MR11
-	SendDirectCommand(SDRAM_CMD_MRS, 0, SDRAM_MODE_REG_MR11, MR.Reg);			
+	SendDirectCommand(SDRAM_CMD_MRS, 0, SDRAM_MODE_REG_MR11, MR.Reg);
 #if (CFG_NSIH_EN == 0)
 #if (_DDR_CS_NUM > 1)
 	SendDirectCommand(SDRAM_CMD_MRS, 1, SDRAM_MODE_REG_MR11, MR.Reg);
@@ -246,7 +246,7 @@ void enterSelfRefresh(void)
 	SetIO32(&pReg_Drex->MEMCONTROL,
 		(0x1 << 0)); // clk_stop_en[0] : Dynamic Clock
 			     // Control   :: 1'b0  - Always
-			     // running	     
+			     // running
 	DMC_Delay(1000 * 3);
 }
 
