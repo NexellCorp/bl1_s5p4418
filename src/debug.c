@@ -8,16 +8,16 @@
  *	FITNESS
  *      FOR A PARTICULAR PURPOSE.
  *
- *      Module          : 
+ *      Module          :
  *      File            : debug.c
  *      Description     :
  *      Author          : Hans
- *      History         : 
+ *      History         :
  */
 #include "sysheader.h"
 
-#define UARTSRC 		1
-#define SOURCE_DIVID	(50UL)
+#define UARTSRC 		2
+#define SOURCE_DIVID		(4UL)
 #define BAUD_RATE 		(115200)
 
 extern U32 getquotient(int dividend, int divisor);
@@ -70,19 +70,18 @@ const U32 UARTSMC[] = {
 	TIEOFFINDEX_OF_UART_NODMA1_USESMC,		TIEOFFINDEX_OF_UART_NODMA1_SMCTXENB,
 	TIEOFFINDEX_OF_UART_NODMA1_SMCRXENB
 };
-//------------------------------------------------------------------------------
 
 CBOOL DebugInit(U32 ch)
 {
 	U32 SOURCE_CLOCK;
 	struct NX_CLKGEN_RegisterSet *const pReg_UartClkGen =
 		(struct NX_CLKGEN_RegisterSet *)UARTCLKGENADDR[ch];
-	
+
 	pReg_Uart = (struct NX_UART_RegisterSet *)UARTBASEADDR[ch];
-	
+
 	NX_CLKPWR_SetOSCFreq(OSC_KHZ);
 
-	SOURCE_CLOCK = NX_CLKPWR_GetPLLFrequency(NX_CLKSRC_UART);
+	SOURCE_CLOCK = NX_CLKPWR_GetPLLFrequency(UARTSRC);
 
 	GPIOSetAltFunction(GPIOALTNUM[ch * 2 + 0]);
 	GPIOSetAltFunction(GPIOALTNUM[ch * 2 + 1]);
@@ -93,30 +92,26 @@ CBOOL DebugInit(U32 ch)
 		(~(1 << ((UARTSMC[ch * 3 + 1]) & 0x1F)));
 	pReg_Tieoff->TIEOFFREG[((UARTSMC[ch * 3 + 2]) & 0xFFFF) >> 5] &=
 		(~(1 << ((UARTSMC[ch * 3 + 2]) & 0x1F)));
-	
-	ResetCon(RESETNUM[ch], CTRUE);  // reset on
-	ResetCon(RESETNUM[ch], CFALSE); // reset negate
 
-	pReg_UartClkGen->CLKENB =
-		(1 << 3); 		// PCLKMODE : always, Clock Gen Disable
+	ResetCon(RESETNUM[ch], CTRUE);			// reset on
+	ResetCon(RESETNUM[ch], CFALSE);			// reset negate
+
+	pReg_UartClkGen->CLKENB =(1 << 3); 		// PCLKMODE : always, Clock Gen Disable
 	pReg_UartClkGen->CLKGEN[0] =
-		((SOURCE_DIVID - 1) << 5) | (NX_CLKSRC_UART << 2);
+		((SOURCE_DIVID - 1) << 5) | (UARTSRC << 2);
 
-	//---------------------------------------------------------------
-	pReg_Uart->LCR_H = 0x0070; // 8 bit, none parity, stop 1, normal mode
-	pReg_Uart->CR = 0x0300;    // rx, tx enable
+	pReg_Uart->LCR_H = 0x0070;			// 8 bit, none parity, stop 1, normal mode
+	pReg_Uart->CR = 0x0300;				// rx, tx enable
 
 	pReg_Uart->IBRD =
 		(U16)getquotient(getquotient(SOURCE_CLOCK, SOURCE_DIVID),
 				((BAUD_RATE / 1) * 16)); // IBRD = 8, 115200bps
-	pReg_Uart->FBRD = (U16)(getquotient(((getremainder(getquotient(SOURCE_CLOCK, SOURCE_DIVID), 
+	pReg_Uart->FBRD = (U16)(getquotient(((getremainder(getquotient(SOURCE_CLOCK, SOURCE_DIVID),
 					((BAUD_RATE / 1) * 16)) + 32) * 64),
 					((BAUD_RATE / 1) * 16))); // FBRD = 0,
 	pReg_UartClkGen->CLKENB =
-		(1 << 3) | (1 << 2);	// PCLKMODE : always, Clock Gen Enable
-
-	pReg_Uart->CR = 0x0301;		// rx, tx, uart enable
-	//---------------------------------------------------------------
+		(1 << 3) | (1 << 2);			// PCLKMODE : always, Clock Gen Enable
+	pReg_Uart->CR = 0x0301;				// rx, tx, uart enable
 
 	return CTRUE;
 }
@@ -136,10 +131,6 @@ CBOOL DebugIsUartTxDone(void)
 			TX_FIFO_EMPTY ? CTRUE : CFALSE);
 }
 
-/*
-  * Debug Releation Function (for reduce binary size)
-  */
-#if 0
 CBOOL DebugIsTXEmpty(void)
 {
 	const U16 TX_FIFO_EMPTY = 1 << 7;
@@ -155,15 +146,11 @@ CBOOL DebugIsBusy(void)
 S8 DebugGetch(void)
 {
 	const U16 RX_FIFO_EMPTY = 1 << 4;
-	while (pReg_Uart->FR & RX_FIFO_EMPTY)
-		;
+	while (pReg_Uart->FR & RX_FIFO_EMPTY);
 	return (S8)pReg_Uart->DR;
 }
-#endif
 
 #if 0
-//------------------------------------------------------------------------------
-
 void DebugPutString(const S8 *const String)
 {
 	const S8 *pString;
@@ -224,7 +211,6 @@ void DebugPrint(const S8 *const FormatString, ...)
 	DebugPutString(String);
 }
 
-//------------------------------------------------------------------------------
 void DebugPutDec(S32 value)
 {
 	S8 ch[16];
@@ -247,7 +233,6 @@ void DebugPutDec(S32 value)
 	}
 }
 
-//------------------------------------------------------------------------------
 void DebugPutHex(S32 value)
 {
 	S8 ch;
@@ -266,7 +251,6 @@ void DebugPutHex(S32 value)
 	}
 }
 
-//------------------------------------------------------------------------------
 void DebugPutByte(S8 value)
 {
 	S8 ch;
@@ -282,7 +266,6 @@ void DebugPutByte(S8 value)
 	}
 }
 
-//------------------------------------------------------------------------------
 void DebugPutWord(S16 value)
 {
 	S8 ch;
@@ -298,4 +281,3 @@ void DebugPutWord(S16 value)
 	}
 }
 #endif
-//------------------------------------------------------------------------------
