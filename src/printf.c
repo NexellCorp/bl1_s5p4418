@@ -204,16 +204,20 @@ out:
 	}
 	if (out)
 		**out = '\0';
-	va_end(args);
+
 	return pc;
 }
 
 int printf(const char *format, ...)
 {
 	va_list args;
+	int ret;
 
 	va_start(args, format);
-	return print(0, format, args);
+	ret = print(0, format, args);
+	va_end(args);
+
+	return ret;
 }
 
 #if 0
