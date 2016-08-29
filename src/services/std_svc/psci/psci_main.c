@@ -150,6 +150,9 @@ int psci_smc_handler(
 		case PSCI_AFFINITY_INFO_AARCH32:
 			return psci_affinity_info(x1, x2);
 
+		case PSCI_MIG_INFO_TYPE:
+			return PSCI_E_NOT_SUPPORTED;
+
 		case PSCI_SYSTEM_SUSPEND_AARCH32:
 			return psci_system_suspend(x1, x2);
 
