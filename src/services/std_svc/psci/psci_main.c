@@ -20,7 +20,10 @@ unsigned int g_cpu_state = 0;
 /* Macro to help build the psci capabilities bitfield */
 #define define_psci_cap(x)		(1 << (x & 0x1f))
 
-unsigned int psci_caps;
+unsigned int psci_caps = define_psci_cap(PSCI_CPU_OFF) |
+	define_psci_cap(PSCI_CPU_ON_AARCH32) |
+	define_psci_cap(PSCI_SYSTEM_OFF) |
+	define_psci_cap(PSCI_SYSTEM_SUSPEND_AARCH32);
 
 /*******************************************************************************
  * PSCI frontend api for servicing SMCs. Described in the PSCI spec.
@@ -107,6 +110,20 @@ int psci_affinity_info(unsigned int target_affinity,
 	return status;
 }
 
+int psci_features(unsigned int psci_fid)
+{
+	unsigned int local_caps = psci_caps;
+
+	/* TODO: sanity check of psci_fid */
+
+	/* Check if the psci fid is supported or not */
+	if (!(local_caps & define_psci_cap(psci_fid)))
+		return PSCI_E_NOT_SUPPORTED;
+
+	/* Return 0 for all other fid's */
+	return PSCI_E_SUCCESS;
+}
+
 int psci_smc_handler(
 	unsigned int smc_fid,
 	unsigned int x1, unsigned int x2,
@@ -147,6 +164,9 @@ int psci_smc_handler(
 			WARN("PSCI_SYSTEM_RESET\r\n");
 			/* We should never return from psci_system_reset() */
 			break;
+
+		case PSCI_FEATURES:
+			return psci_features(x1);
 
 		default:
 			break;
