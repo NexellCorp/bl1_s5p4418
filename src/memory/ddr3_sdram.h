@@ -23,8 +23,8 @@ typedef enum
 	SDRAM_MODE_REG_MR1      = 1,
 	SDRAM_MODE_REG_MR2      = 2,
 	SDRAM_MODE_REG_MR3      = 3,
-
-	SDRAM_MODE_REG_MR11	    = 11,
+	/* LPDDR3 Features */
+	SDRAM_MODE_REG_MR11	= 11,
 	SDRAM_MODE_REG_MAX_MRn  = 0xFF
 }SDRAM_MODE_REG;
 
@@ -42,13 +42,13 @@ struct SDRAM_MR0 {
 struct SDRAM_MR1 {
 	volatile U16 DLL		:1;     // 0 DLL Enable (0: enable, 1: disable)
 	volatile U16 ODS0		:1;     // 1 Output Drive Strenghth 0 bit (00: RZQ/6(40ohm), 01: RZQ/7(34ohm), 10, 11: reserved)
-	volatile U16 RTT_Nom0	:1;     // 2
+	volatile U16 RTT_Nom0		:1;     // 2
 	volatile U16 AL			:2;     // 3 Additive Latency	(00: disable, 01: AL=CL-1, 10: AL=CL-2, 11: Reserved)
 	volatile U16 ODS1		:1;     // 5 Output Drive Strenghth 1 bit
-	volatile U16 RTT_Nom1	:1;     // 6
+	volatile U16 RTT_Nom1		:1;     // 6
 	volatile U16 WL			:1;     // 7 Write Levelization (0: disable, 1: enable)
 	volatile U16 SBZ0		:1;     // 8
-	volatile U16 RTT_Nom2	:1;     // 9 (000: disable, 001: RZQ/4(60ohm), 010: RZQ/2(120ohm), 011: RZQ/6(40ohm), 100: RZQ/12(20ohm), 101: RZQ/8(30ohm) 110, 111: Reserved)
+	volatile U16 RTT_Nom2		:1;     // 9 (000: disable, 001: RZQ/4(60ohm), 010: RZQ/2(120ohm), 011: RZQ/6(40ohm), 100: RZQ/12(20ohm), 101: RZQ/8(30ohm) 110, 111: Reserved)
 	volatile U16 SBZ1		:1;     // 10
 	volatile U16 TDQS		:1;     // 11 TDQS (0: disable, 1: enable)
 	volatile U16 QOff		:1;     // 12 Q Off (0: enabled, 1: disabled)
@@ -78,13 +78,13 @@ struct LPDDR3_MR0 {
 	volatile U16 _RFU1		:1;     // 5
 	volatile U16 WL			:1;     // 6
 	volatile U16 RL3		:1;     // 7
-	volatile U16 _reserved	:8;     // 8 ~ 15
+	volatile U16 _reserved		:8;     // 8 ~ 15
 };
 struct LPDDR3_MR1 {
-	volatile U16 BL		    :3;     // 0 ~ 2
+	volatile U16 BL		    	:3;     // 0 ~ 2
 	volatile U16 _RFU0		:2;     // 3 ~ 4
-	volatile U16 WR		    :3;     // 5 ~ 7
-	volatile U16 _reserved	:8;     // 8 ~ 15
+	volatile U16 WR		    	:3;     // 5 ~ 7
+	volatile U16 _reserved		:8;     // 8 ~ 15
 };
 
 struct LPDDR3_MR2 {
@@ -99,14 +99,14 @@ struct LPDDR3_MR2 {
 struct LPDDR3_MR3 {
 	volatile U16 DS			:4;     // 0 ~ 3
 	volatile U16 _RFU0		:4;     // 4 ~ 7
-	volatile U16 _reserved	:8;     // 8 ~ 15
+	volatile U16 _reserved		:8;     // 8 ~ 15
 };
 
 struct LPDDR3_MR11 {
 	volatile U16 DQ_ODT		:2;     // 0 ~ 1
 	volatile U16 PD_CON		:1;     // 2
 	volatile U16 _RFU0		:5;     // 3 ~ 7
-	volatile U16 _reserved	:8;     // 8 ~ 15
+	volatile U16 _reserved		:8;     // 8 ~ 15
 };
 
 union SDRAM_MR {

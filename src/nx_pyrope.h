@@ -25,6 +25,7 @@
 #define Mode_FIQ            0x11
 #define Mode_IRQ            0x12
 #define Mode_SVC            0x13
+#define MODE_MON		0x16
 #define Mode_ABT            0x17
 #define Mode_UNDEF          0x1B
 #define Mode_SYS            0x1F

@@ -240,7 +240,7 @@ static CBOOL I2C_ReadBit(CBOOL *Bit)
 
 	I2CDELAY(I2C_DELAY_TIME);
 
-	while(SCL_READ() == CFALSE);	// clock stretching.... need timeout code
+	while(SCL_READ() == CFALSE)	// clock stretching.... need timeout code
 	{
 		if (timeout-- == 0) {
 			dprintf("I2C_ReadBit CLK Timeout Arbitration Fail\r\n");

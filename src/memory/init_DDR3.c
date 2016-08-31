@@ -329,76 +329,6 @@ void exitSelfRefresh(void)
 }
 #endif // #if (CONFIG_SUSPEND_RESUME == 1)
 
-#if 0
-void real_change_pll(U32 *clkpwr_reg, U32 *AXIBottomBase, struct NX_DREXSDRAM_RegisterSet *pReg_Drex, U32 pll_data)
-{
-#if 1
-	U32 temp;
-
-	temp = (U32)clkpwr_reg;
-	temp = (U32)AXIBottomBase;
-	temp = (U32)pReg_Drex;
-	temp = pll_data;
-	temp = temp;
-#else
-
-	register U32 i_slot;
-	register U32 const pll_num  = (pll_data & 0x000000FF)>>  0;
-	register U32 const s        = (pll_data & 0x0000FF00)>>  8;
-	register U32 const m        = (pll_data & 0x00FF0000)>> 16;
-	register U32 const p        = (pll_data & 0xFF000000)>> 24;
-	register volatile U32 * const pllset_reg = (clkpwr_reg + 2 + pll_num);
-
-	WriteIO32( &pReg_Drex->DIRECTCMD,     ((DIRCMD_PALL <<  DIRCMD_TYPE_SHIFT)| (DIRCMD_CHIP_0 <<  DIRCMD_CHIP_SHIFT)) );        // precharge all cmd
-	ClearIO32( &pReg_Drex->CONCONTROL,    (0x1    <<     5));                // afre_en[5]. Auto Refresh Counter. Disable:0, Enable:1
-	for(i_slot = 0; i_slot<32; i_slot++)
-	{
-		//        WriteIO32( NX_BASE_REG_PL301_BOTT| (0x408    <<  0), (i_slot <<  24)| (i_slot & 1));            // reserved only for cpu bus
-		*(U32*)((U32)AXIBottomBase + 0x408) = (i_slot <<  24)| (i_slot & 1);
-	}
-
-	WriteIO32( &pReg_Drex->BRBRSVCONFIG,      0xFFF0FFF0 );        // Port 0(bottom): 0, Port 1(display): 0xF
-	WriteIO32( &pReg_Drex->BRBRSVCONTROL,     0x00000022 );        // disable read/write brb reservation for AXI port 0
-	WriteIO32( &pReg_Drex->BRBQOSCONFIG,      0x00000001 );        // QoS timer decrease below QOS value 0x00000FFF
-	WriteIO32( &pReg_Drex->QOS[0],            0x00000FFF );        // above QoS counter decrease value counting value
-
-	*pllset_reg &= ~(1<< 28);
-	*clkpwr_reg = (1<< pll_num);
-	while(*clkpwr_reg & (1<< 31));
-
-	*pllset_reg = ((1UL <<  29)|
-			(0UL <<  28)|
-			(s <<  0)|
-			(m <<  8)|
-			(p <<  18));
-	*clkpwr_reg = (1<< pll_num);
-	while(*clkpwr_reg & (1<< 31));
-
-	*pllset_reg &= ~((U32)(1UL<< 29));
-	*clkpwr_reg = (1<< pll_num);
-	while(*clkpwr_reg & (1<< 31));
-
-	*pllset_reg|= (1<< 28);
-	*clkpwr_reg = (1<< pll_num);
-	while(*clkpwr_reg & (1<< 31));
-
-	WriteIO32( &pReg_Drex->BRBRSVCONFIG,	0xFFF1FFF1 );
-	WriteIO32( &pReg_Drex->BRBRSVCONTROL,	0x00000033 );
-	WriteIO32( &pReg_Drex->BRBQOSCONFIG,	0x00000010 );        // QoS timer decrease below QOS value 0x00000FFF
-	WriteIO32( &pReg_Drex->QOS[0],			0x00000200 );        // restore
-
-	for(i_slot = 0; i_slot<32; i_slot++)
-	{
-		//        WriteIO32( NX_BASE_REG_PL301_BOTT| (0x408    <<  0), (i_slot <<  24)| i_slot);        // each port reserved for themself
-		*(U32*)((U32)AXIBottomBase + 0x408) = (i_slot <<  24)| i_slot;
-	}
-	WriteIO32( &pReg_Drex->DIRECTCMD,     ((DIRCMD_PALL <<  DIRCMD_TYPE_SHIFT)| (DIRCMD_CHIP_0 <<  DIRCMD_CHIP_SHIFT)) );        // precharge all cmd
-	SetIO32( &pReg_Drex->CONCONTROL,      (0x1    <<     5));            // afre_en[5]. Auto Refresh Counter. Disable:0, Enable:1
-#endif
-
-	return;
-}
-#endif
 
 #if (DDR_RW_CAL == 1)
 extern    void BurstZero(U32 *WriteAddr, U32 WData);
@@ -1443,10 +1373,6 @@ CBOOL DDR_Write_DQ_Calibration(U32 isResume)
 	C_Offset = Offset;
 #endif // #if (DDR_WRITE_DQ_COMPENSATION_EN == 1)
 
-#if (MEM_CALIBRAION_INFO == 1)
-	Write_DQ_Calibration_Information();
-#endif
-
 	if (isResume == 1)
 		C_Offset = g_WRvwmc;
 	else
@@ -1458,6 +1384,10 @@ CBOOL DDR_Write_DQ_Calibration(U32 isResume)
 	SetIO32(&pReg_DDRPHY->PHY_CON[10], (0x1 << 24));	// ctrl_resync[24]=0x1 (HIGH)
 	ClearIO32(&pReg_DDRPHY->PHY_CON[10], (0x1 << 24));	// ctrl_resync[24]=0x0 (LOW)
 #endif	// #if (DDR_RESET_WRITE_DQ == 1)
+
+#if (MEM_CALIBRATION_INFO == 1)
+	Write_DQ_Calibration_Information();
+#endif
 
 wr_err_ret:
 

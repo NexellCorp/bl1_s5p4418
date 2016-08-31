@@ -38,11 +38,10 @@ CRC_CHECK			= n
 CFLAGS				:=
 
 SUPPORT_USB_BOOT		= y
-SUPPORT_SPI_BOOT		= n
 SUPPORT_SDMMC_BOOT		= y
-SUPPORT_SDFS_BOOT		= n
-SUPPORT_NAND_BOOT		= n
-SUPPORT_UART_BOOT		= n
+
+# Secure Boot
+SECURE_ON           ?= 0
 
 ifeq ($(CHIPNAME), NXP4330)
 BOARD				= LEPUS
@@ -55,6 +54,8 @@ else
 #BOARD				= LAVENDA
 BOARD				?= RAPTOR
 endif
+
+SECURE				?= NO
 
 # cross-tool pre-header
 ifeq ($(OS),Windows_NT)
@@ -95,6 +96,10 @@ OBJCOPY				= $(CROSS_TOOL)objcopy
 RANLIB 				= $(CROSS_TOOL)ranlib
 
 GCC_LIB				= $(shell $(CC) -print-libgcc-file-name)
+
+ifeq ($(SECURE_ON), 1)
+CFLAGS              +=  -DSECURE_ON
+endif
 
 ifeq ($(DEBUG), y)
 CFLAGS				= -DNX_DEBUG -O0
@@ -149,6 +154,11 @@ CFLAGS				+=	-g -Wall				\
 ifeq ($(INITPMIC), YES)
 CFLAGS				+=	-D$(BOARD)_PMIC_INIT
 endif
+
+ifeq ($(SECURE), YES)
+CFLAGS				+=	-DSECURE_MODE
+endif
+
 ifeq ($(MEMTEST), y)
 #MEMTEST_TYPE			+=	STANDARD
 MEMTEST_TYPE			+=	SIMPLE

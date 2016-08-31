@@ -27,9 +27,9 @@
 //#define MEM_CLK         DDR3_666
 #define MEM_CLK         DDR3_800
 
-//#define _DDR_CS_NUM     2               // nCS Number : Tablet=1, VTK=2
-#define _DDR_CS_NUM     1               // nCS Number : Tablet=1, VTK=2
-#define _DDR_BUS_WIDTH  16              // 16bit, 8bit
+//#define _DDR_CS_NUM     2               		// nCS Number : Tablet=1, VTK=2
+#define _DDR_CS_NUM     1               		// nCS Number : Tablet=1, VTK=2
+#define _DDR_BUS_WIDTH  16              		// 16bit, 8bit
 
 #define _DDR_ROW_NUM    15
 #define _DDR_COL_NUM    10

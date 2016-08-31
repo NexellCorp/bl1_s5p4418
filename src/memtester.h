@@ -1,17 +1,17 @@
- *      Copyright (C) 2012 Nexell Co., All Rights Reserved
- *      Nexell Co. Proprietary & Confidential
+/* Copyright (C) 2012 Nexell Co., All Rights Reserved
+ * Nexell Co. Proprietary & Confidential
  *
- *      NEXELL INFORMS THAT THIS CODE AND INFORMATION IS PROVIDED "AS IS" BASE
- *      AND WITHOUT WARRANTY OF ANY KIND, EITHER EXPRESSED OR IMPLIED, INCLUDING
- *      BUT NOT LIMITED TO THE IMPLIED WARRANTIES OF MERCHANTABILITY AND/OR
+ * NEXELL INFORMS THAT THIS CODE AND INFORMATION IS PROVIDED "AS IS" BASE
+ * AND WITHOUT WARRANTY OF ANY KIND, EITHER EXPRESSED OR IMPLIED, INCLUDING
+ *  BUT NOT LIMITED TO THE IMPLIED WARRANTIES OF MERCHANTABILITY AND/OR
  *	FITNESS
- *      FOR A PARTICULAR PURPOSE.
+ *  FOR A PARTICULAR PURPOSE.
  *
- *      Module          : memory
- *      File            : memtester.h
- *      Description     :
- *      Author          : Deoks
- *      History         : 2016-06-13 Create
+ * Module          : memory
+ * File            : memtester.h
+ * Description     :
+ * Author          : Deoks
+ * History         : 2016-06-13 Create
  */
 /*
  * Very simple yet very effective memory tester.
@@ -108,9 +108,13 @@ int test_walkbits0_comparison(unsigned long volatile *bufa, unsigned long volati
 int test_walkbits1_comparison(unsigned long volatile *bufa, unsigned long volatile *bufb, int count);
 int test_bitspread_comparison(unsigned long volatile *bufa, unsigned long volatile *bufb, int count);
 int test_bitflip_comparison(unsigned long volatile *bufa, unsigned long volatile *bufb, int count);
-#ifdef TEST_NARROW_WRITES    
+#ifdef TEST_NARROW_WRITES
 int test_8bit_wide_random(unsigned long volatile *bufa, unsigned long volatile *bufb, int count);
 int test_16bit_wide_random(unsigned long volatile *bufa, unsigned long volatile *bufb, int count);
 #endif
 
-//int memtester_main( unsigned cpuid, unsigned int start, unsigned int end );
+#if defined(STANDARD_MEMTEST)
+extern int memtester_main(unsigned int start, unsigned int end, int repeat);
+#elif defined(SIMPLE_MEMTEST)
+extern void simple_memtest(U32 *pStart, U32 *pEnd);
+#endif
