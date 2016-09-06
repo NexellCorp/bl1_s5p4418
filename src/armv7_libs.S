@@ -149,8 +149,8 @@ set_secure_mode:
 	mcr	p15, 0, r0, c1, c1, 0
 	bx	lr
 
-.global armv7_get_cpu_id
-armv7_get_cpu_id:
+.global armv7_get_cpuid
+armv7_get_cpuid:
         mrc     p15, 0, r0, c0, c0, 5		// Get our cpu id
         ands    r0, r0, #0xF			// Save CPU id
         bx	lr

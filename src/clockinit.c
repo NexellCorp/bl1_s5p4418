@@ -491,6 +491,35 @@ void initClock(void)
     }
 }
 
+void s5p4418_change_pll(volatile u32 *clkpwr_reg, unsigned int pll_data)
+{
+	unsigned int pll_num = (pll_data & 0x00000003);
+	unsigned int s       = (pll_data & 0x000000fc) >> 2;
+	unsigned int m       = (pll_data & 0x00ffff00) >> 8;
+	unsigned int p       = (pll_data & 0xff000000) >> 24;
+	volatile u32 *pllset_reg = (clkpwr_reg + 2 + pll_num);
+
+	*pllset_reg &= ~(1 << 28);
+	*clkpwr_reg  = (1 << pll_num);
+	while(*clkpwr_reg & (1<<31));
+
+	*pllset_reg  = ((1UL << 29) |
+			(0UL << 28) |
+			(s   << 0)  |
+			(m   << 8)  |
+			(p   << 18));
+	*clkpwr_reg  = (1 << pll_num);
+	while(*clkpwr_reg & (1<<31));
+
+	*pllset_reg &= ~((u32)(1UL<<29));
+	*clkpwr_reg  = (1 << pll_num);
+	while(*clkpwr_reg & (1<<31));
+
+	*pllset_reg |= (1 << 28);
+	*clkpwr_reg  = (1 << pll_num);
+	while(*clkpwr_reg & (1<<31));
+}
+
 #if 0
 void PLLDynamicChange(U32 Freq)
 {

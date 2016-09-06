@@ -35,7 +35,7 @@ monitor_vectors:
         b       .          				// 10 -
         b       .                   			// 14 -
         b       .                   			// 18 -
-        b       .					// 1C - FIQ Interrupt
+        b       smc_asm_monitor_fiq_handler		// 1C - FIQ Interrupt
 
 /*
  * (BL1) SMC Caller Handler
@@ -48,6 +48,17 @@ smc_asm_handler:
 	bl	bl1_smc_handler
 	ldmfd	sp!, {r4-r12, lr}
 	movs 	pc, r14
+
+.align 8
+/* monitor mode - fiq handler */
+.global smc_asm_monitor_fiq_handler
+smc_asm_monitor_fiq_handler:
+	stmfd	sp!, {r0-r12, lr}
+	bl	smc_monitor_fiq_handler
+	ldmfd	sp!, {r0-r12, lr}
+//	movs 	pc, r14
+	subs 	pc, r14, #4
+
 /*
  *  Only Monitor Mode - Deoks
  */
@@ -92,6 +103,15 @@ monitor_mode_init:
         orreq   r0, r0, #0x7                        	//  L2C control
         mcreq   p15, 0, r0, c1, c0, 1               	//  Write Aux Control Register
 #endif
+
+	/*
+	 * Processor is in Secure Mode, when the FIQ occurs
+	 * in, which specifies the vector jump to Monitor Mode.
+	 */
+	mrc	p15, 0, r0, c1, c1, 0			// Read SCR into Rt
+	orr	r0, r0, #(1 << 2)			// SCR- FIQ Forward[2]
+	mcr	p15, 0, r0, c1, c1, 0			// Write Rt to SCR
+
 	//;  Configure CPU
 	mrc	p15, 0, r0, c1, c0, 1
 	//;  Only try to set SMP mode if not yet set - cannot write AuxCtrl if in normal world

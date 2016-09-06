@@ -1,15 +1,63 @@
 #include "sysheader.h"
+#include "gic.h"
 
-unsigned char* gic_cpuif_get_baseaddr(void)
+/*******************************************************************************
+ * cpu-interface s/w interface accessors for reading entire registers
+ ******************************************************************************/
+
+unsigned char* gicc_get_baseaddr(void)
 {
-	return ((unsigned char*)0xF0000100);
+	return ((unsigned char*)GICC_BASEADDR);
 }
 
-unsigned char* gic_disp_get_baseaddr(void)
+unsigned int gicc_get_iar(void* base)
 {
-	return ((unsigned char*)0xF0001000);
+	return (mmio_read_32((base + GIC_CPUIF_IAR)) & 0xFFFF);
 }
 
+/*******************************************************************************
+ * cpu-interface s/w interface accessors for writing entire registers
+ ******************************************************************************/
+void gicc_set_ctrl(void* base, int val)
+{
+	mmio_set_32((base + GIC_CPUIF_CTRL), val);
+}
+
+void gicc_set_eoir(void* base, int val)
+{
+	int eoir = val & 0xFFFF;
+	mmio_write_32((base + GIC_CPUIF_EOIR), eoir);
+}
+
+/*******************************************************************************
+ * Distributor interface accessors for reading entire registers
+ ******************************************************************************/
+unsigned char* gicd_get_baseaddr(void)
+{
+	return ((unsigned char*)GICD_BASEADDR);
+}
+
+/*******************************************************************************
+ * Distributor interface accessors for writing entire registers
+ ******************************************************************************/
+void gicd_set_enable(void* base, int val)
+{
+	mmio_set_32((base + GIC_DIST_SENABLE), val);
+}
+
+void gicd_set_group(void* base, int val)
+{
+	mmio_write_32((base + GIC_DIST_GROUP), val);
+}
+
+void gicd_set_sgir(void* base, int val)
+{
+	mmio_write_32((base + GIC_DIST_SGIR), val);
+}
+
+/*******************************************************************************
+ * Setup the ARM GIC CPU and Distributor interfaces.
+******************************************************************************/
 #if 0
 void gic_disp_init(void)
 {

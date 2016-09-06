@@ -24,17 +24,16 @@ LDFLAGS		=	-Bstatic							\
 			-Wl,--build-id=none						\
 			-nostdlib
 
-SYS_OBJS	+=	startup.o secondboot.o armv7_libs.o subcpu.o			\
-			clockinit.o resetcon.o GPIO.o CRC32.o				\
-			 debug.o util.o buildinfo.o					\
-			sleep.o ema.o printf.o
+SYS_OBJS	+=	startup.o armv7_libs.o clockinit.o secondboot.o subcpu.o	\
+			sleep.o ema.o resetcon.o GPIO.o debug.o util.o CRC32.o		\
+			gic.o arm_gic.o dpc.o buildinfo.o printf.o
 
 #SYS_OBJS	+=	sysbus.o
 
 ifeq ($(SECURE), NO)
-SYS_OBJS	+=	gic.o non_secure.o smc_entry.o smc_handler.o sip_main.o std_svc_setup.o	\
+SYS_OBJS	+=	non_secure.o smc_entry.o smc_handler.o sip_main.o std_svc_setup.o	\
 			arm_topology.o psci_system_off.o psci_off.o psci_on.o 			\
-			psci_suspend.o psci_common.o psci_main.o
+			psci_suspend.o psci_common.o psci_main.o bclk-dfs.o
 endif
 
 ifeq ($(MEMTYPE),DDR3)

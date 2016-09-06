@@ -3,7 +3,7 @@
 #include <psci_main.h>
 #include <psci.h>
 
-extern int  armv7_get_cpu_id(void);
+extern int  armv7_get_cpuid(void);
 extern int  psci_validate_mpidr(unsigned int mpidr);
 
 extern void psci_power_down_wfi(void);
@@ -67,7 +67,7 @@ int psci_system_suspend(unsigned int entrypoint, unsigned int context_id)
 
 int psci_cpu_off(void)
 {
-	int cpu_id = armv7_get_cpu_id();
+	int cpu_id = armv7_get_cpuid();
 	int rc = 0;
 
 	/* Check the CPUx to Kill*/
