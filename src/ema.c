@@ -78,6 +78,7 @@ CBOOL isEMA3(U32 ecid_1, U32 ecid_2)
 
 	return (field > 2 ? CTRUE : CFALSE);
 }
+#endif // #if (AUTO_DETECT_EMA == 1)
 
 void setEMA(void)
 {
@@ -117,4 +118,3 @@ void setEMA(void)
 
 	return;
 }
-#endif // #if (AUTO_DETECT_EMA == 1)
