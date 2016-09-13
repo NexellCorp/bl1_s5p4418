@@ -42,14 +42,15 @@ CBOOL subcpu_on_start(U32 cpuid)
 
 void subcpu_boot(unsigned int cpuid)
 {
+#if defined(SECURE_MODE)
 	volatile U32 *aliveflag
 		= (U32 *)CPU_ALIVE_FLAG_ADDR;
 	DebugPutch('0' + cpuid);
 	*aliveflag = 1;
 
-#if defined(SECURE_MODE)
 	subcpu_wfi();
 #else
+	cpuid = cpuid;
 	g_psci_ep();
 #endif
 }
