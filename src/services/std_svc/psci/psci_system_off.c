@@ -7,34 +7,34 @@ void psci_system_off(void)
 	return;
 }
 
-/*******************************************************************************
- * s5pxx18 system reset (method: power control)
- ******************************************************************************/
- void reset_cpu(void)
+/*************************************************************
+ * s5p4418 system reset (method: power control)
+ *************************************************************/
+ void s5p4418_reset_cpu(void)
 {
 	void *base = (void *)PHY_BASEADDR_CLKPWR_MODULE;
-	const u32 sw_rst_enb_bitpos = 3;
-	const u32 sw_rst_enb_mask = 1 << sw_rst_enb_bitpos;
-	const u32 sw_rst_bitpos = 12;
-	const u32 sw_rst_mask = 1 << sw_rst_bitpos;
+	const unsigned int sw_rst_enb_bitpos = 3;
+	const unsigned int sw_rst_enb_mask = 1 << sw_rst_enb_bitpos;
+	const unsigned int sw_rst_bitpos = 12;
+	const unsigned int sw_rst_mask = 1 << sw_rst_bitpos;
 	int pwrcont = 0x224;
 	int pwrmode = 0x228;
-	u32 reg;
+	unsigned int reg;
 
-	reg = readl((void *)(base + pwrcont));
+	reg = mmio_read_32((void *)(base + pwrcont));
 
 	reg &= ~sw_rst_enb_mask;
 	reg |= 1 << sw_rst_enb_bitpos;
 
-	writel(reg, (void *)(base + pwrcont));
-	writel(sw_rst_mask, (void *)(base + pwrmode));
+	mmio_write_32((void *)(base + pwrcont), reg);
+	mmio_write_32((void *)(base + pwrmode), sw_rst_mask);
 }
 
-/*******************************************************************************
+/*************************************************************
  * System Reset the Reference Fucntion
- ******************************************************************************/
+ *************************************************************/
 void psci_system_reset(void)
 {
-	/* s5pxx18 reset  */
-	reset_cpu();
+	/* s5p4418 Reset  */
+	s5p4418_reset_cpu();
 }

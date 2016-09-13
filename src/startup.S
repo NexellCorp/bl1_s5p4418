@@ -276,7 +276,6 @@ secondary_startup:
         bic     r0, #(1 << 13)				// Clear V-bit
         mcr     p15, 0, r0, c1, c0, 0			// Write SCTLR
 
-
         bl      Invalidate_entire_branch_predictor
         bl      InvalidateDataCache
 
@@ -301,14 +300,14 @@ secondary_startup:
         //;  Configure CPU
         mrc     p15, 0, r0, c1, c0, 1
         //;  Only try to set SMP mode if not yet set - cannot write AuxCtrl if in normal world
-        tst     r0, #(1 << 6)                       	//;  SMP bit
-        orreq   r0, r0, #(1 << 6)                   	//;  Set SMP bit in aux control register
-        orreq   r0, r0, #0x7                        	//;  L2C control
-        mcreq   p15, 0, r0, c1, c0, 1               	//;  write Aux Control Register
+        tst     r0, #(1 << 6)                       	//  SMP bit
+        orreq   r0, r0, #(1 << 6)                   	//  Set SMP bit in aux control register
+        orreq   r0, r0, #0x7                        	//  L2C control
+        mcreq   p15, 0, r0, c1, c0, 1               	//  write Aux Control Register
 
         //; Set stack pointer
         ldr     sp, =BASEADDR_SRAM
-        add     sp, sp, #INTERNAL_SRAM_SIZE		//; Add to internal sram size.
+        add     sp, sp, #INTERNAL_SRAM_SIZE		// Add to internal sram size.
 
         mov     r1, #0x20
         sub     r2, r12, #1
@@ -333,7 +332,7 @@ subcpu_wfi:
         ldr     r3, [r0, #0x41C]			// get jump address
         cmp     r3, #0xFFFFFFFF				// check if invalid address
         bxne    r3					// if valid address, get jump.
-//	streq   r2, [r0]				// restore power gating status
+//	streq   r2, [r0]					// restore power gating status
         beq     subcpu_wfi
 #endif
 
@@ -343,7 +342,7 @@ subcpu_wfi:
 // suspend/resume routine
 //==================================================================
 #if (CONFIG_SUSPEND_RESUME == 1)	// this code is call linux kernel, so here is virtual memory space.
-.global s5pxx18_suspend
+.global s5p4418_suspend
 system_sleep:				// r0:alive r1:drex
 disable_mmu:
         mrc     p15, 0, r1, c1, c0, 0   		// Read control register
@@ -376,7 +375,7 @@ physical_start:
         add     sp, sp, #INTERNAL_SRAM_SIZE         	// Add to internal sram size.
 
         // Goto sleepMain function.
-        bl      s5pxx18_suspend
+        bl      s5p4418_suspend
 #else
 SystemSleep:
 #endif

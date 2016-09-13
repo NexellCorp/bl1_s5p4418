@@ -42,6 +42,7 @@
 #include "printf.h"
 #include "debug.h"
 #include "type.h"
+#include <common.h>
 
 //------------------------------------------------------------------------------
 //  Set DEBUG Macro

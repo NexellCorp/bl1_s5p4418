@@ -1,24 +1,24 @@
 #include <sysheader.h>
 #include <smcc_helpers.h>
+#include <psci.h>
 #include <gic.h>
 
 /* External function */
-extern  int armv7_get_cpuid(void);
-extern  int arm9_get_scr(void);
-extern void arm9_set_scr(int value);
-extern void set_nonsecure_mode(void);
-extern void set_secure_mode(void);
-
 extern unsigned int std_svc_smc_handler(unsigned int smc_fid,
 	unsigned int r1, unsigned int r2, unsigned int r3);
 
 extern unsigned int sip_smc_handler(unsigned int smc_fid,
 	unsigned int r1, unsigned int r2, unsigned int r3);
 
+extern int s5p4418_bclk_dfs_handler(void);
+extern int psci_cpu_off_handler(void);
+
 #define IS_SMC_TYPE(_fid)	((_fid >> 24) & 0xF)
 
 /* External Variable */
-extern volatile int g_fiq_flag;
+volatile int g_smc_id    = 0;
+volatile int g_fiq_flag  = 0;
+volatile int g_cpu_kill_num = 0;
 
 /*******************************************************************************
  * Monitor Mode FIQ Hanlder ofr servicing BL1 SMCs.
@@ -43,21 +43,21 @@ void smc_set_monitor_fiq(int enable)
  ******************************************************************************/
 int smc_monitor_fiq_handler(void)
 {
-	char* cpu_base = (char*)gicc_get_baseaddr();
-	int cpu_id = armv7_get_cpuid();
-	int eoir = 0;
+	int ret = 0;
 
 	set_secure_mode();
 
-	/* */
-	eoir = gicc_get_iar(cpu_base);
-	gicc_set_eoir(cpu_base, eoir);
+	if (g_smc_id == (int)0x84000002)
+		ret = psci_cpu_off_handler();
 
-	while(g_fiq_flag & (1 << cpu_id));
+	else if (g_smc_id == (int)0x82000009)
+		ret = s5p4418_bclk_dfs_handler();
+	else
+		WARN("unknown parameter smc_id : 0x%08X \r\n", g_smc_id);
 
 	set_nonsecure_mode();
 
-	return 0;
+	return ret;
 }
 
 /*******************************************************************************

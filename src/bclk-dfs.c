@@ -5,7 +5,8 @@
 
 #define SGI_IRQ_8			8
 
-volatile int g_fiq_flag = 0;
+extern volatile int g_smc_id;
+extern volatile int g_fiq_flag;
 
 /* External function */
 extern int  armv7_get_cpuid(void);
@@ -17,6 +18,22 @@ extern void delay_ms(int ms);
 extern void s5p4418_cpuidle(int cpu_id, int int_id);
 extern void s5p4418_change_pll(volatile int *base, unsigned int pll_data);
 extern void smc_set_monitor_fiq(int enable);
+
+int s5p4418_bclk_dfs_handler(void)
+{
+	char* cpu_base = (char*)gicc_get_baseaddr();
+	int cpu_id = armv7_get_cpuid();
+	int eoir = 0;
+
+	/* */
+	eoir = gicc_get_iar(cpu_base);
+	gicc_set_eoir(cpu_base, eoir);
+
+	/* Sequenceal */
+	while(g_fiq_flag & (1 << cpu_id));
+
+	return 0;
+}
 
 /*******************************************************************************
  * For the BCLK DFS, the remaining CPU changes to the WakeUp state.
@@ -45,6 +62,8 @@ static int cpu_down_force(void)
 {
 	int cpu_id = armv7_get_cpuid();
 	int id = 0;
+
+	g_smc_id = 0x82000009;
 
 	/* Using the SGI(GIC), and calls to the idle of the CORE FIQ. */
 	for (id = 0; id < 4; id++) {

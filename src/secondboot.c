@@ -50,7 +50,7 @@ extern void buildinfo(void);
 extern void printClkInfo(void);
 
 extern void setEMA(void);
-extern void s5pxx18_resume(void);
+extern void s5p4418_resume(void);
 
 extern int CRC_Check(void* buf, unsigned int size, unsigned int ref_crc);
 
@@ -158,7 +158,7 @@ void BootMain(void)
 	if (is_resume) {
 		printf(" DDR3 SelfRefresh exit Done!\r\n0x%08X\r\n",
 				ReadIO32(&pReg_Alive->WAKEUPSTATUS));
-		s5pxx18_resume();
+		s5p4418_resume();
 	}
 	WriteIO32(&pReg_Alive->ALIVEPWRGATEREG, 0);
 #else // #if (CONFIG_SUSPEND_RESUME == 1)

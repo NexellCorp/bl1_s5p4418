@@ -1,19 +1,18 @@
 #include <sysheader.h>
+#include <plat_pm.h>
 #include <psci.h>
 
 /* External function */
-extern void system_sleep(void);
-extern void s5pxx18_resume(void);
 extern unsigned int __calc_crc(void *addr, int len);
 
 /* Macro for Suspend/Resume */
 #define PSCI_SUSPEND		0
 #define PSCI_RESUME		1
 
-/*******************************************************************************
+/*************************************************************
  * Before entering suspend and Mark the location and promise Kernel.
  * Reference CRC, Jump Address, Memory Address(CRC), Size(CRC)
- ******************************************************************************/
+ *************************************************************/
 static void suspend_mark(unsigned int state, unsigned int entrypoint, unsigned int crc,
 						unsigned int mem, unsigned int size)
 {
@@ -21,25 +20,25 @@ static void suspend_mark(unsigned int state, unsigned int entrypoint, unsigned i
 	unsigned int crc;
 	unsigned int mem = 0x40000000, size = (512*1024*1024);
 #endif
-	WriteIO32(&pReg_Alive->ALIVESCRATCHRSTREG, 0xFFFFFFFF);
-	WriteIO32(&pReg_Alive->ALIVESCRATCHRST1, 0xFFFFFFFF);
-	WriteIO32(&pReg_Alive->ALIVESCRATCHRST2, 0xFFFFFFFF);
-	WriteIO32(&pReg_Alive->ALIVESCRATCHRST3, 0xFFFFFFFF);
-	WriteIO32(&pReg_Alive->ALIVESCRATCHRST4, 0xFFFFFFFF);
+	mmio_write_32(&pReg_Alive->ALIVESCRATCHRSTREG, 0xFFFFFFFF);
+	mmio_write_32(&pReg_Alive->ALIVESCRATCHRST1, 0xFFFFFFFF);
+	mmio_write_32(&pReg_Alive->ALIVESCRATCHRST2, 0xFFFFFFFF);
+	mmio_write_32(&pReg_Alive->ALIVESCRATCHRST3, 0xFFFFFFFF);
+	mmio_write_32(&pReg_Alive->ALIVESCRATCHRST4, 0xFFFFFFFF);
 
 	if (state == PSCI_SUSPEND) {
 		crc = __calc_crc((void *)mem, size);
-		WriteIO32(&pReg_Alive->ALIVESCRATCHSETREG, SUSPEND_SIGNATURE);
-		WriteIO32(&pReg_Alive->ALIVESCRATCHSET1, entrypoint);
-		WriteIO32(&pReg_Alive->ALIVESCRATCHSET2, crc);
-		WriteIO32(&pReg_Alive->ALIVESCRATCHSET3, mem);
-		WriteIO32(&pReg_Alive->ALIVESCRATCHSET4, size);
+		mmio_write_32(&pReg_Alive->ALIVESCRATCHSETREG, SUSPEND_SIGNATURE);
+		mmio_write_32(&pReg_Alive->ALIVESCRATCHSET1, entrypoint);
+		mmio_write_32(&pReg_Alive->ALIVESCRATCHSET2, crc);
+		mmio_write_32(&pReg_Alive->ALIVESCRATCHSET3, mem);
+		mmio_write_32(&pReg_Alive->ALIVESCRATCHSET4, size);
 	}
 }
 
-/*******************************************************************************
+/*************************************************************
  * Designed to meet the the PSCI Common Interface.
- ******************************************************************************/
+ *************************************************************/
 int psci_cpu_suspend_start(unsigned int entrypoint)
 {
 	/* s5pxx18 suspend mark */
@@ -51,9 +50,9 @@ int psci_cpu_suspend_start(unsigned int entrypoint)
 	return PSCI_E_SUCCESS;
 }
 
-/*******************************************************************************
+/*************************************************************
  * Designed to meet the the PSCI Common Interface.
- ******************************************************************************/
+ *************************************************************/
 void psci_cpu_suspend_finish(unsigned int cpu_idx,
 			     psci_power_state_t *state_info)
 {
@@ -62,5 +61,5 @@ void psci_cpu_suspend_finish(unsigned int cpu_idx,
 	state_info = state_info;
 
 	/* the function for system wakeup */
-	s5pxx18_resume();
+	s5p4418_resume();
 }

@@ -2,11 +2,6 @@
 #include <gic.h>
 
 /* External function */
-extern void set_nonsecure_mode(void);
-extern void set_secure_mode(void);
-extern int  arm9_get_scr(void);
-extern void arm9_set_scr(int reg);
-extern int  armv7_get_cpuid(void);
 extern void s5p4418_bclk_dfs(unsigned int pll_data);
 
 /* Macro for Secure Write/Read  */

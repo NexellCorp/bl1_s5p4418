@@ -1,53 +1,53 @@
 #include <sysheader.h>
+#include <plat_pm.h>
 #include <gic.h>
 #include "psci.h"
 
 /* External Function */
-extern void ResetCon(U32 devicenum, CBOOL en);
+extern void psci_power_down_wfi(void);
+
 /* External Variable */
-extern unsigned int g_cpu_state;
+extern volatile int g_fiq_flag;
+extern volatile int g_cpu_kill_num;
 
-/*
- * Must be S5P44418
- * For CPU Power Off, STANDBY_WFI[n]
- * the signal must wait until be High.
- */
-int psci_get_standby_wfi(unsigned int cpu_id)
+int psci_cpu_off_handler(void)
 {
-	unsigned int bitpos = 12;
+	char* cpu_base = (char*)gicc_get_baseaddr();
+	int cpu_id = armv7_get_cpuid();
+	int eoir = 0;
+	int ret;
 
-	return (ReadIO32(&pReg_ClkPwr->PWRCONT) >> (cpu_id + bitpos));
+	eoir = gicc_get_iar(cpu_base);
+	gicc_set_eoir(cpu_base, eoir);
+
+	/* It is necessary in order to ensure sequential operation.*/
+	if (cpu_id != 0) {
+		g_fiq_flag |= (1 << cpu_id);
+		do {
+			cache_delay_ms(0xFFFFF);
+		} while(g_fiq_flag & (1 << cpu_id));
+
+		return 0;
+	}
+
+	/* cpu0 operated to the subcpu power off*/
+	ret =  s5p4418_cpu_off(g_cpu_kill_num);
+	if (ret > 0)
+		g_fiq_flag = 0;
+
+	return ret;
 }
 
- /*******************************************************************************
+/*************************************************************
  * Must be S5P4418
  * CPU Power Off sequence in S5P4418
- * must go through the following steps:
- *
- * Step 01. Set the Clam Signal(High)
- * Step 02. Have to wait more than 20us.
- * Step 03. Waiting for the Standard WFI Signal Gating.
- * Step 04. Set the CPUx Power Down
- * Step 05. Reset to the CPUx Block.
- ******************************************************************************/
-int psci_do_cpu_off(unsigned int cpu_id)
+ * Reference is made to function psci interface .
+ *************************************************************/
+int psci_do_cpu_off(unsigned int target_cpu)
 {
-	int ret = 1;
+	unsigned int cpu_id = ((target_cpu >> 0) & 0xFF);
 
-	/* Step 01. Set to (CPUx) Clamp Signal High */
-	SetIO32(&pReg_Tieoff->TIEOFFREG[0], (1 << (cpu_id + 1)));
+	s5p4418_cpu_off(cpu_id);
 
-	/* Step 02. Waiting for 20us */
-	delay_ms(0xFFFFF);
-
-	/* Step 03. Waiting for the Standard WFI Signal Gating. */
-	while(psci_get_standby_wfi(cpu_id));
-
-	/* Step 04. CPUx Power Down (1: Power Down, 0:Active) */
-	SetIO32(&pReg_Tieoff->TIEOFFREG[1], ((1 << cpu_id) << (37 - 32)));
-
-	/* Step 05. CPUx Block Reset Assert */
-	ResetCon(cpu_id, CTRUE);
-
-	return ret;		// 0: ON, 1:OFF, 2:PENDING
+	return s5p4418_cpu_check(cpu_id);	// 0: ON, 1:OFF, 2:PENDING
 }

@@ -127,6 +127,15 @@ enableICache:
         mov     pc, lr
         b       .
 
+.global cache_delay_ms
+cache_delay_ms:
+	mov	r1, #0
+subs_repeat:
+	subs	r0, #1
+	cmp	r0, r1
+	bne	subs_repeat
+	bx	lr
+
 /* ------------------------------------------
  * Non-Secure Access Control Register
  * ------------------------------------------
