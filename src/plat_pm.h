@@ -26,6 +26,8 @@ void s5p4418_cpu_off_wfi_ready(void);
  int s5p4418_cpu_on(unsigned int cpu_id);
  int s5p4418_cpu_off(unsigned int cpu_id);
 
+void s5p4418_reset_cpu(void);
+
 void s5p4418_suspend(void);
 void s5p4418_resume(void);
 
