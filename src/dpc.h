@@ -15,18 +15,12 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-#include "psci.h"
+#ifndef __DPC_H__
+#define __DPC_H__
 
-/* External function */
-extern int arm_check_mpidr(unsigned int mpidr);
+void dpc_set_enable_all(unsigned int module, unsigned int enb);
+ int dpc_get_pending_all(unsigned int module);
+void dpc_clear_pending_all(unsigned int module);
+int  dpc_enabled(unsigned int module);
 
-/*******************************************************************************
- * Simple routine to determine whether a mpidr is valid or not.
- ******************************************************************************/
-int psci_validate_mpidr(unsigned int mpidr)
-{
-	if (arm_check_mpidr(mpidr) < 0)
-		return PSCI_E_INVALID_PARAMS;
-
-	return PSCI_E_SUCCESS;
-}
+#endif

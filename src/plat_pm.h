@@ -15,18 +15,20 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-#include "psci.h"
+#ifndef __PLAT_PM_H__
+#define __PLAT_PM_H__
 
-/* External function */
-extern int arm_check_mpidr(unsigned int mpidr);
+void s5p4418_cpuidle(int cpu_id, int int_id);
+void s5p4418_cpu_off_wfi_ready(void);
 
-/*******************************************************************************
- * Simple routine to determine whether a mpidr is valid or not.
- ******************************************************************************/
-int psci_validate_mpidr(unsigned int mpidr)
-{
-	if (arm_check_mpidr(mpidr) < 0)
-		return PSCI_E_INVALID_PARAMS;
+ int s5p4418_cpu_check(unsigned int cpu_id);
 
-	return PSCI_E_SUCCESS;
-}
+ int s5p4418_cpu_on(unsigned int cpu_id);
+ int s5p4418_cpu_off(unsigned int cpu_id);
+
+void s5p4418_reset_cpu(void);
+
+void s5p4418_suspend(void);
+void s5p4418_resume(void);
+
+#endif	// __PLAT_PM_H__

@@ -15,18 +15,24 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-#include "psci.h"
+#ifndef __COMMON_H__
+#define __COMMON_H__
 
-/* External function */
-extern int arm_check_mpidr(unsigned int mpidr);
+/* "startup.S" startup code function */
+void system_sleep(void);
 
-/*******************************************************************************
- * Simple routine to determine whether a mpidr is valid or not.
- ******************************************************************************/
-int psci_validate_mpidr(unsigned int mpidr)
-{
-	if (arm_check_mpidr(mpidr) < 0)
-		return PSCI_E_INVALID_PARAMS;
+/* "armv7_lib.S" armv7 function */
+void set_nonsecure_mode(void);
+void set_secure_mode(void);
 
-	return PSCI_E_SUCCESS;
-}
+ int arm9_get_scr(void);
+void arm9_set_scr(int reg);
+
+ int arm9_get_auxctrl(void);
+void arm9_set_auxctrl(int value);
+
+ int armv7_get_cpuid(void);
+
+void cache_delay_ms(int ms);
+
+#endif

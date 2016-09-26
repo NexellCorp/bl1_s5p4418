@@ -1,17 +1,19 @@
-#	Copyright (C) 2009 Nexell Co., All Rights Reserved
-#	Nexell Co. Proprietary & Confidential
-#
-#	NEXELL INFORMS THAT THIS CODE AND INFORMATION IS PROVIDED "AS IS" BASE
-#	AND WITHOUT WARRANTY OF ANY KIND, EITHER EXPRESSED OR IMPLIED, INCLUDING
-#	BUT NOT LIMITED TO THE IMPLIED WARRANTIES OF MERCHANTABILITY AND/OR FITNESS
-#	FOR A PARTICULAR PURPOSE.
-#
-#	Module		: Base
-#	File		: Makefile
-#	Description	:
-#	Author		:
-#	History		:
-#------------------------------------------------------------------------------
+ # Copyright (C) 2016  Nexell Co., Ltd.
+ # Author: Sangjong, Han <hans@nexell.co.kr>
+ #
+ # This program is free software; you can redistribute it and/or
+ # modify it under the terms of the GNU General Public License
+ #
+ # as published by the Free Software Foundation; either version 2
+ # of the License, or (at your option) any later version.
+ #
+ # This program is distributed in the hope that it will be useful,
+ # but WITHOUT ANY WARRANTY; without even the implied warranty of
+ # MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ # GNU General Public License for more details.
+ #
+ # You should have received a copy of the GNU General Public License
+ # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 include config.mak
 
@@ -24,17 +26,16 @@ LDFLAGS		=	-Bstatic							\
 			-Wl,--build-id=none						\
 			-nostdlib
 
-SYS_OBJS	+=	startup.o secondboot.o armv7_libs.o subcpu.o			\
-			clockinit.o resetcon.o GPIO.o CRC32.o				\
-			 debug.o util.o buildinfo.o					\
-			sleep.o ema.o printf.o
+SYS_OBJS	+=	startup.o armv7_libs.o clockinit.o secondboot.o subcpu.o	\
+			plat_pm.o ema.o resetcon.o GPIO.o debug.o util.o CRC32.o	\
+			gic.o arm_gic.o dpc.o buildinfo.o printf.o
 
 #SYS_OBJS	+=	sysbus.o
 
 ifeq ($(SECURE), NO)
-SYS_OBJS	+=	gic.o non_secure.o smc_entry.o smc_handler.o sip_main.o std_svc_setup.o	\
+SYS_OBJS	+=	non_secure.o smc_entry.o smc_handler.o sip_main.o std_svc_setup.o	\
 			arm_topology.o psci_system_off.o psci_off.o psci_on.o 			\
-			psci_suspend.o psci_common.o psci_main.o
+			psci_suspend.o psci_common.o psci_main.o bclk-dfs.o
 endif
 
 ifeq ($(MEMTYPE),DDR3)

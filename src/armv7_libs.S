@@ -1,18 +1,19 @@
 /*
- *      Copyright (C) 2012 Nexell Co., All Rights Reserved
- *      Nexell Co. Proprietary & Confidential
+ * Copyright (C) 2016  Nexell Co., Ltd.
+ * Author: DeokJin, Lee <truevirtue@nexell.co.kr>
  *
- *      NEXELL INFORMS THAT THIS CODE AND INFORMATION IS PROVIDED "AS IS" BASE
- *      AND WITHOUT WARRANTY OF ANY KIND, EITHER EXPRESSED OR IMPLIED, INCLUDING
- *      BUT NOT LIMITED TO THE IMPLIED WARRANTIES OF MERCHANTABILITY AND/OR
- *	FITNESS
- *      FOR A PARTICULAR PURPOSE.
+ * This program is free software; you can redistribute it and/or
+ * modify it under the terms of the GNU General Public License
+ * as published by the Free Software Foundation; either version 2
+ * of the License, or (at your option) any later version.
  *
- *      Module          : ARM & CORE
- *      File            : armv7_libs.S
- *      Description     :
- *      Author          : Hans
- *      History         :
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 #include "nx_pyrope.h"
 #include "cfgBootDefine.h"
@@ -127,6 +128,15 @@ enableICache:
         mov     pc, lr
         b       .
 
+.global cache_delay_ms
+cache_delay_ms:
+	mov	r1, #0
+subs_repeat:
+	subs	r0, #1
+	cmp	r0, r1
+	bne	subs_repeat
+	bx	lr
+
 /* ------------------------------------------
  * Non-Secure Access Control Register
  * ------------------------------------------
@@ -149,8 +159,8 @@ set_secure_mode:
 	mcr	p15, 0, r0, c1, c1, 0
 	bx	lr
 
-.global armv7_get_cpu_id
-armv7_get_cpu_id:
+.global armv7_get_cpuid
+armv7_get_cpuid:
         mrc     p15, 0, r0, c0, c0, 5		// Get our cpu id
         ands    r0, r0, #0xF			// Save CPU id
         bx	lr

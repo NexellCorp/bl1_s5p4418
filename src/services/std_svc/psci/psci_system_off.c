@@ -1,4 +1,22 @@
+/*
+ * Copyright (C) 2016  Nexell Co., Ltd.
+ * Author: DeokJin, Lee <truevirtue@nexell.co.kr>
+ *
+ * This program is free software; you can redistribute it and/or
+ * modify it under the terms of the GNU General Public License
+ * as published by the Free Software Foundation; either version 2
+ * of the License, or (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program.  If not, see <http://www.gnu.org/licenses/>.
+ */
 #include <sysheader.h>
+#include <plat_pm.h>
 #include <psci.h>
 
 void psci_system_off(void)
@@ -7,34 +25,11 @@ void psci_system_off(void)
 	return;
 }
 
-/*******************************************************************************
- * s5pxx18 system reset (method: power control)
- ******************************************************************************/
- void reset_cpu(void)
-{
-	void *base = (void *)PHY_BASEADDR_CLKPWR_MODULE;
-	const u32 sw_rst_enb_bitpos = 3;
-	const u32 sw_rst_enb_mask = 1 << sw_rst_enb_bitpos;
-	const u32 sw_rst_bitpos = 12;
-	const u32 sw_rst_mask = 1 << sw_rst_bitpos;
-	int pwrcont = 0x224;
-	int pwrmode = 0x228;
-	u32 reg;
-
-	reg = readl((void *)(base + pwrcont));
-
-	reg &= ~sw_rst_enb_mask;
-	reg |= 1 << sw_rst_enb_bitpos;
-
-	writel(reg, (void *)(base + pwrcont));
-	writel(sw_rst_mask, (void *)(base + pwrmode));
-}
-
-/*******************************************************************************
+/*************************************************************
  * System Reset the Reference Fucntion
- ******************************************************************************/
+ *************************************************************/
 void psci_system_reset(void)
 {
-	/* s5pxx18 reset  */
-	reset_cpu();
+	/* s5p4418 Reset  */
+	s5p4418_reset_cpu();
 }
