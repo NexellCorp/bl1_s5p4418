@@ -31,31 +31,31 @@
 #define LOG_LEVEL_VERBOSE		50
 
 
-#if LOG_LEVEL >= LOG_LEVEL_NOTICE
+#if ((LOG_LEVEL >= LOG_LEVEL_NOTICE) && defined(SYSLOG_ON))
 # define NOTICE(...)	printf("NOTICE:  " __VA_ARGS__)
 #else
 # define NOTICE(...)
 #endif
 
-#if LOG_LEVEL >= LOG_LEVEL_ERROR
+#if ((LOG_LEVEL >= LOG_LEVEL_ERROR) && defined(SYSLOG_ON))
 # define ERROR(...)	printf("ERROR:   " __VA_ARGS__)
 #else
 # define ERROR(...)
 #endif
 
-#if LOG_LEVEL >= LOG_LEVEL_WARNING
+#if ((LOG_LEVEL >= LOG_LEVEL_WARNING) && defined(SYSLOG_ON))
 # define WARN(...)	printf("WARNING: " __VA_ARGS__)
 #else
 # define WARN(...)
 #endif
 
-#if LOG_LEVEL >= LOG_LEVEL_INFO
+#if ((LOG_LEVEL >= LOG_LEVEL_INFO) && defined(SYSLOG_ON))
 # define INFO(...)	printf("INFO:    " __VA_ARGS__)
 #else
 # define INFO(...)
 #endif
 
-#if LOG_LEVEL >= LOG_LEVEL_VERBOSE
+#if ((LOG_LEVEL >= LOG_LEVEL_VERBOSE) && defined(SYSLOG_ON))
 # define VERBOSE(...)	printf("VERBOSE: " __VA_ARGS__)
 #else
 # define VERBOSE(...)
