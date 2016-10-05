@@ -60,14 +60,14 @@
 //  Set DEBUG Macro
 //------------------------------------------------------------------------------
 
-#if 0 // def NX_DEBUG
+#if defined(SYSLOG_ON)
 #define SYSMSG printf
 #else
 #define SYSMSG(x, ...)
 #endif
 
 // Memory debug message
-#if 0
+#if defined(SYSLOG_ON)
 #define MEMMSG  printf
 #else
 #define MEMMSG(x, ...)

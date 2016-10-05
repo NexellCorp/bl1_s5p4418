@@ -22,6 +22,7 @@
 
 extern void DMC_Delay(int milisecond);
 extern void ResetCon(U32 devicenum, CBOOL en);
+extern void device_reset(void);
 
 extern void subcpu_bringup(void);
 
@@ -174,7 +175,7 @@ void __init BootMain(void)
 	/*  */
 	enableL2Cache(CTRUE);
 
-#if 0 // Clock Information Display.
+#if 1 // Clock Information Display.
 	/* Clock Information */
 	printClkInfo();
 #endif
@@ -193,18 +194,18 @@ void __init BootMain(void)
 	init_LPDDR3(is_resume);
 #endif
 
-	/* Exit to Self Refresh  */
+	/* Exit to Self Refresh */
 	if (is_resume) 
 		exitSelfRefresh();
 
-	SYSMSG("DDR3/LPDDR3 Init Done!\r\n");
+	NOTICE("DDR3/LPDDR3 Init Done!\r\n");
 
 #if (CONFIG_BUS_RECONFIG == 1)
 	setBusConfig();
 #endif
 
 	if (is_resume) {
-		printf(" DDR3 SelfRefresh exit Done!\r\n0x%08X\r\n",
+		NOTICE(" DDR3 SelfRefresh exit Done!\r\n0x%08X\r\n",
 				ReadIO32(&pReg_Alive->WAKEUPSTATUS));
 		s5p4418_resume();
 	}
@@ -218,7 +219,7 @@ void __init BootMain(void)
 #ifdef MEM_TYPE_LPDDR23
 	init_LPDDR3(is_resume);
 #endif
-	SYSMSG("DDR3/LPDDR3 Init Done!\r\n");
+	NOTICE("DDR3/LPDDR3 Init Done!\r\n");
 
 #if (CONFIG_BUS_RECONFIG == 1)
 	setBusConfig();
@@ -226,9 +227,9 @@ void __init BootMain(void)
 #endif // #if (CONFIG_SUSPEND_RESUME == 1)
 
 	if (pSBI->SIGNATURE != HEADER_ID)
-		printf("2nd Boot Header is invalid, Please check it out!\r\n");
+		ERROR("2nd Boot Header is invalid, Please check it out!\r\n");
 
-	/* Check the data loaded to the SDRAM as a CRC */
+	/* Check the (SDRAM)Memory */
 #if defined(STANDARD_MEMTEST)
 	memtester_main((U32)0x40000000UL, (U32)0x50000000UL, 0x10);
 #elif defined(SIMPLE_MEMTEST)
@@ -236,21 +237,21 @@ void __init BootMain(void)
 #endif
 
 #if defined(LOAD_FROM_USB)
-	printf( "Loading from usb...\r\n" );
-	ret = iUSBBOOT(pTBI);            // for USB boot
+	NOTICE("Loading from usb...\r\n" );
+	ret = iUSBBOOT(pTBI);			// for USB boot
 #endif
 
 	switch (pSBI->DBI.SPIBI.LoadDevice) {
 #if defined(SUPPORT_USB_BOOT)
 		case BOOT_FROM_USB:
-			printf("Loading from usb...\r\n");
+			SYSMSG("Loading from usb...\r\n");
 			ret = iUSBBOOT(pTBI);	// for USB boot
 			break;
 #endif
 
 #if defined(SUPPORT_SDMMC_BOOT)
 		case BOOT_FROM_SDMMC:
-			printf("Loading from sdmmc...\r\n");
+			SYSMSG("Loading from sdmmc...\r\n");
 			ret = iSDXCBOOT(pTBI);	// for SD boot
 			break;
 #endif
@@ -263,12 +264,12 @@ void __init BootMain(void)
 #endif
 	if (ret) {
 		void (*pLaunch)(U32, U32) = (void (*)(U32, U32))pTBI->LAUNCHADDR;
-		printf(" Image Loading Done!\r\n");
-		printf("Launch to 0x%08X\r\n", (U32)pLaunch);
+		SYSMSG("Image Loading Done!\r\n");
+		SYSMSG("Launch to 0x%08X\r\n", (U32)pLaunch);
 		while (!DebugIsUartTxDone());
 		pLaunch(0, 4330);
 	}
 
-	printf("Image Loading Failure Try to USB boot\r\n");
+	SYSMSG("Image Loading Failure Try to USB boot\r\n");
 	while (!DebugIsUartTxDone());
 }

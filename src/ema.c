@@ -131,7 +131,7 @@ void setEMA(void)
 
 	enableICache(CTRUE);
 
-	printf("EMA VALUE : %s\r\n", (ema == 3 ? "011" : "001"));
+	NOTICE("EMA VALUE : %s\r\n", (ema == 3 ? "011" : "001"));
 
 	return;
 }

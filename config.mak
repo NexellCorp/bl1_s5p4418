@@ -41,8 +41,11 @@ CFLAGS				:=
 SUPPORT_USB_BOOT		= y
 SUPPORT_SDMMC_BOOT		= y
 
+# System Log Message
+SYSLOG				?= n
+
 # Secure Boot
-SECURE_ON           ?= 0
+SECURE_ON			?= 0
 
 ifeq ($(CHIPNAME), NXP4330)
 BOARD				= LEPUS
@@ -151,6 +154,10 @@ CFLAGS				+=	-g -Wall				\
 					-DINITPMIC_$(INITPMIC)			\
 					-DCHIPID_$(CHIPNAME)			\
 					-D_2NDBOOT_MODE -D$(BOARD)
+
+ifeq ($(SYSLOG), y)
+CFLAGS				+=	-DSYSLOG_ON
+endif
 
 ifeq ($(INITPMIC), YES)
 CFLAGS				+=	-D$(BOARD)_PMIC_INIT
