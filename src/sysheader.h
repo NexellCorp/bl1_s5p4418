@@ -45,6 +45,17 @@
 #include "type.h"
 #include <common.h>
 
+#define BL1_SDRAMBOOT_LOADADDR			(0xFFFF0000)
+#define BL1_SDMMCBOOT_DEVADDR			(0x200)
+#define BL1_SDMMCBOOT_LOADSIZE			(16*1024)
+#define SRAM_MAXSIZE				(32*1024)
+#define BL1_STACKSIZE				(3072)
+
+#define __section(S)	__attribute__ ((__section__(#S)))
+#define __init		__section(.init.text)
+#define __initdata	__section(.init.data)
+#define __initcode	__section(.init.code)
+
 //------------------------------------------------------------------------------
 //  Set DEBUG Macro
 //------------------------------------------------------------------------------
@@ -75,21 +86,21 @@
 
 #if defined(__SET_GLOBAL_VARIABLES)
 
-struct NX_SecondBootInfo *const pSBI =
+struct NX_SecondBootInfo *const __initdata pSBI =
     (struct NX_SecondBootInfo * const)BASEADDR_SRAM;
-struct NX_SecondBootInfo *const pTBI =
+struct NX_SecondBootInfo *const __initdata pTBI =
     (struct NX_SecondBootInfo * const)BASEADDR_SRAM;
-struct NX_GPIO_RegisterSet (*const pReg_GPIO)[1] =
+struct NX_GPIO_RegisterSet (*const __initdata pReg_GPIO)[1] =
     (struct NX_GPIO_RegisterSet (*const)[])PHY_BASEADDR_GPIOA_MODULE;
 struct NX_ALIVE_RegisterSet *const pReg_Alive =
     (struct NX_ALIVE_RegisterSet * const)PHY_BASEADDR_ALIVE_MODULE;
-struct NX_TIEOFF_RegisterSet *const pReg_Tieoff =
+struct NX_TIEOFF_RegisterSet *const __initdata pReg_Tieoff =
     (struct NX_TIEOFF_RegisterSet * const)PHY_BASEADDR_TIEOFF_MODULE;
 struct NX_ECID_RegisterSet *const pReg_ECID =
     (struct NX_ECID_RegisterSet * const)PHY_BASEADDR_ECID_MODULE;
-struct NX_CLKPWR_RegisterSet *const pReg_ClkPwr =
+struct NX_CLKPWR_RegisterSet *const __initdata pReg_ClkPwr =
     (struct NX_CLKPWR_RegisterSet * const)PHY_BASEADDR_CLKPWR_MODULE;
-struct NX_RSTCON_RegisterSet *const pReg_RstCon =
+struct NX_RSTCON_RegisterSet *const __initdata pReg_RstCon =
     (struct NX_RSTCON_RegisterSet * const)PHY_BASEADDR_RSTCON_MODULE;
 struct NX_DREXSDRAM_RegisterSet *const pReg_Drex =
     (struct NX_DREXSDRAM_RegisterSet * const)PHY_BASEADDR_DREX_MODULE_CH0_APB;
@@ -103,14 +114,14 @@ struct NX_WDT_RegisterSet *const pReg_WDT =
 
 #else
 
-extern struct NX_SecondBootInfo *const pSBI; // second boot info
-extern struct NX_SecondBootInfo *const pTBI; // third boot info
+extern struct NX_SecondBootInfo *const __initdata pSBI; // second boot info
+extern struct NX_SecondBootInfo *const __initdata pTBI; // third boot info
 extern struct NX_GPIO_RegisterSet (*const pReg_GPIO)[1];
 extern struct NX_ALIVE_RegisterSet *const pReg_Alive;
-extern struct NX_TIEOFF_RegisterSet *const pReg_Tieoff;
+extern struct NX_TIEOFF_RegisterSet *const __initdata pReg_Tieoff;
 extern struct NX_ECID_RegisterSet *const pReg_ECID;
-extern struct NX_CLKPWR_RegisterSet *const pReg_ClkPwr;
-extern struct NX_RSTCON_RegisterSet *const pReg_RstCon;
+extern struct NX_CLKPWR_RegisterSet *const __initdata pReg_ClkPwr;
+extern struct NX_RSTCON_RegisterSet *const __initdata pReg_RstCon;
 extern struct NX_DREXSDRAM_RegisterSet *const pReg_Drex;
 extern struct NX_DDRPHY_RegisterSet *const pReg_DDRPHY;
 extern struct NX_RTC_RegisterSet *const pReg_RTC;

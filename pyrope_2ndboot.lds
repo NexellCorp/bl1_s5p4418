@@ -9,6 +9,9 @@ SECTIONS
 	.text :
 	{
 		obj/startup.o	(.text)
+		*(.init.text)
+		*(.init.data)
+		*(.init.code)
 		*(.text)
 	}
 

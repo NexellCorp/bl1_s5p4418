@@ -23,7 +23,7 @@ static unsigned int RESET_IDX_LIST[2] =
 	RESETINDEX_OF_PWM_MODULE_PRESETn
 };
 
-void ResetCon(U32 devicenum, CBOOL en)
+void __init ResetCon(U32 devicenum, CBOOL en)
 {
 	if (en)
 		ClearIO32(&pReg_RstCon->REGRST[(devicenum >> 5) & 0x3],

@@ -16,6 +16,7 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+#include <sysheader.h>
 #include <nx_pyrope.h>
 #include <nx_type.h>
 #include <nx_debug2.h>
@@ -30,9 +31,9 @@ struct NXPYROPE_GPIO_RegSet {
 };
 
 #if !DIRECT_IO
-static struct NXPYROPE_GPIO_RegSet (*const pBaseGPIOReg)[1] =
+static struct NXPYROPE_GPIO_RegSet (*const __initdata pBaseGPIOReg)[1] =
     (struct NXPYROPE_GPIO_RegSet(*)[])(PHY_BASEADDR_GPIOA_MODULE);
-void GPIOSetAltFunction(U32 AltFunc)
+void __init GPIOSetAltFunction(U32 AltFunc)
 {
 	register struct NX_GPIO_RegisterSet *pGPIOReg =
 		&pBaseGPIOReg[(AltFunc >> 8) & 0x7]->NXGPIO;

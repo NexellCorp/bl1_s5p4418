@@ -77,7 +77,46 @@ void enableL2Cache(unsigned int enb)
 	WriteIO32(&pReg_Tieoff->TIEOFFREG[0], reg);
 }
 
-void BootMain(void)
+static int __init check_bl1_size(void)
+{
+	if (pSBI->LOADSIZE <= (SRAM_MAXSIZE - BL1_STACKSIZE)) {
+		return 0;
+	} else{
+		/* Do not exceed the 28K (32K - Stack SIze(3KB). */
+		ERROR("BL1 is, must not exceed the maximum size. (28KB <= %d Byte)",
+			(pSBI->LOADSIZE));
+		return -1;
+	}
+}
+
+#ifdef CHIPID_NXP4330
+extern unsigned int __init sdmmc_self_boot(void);
+
+/*
+ * NXP4330 a part to overcome the limitations
+ * on the size used in the SRAM Romboot(rev2).
+ */
+static int __init nxp4330_self_boot(void)
+{
+	int boot_option  = pSBI->DBI.SDMMCBI.LoadDevice;
+	unsigned int fix_bl1_size = (16 * 1024);
+	int ret = 0;
+
+	/* Make sure than the size loaded in Romboot, built size is large. */
+	if (pSBI->LOADSIZE > fix_bl1_size) {
+		/* Check to boot type. */
+		switch(boot_option) {
+			case BOOT_FROM_SDMMC:
+				ret = sdmmc_self_boot();
+				break;
+		}
+	}
+
+	return ret;
+}
+#endif
+
+void __init BootMain(void)
 {
 	struct NX_SecondBootInfo TBI;
 	struct NX_SecondBootInfo *pTBI = &TBI; // third boot info
@@ -90,6 +129,14 @@ void BootMain(void)
 
 #if defined(AVN) || defined(NAVI) || defined(RAPTOR)
 	debug_ch = 3;
+#endif
+
+	/* check to binary(bl1) size */
+	check_bl1_size();
+
+#ifdef CHIPID_NXP4330
+	/* must be self loading*/
+	nxp4330_self_boot();
 #endif
 
 #if 0 // Low Level Debug Message
