@@ -22,8 +22,8 @@ VERINFO				= V062
 ###########################################################################
 # Build Environment
 ###########################################################################
-#CHIPNAME			= NXP4330
-CHIPNAME			= S5P4418
+CHIPNAME			= NXP4330
+#CHIPNAME			= S5P4418
 
 DEBUG				= n
 
@@ -48,8 +48,8 @@ SYSLOG				?= n
 SECURE_ON			?= 0
 
 ifeq ($(CHIPNAME), NXP4330)
-BOARD				= LEPUS
-#BOARD				= NAVI
+#BOARD				= LEPUS
+BOARD				= NAVI
 else
 #BOARD				= SVT
 #BOARD				= ASB
