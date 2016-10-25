@@ -42,24 +42,24 @@ SUPPORT_USB_BOOT		= y
 SUPPORT_SDMMC_BOOT		= y
 
 # System Log Message
-SYSLOG				?= n
+SYSLOG				= n
 
 # Secure Boot
-SECURE_ON			?= 0
+SECURE_ON			= 0
 
 ifeq ($(CHIPNAME), NXP4330)
 #BOARD				= LEPUS
-BOARD				= NAVI
+BOARD				= HS
 else
 #BOARD				= SVT
 #BOARD				= ASB
 #BOARD				= DRONE
 #BOARD				= AVN
 #BOARD				= LAVENDA
-BOARD				?= RAPTOR
+BOARD				= RAPTOR
 endif
 
-SECURE				?= NO
+SECURE				= NO
 
 # cross-tool pre-header
 ifeq ($(OS),Windows_NT)
@@ -153,7 +153,8 @@ CFLAGS				+=	-g -Wall				\
 					-DMEMTYPE_$(MEMTYPE)			\
 					-DINITPMIC_$(INITPMIC)			\
 					-DCHIPID_$(CHIPNAME)			\
-					-D_2NDBOOT_MODE -D$(BOARD)
+					-D_2NDBOOT_MODE				\
+					-D$(BOARD)
 
 ifeq ($(SYSLOG), y)
 CFLAGS				+=	-DSYSLOG_ON

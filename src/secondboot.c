@@ -128,7 +128,7 @@ void __init BootMain(void)
 	U32 is_resume = 0;
 	U32 debug_ch = 0;
 
-#if defined(AVN) || defined(NAVI) || defined(RAPTOR)
+#if defined(AVN) || defined(NAVI) || defined(RAPTOR) || defined(HS)
 	debug_ch = 3;
 #endif
 
