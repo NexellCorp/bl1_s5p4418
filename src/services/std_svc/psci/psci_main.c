@@ -61,8 +61,9 @@ void psci_set_sgi_caller(int cpu_id)
 		}
 	}
 #else	// Sequences that are usually used.
+	// CPU Number : 0x0 Interrupt Number : 8
 	cpu_id = cpu_id;
-	s5p4418_cpuidle(0, (0 + 8));
+	s5p4418_cpuidle((1 << 0), 8);
 #endif
 }
 
