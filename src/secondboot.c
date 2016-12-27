@@ -132,6 +132,9 @@ void __init BootMain(void)
 	debug_ch = 3;
 #endif
 
+	/* setp 01. set the ema for sram and instruction-cache */
+	cache_setup_ema();
+
 	/* check to binary(bl1) size */
 	check_bl1_size();
 
@@ -169,9 +172,6 @@ void __init BootMain(void)
 	/* Build information */
 	buildinfo();
 
-	/* Set the EMA */
-	setEMA();
-
 	/*  */
 	enableL2Cache(CTRUE);
 
@@ -193,6 +193,9 @@ void __init BootMain(void)
 #ifdef MEM_TYPE_LPDDR23
 	init_LPDDR3(is_resume);
 #endif
+
+	/* step xx. display the ema(extra margin adjustments) information.  */
+	ema_information();
 
 	/* Exit to Self Refresh */
 	if (is_resume) 

@@ -15,10 +15,14 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-#include "sysheader.h"
+#include <sysheader.h>
 
+/* External Variables */
+unsigned int g_cahce_ema;
+
+/* External Function */
 extern void     flushICache(void);
-extern void     enableICache(CBOOL enable);
+extern void     enableICache(int enable);
 
 #if defined(CHIPID_NXP4330)
 #define AUTO_DETECT_EMA     (0)
@@ -33,7 +37,7 @@ struct asv_tb_info {
 	int ro;
 };
 
-static struct asv_tb_info asv_tables[] = {
+static struct asv_tb_info __initdata asv_tables[] = {
 	[0] = { .ids = 10, .ro = 110, },
 	[1] = { .ids = 15, .ro = 130, },
 	[2] = { .ids = 20, .ro = 140, },
@@ -43,9 +47,9 @@ static struct asv_tb_info asv_tables[] = {
 
 #define ASV_ARRAY_SIZE  (int)(sizeof(asv_tables)/sizeof(asv_tables[0]))
 
-static inline U32 MtoL(U32 data, int bits)
+static inline unsigned int __init MtoL(unsigned int data, int bits)
 {
-	U32 result = 0, mask = 1;
+	unsigned int result = 0, mask = 1;
 	int i = 0;
 
 	for (i = 0; i < bits ; i++) {
@@ -56,7 +60,7 @@ static inline U32 MtoL(U32 data, int bits)
 	return result;
 }
 
-CBOOL isEMA3(U32 ecid_1, U32 ecid_2)
+int __init is_ema3(unsigned int ecid_1, unsigned int ecid_2)
 {
 	int field = 0;
 
@@ -97,18 +101,24 @@ CBOOL isEMA3(U32 ecid_1, U32 ecid_2)
 }
 #endif // #if (AUTO_DETECT_EMA == 1)
 
-void setEMA(void)
+/*************************************************************
+ * Must be S5P4418
+ * EMA(Extra Margin Adjustment)
+ * According to the arm voltage, it sets the appropriate ema value in use the sram
+ * and instruction cache.
+ *************************************************************/
+void __init cache_setup_ema(void)
 {
 #if (AUTO_DETECT_EMA == 1)
-	U32 ecid_1, ecid_2;
+	unsigned int ecid_1, ecid_2;
 #endif
-	U32 ema, temp;
+	unsigned int ema, temp;
 
 #if (AUTO_DETECT_EMA == 1)
-	ecid_1 = ReadIO32(&pReg_ECID->ECID[1]);
-	ecid_2 = ReadIO32(&pReg_ECID->ECID[2]);
+	ecid_1 = mmio_read_32(&pReg_ECID->ECID[1]);
+	ecid_2 = mmio_read_32(&pReg_ECID->ECID[2]);
 
-	if (isEMA3(ecid_1, ecid_2))
+	if (is_ema3(ecid_1, ecid_2))
 		ema = 3;
 	else
 		ema = 1;
@@ -116,22 +126,34 @@ void setEMA(void)
 	ema = EMA_VALUE; //; cortex-A9 L1 Cache EMA value (1: 1.1V, 3: 1.0V)
 #endif
 
+	g_cahce_ema = ema;
+
 	enableICache(CFALSE);
 	flushICache();
 
 	// L2 Cache
-	temp = ReadIO32(&pReg_Tieoff->TIEOFFREG[0]) & ~(7 << 22);
+	temp = mmio_read_32(&pReg_Tieoff->TIEOFFREG[0]) & ~(7 << 22);
 	temp |= (ema << 22);
-	WriteIO32(&pReg_Tieoff->TIEOFFREG[0], temp);
+	mmio_write_32(&pReg_Tieoff->TIEOFFREG[0], temp);
 
 	// L1 Cache
-	temp = ReadIO32(&pReg_Tieoff->TIEOFFREG[1]) & ~(7 << 2);
+	temp = mmio_read_32(&pReg_Tieoff->TIEOFFREG[1]) & ~(7 << 2);
 	temp |= (ema << 2);
-	WriteIO32(&pReg_Tieoff->TIEOFFREG[1], temp);
+	mmio_write_32(&pReg_Tieoff->TIEOFFREG[1], temp);
 
 	enableICache(CTRUE);
 
+#if 0
 	NOTICE("EMA VALUE : %s\r\n", (ema == 3 ? "011" : "001"));
-
+#endif
 	return;
+}
+
+/*************************************************************
+ * Optional information in s5p4418.
+ * EMA(Extra Margin Adjustment) information
+ *************************************************************/
+void ema_information(void)
+{
+	NOTICE("EMA VALUE : %s\r\n", (g_cahce_ema == 3 ? "011" : "001"));
 }
