@@ -14,38 +14,34 @@
  #
  # You should have received a copy of the GNU General Public License
  # along with this program.  If not, see <http://www.gnu.org/licenses/>.
-###########################################################################
-# Build Version info
-###########################################################################
-VERINFO				= V062
 
-###########################################################################
-# Build Environment
-###########################################################################
+# Build Version info
+VERINFO				= V100
+
+#########################################################################
+# build environment
+##########################################################################
+CFLAGS				:=
+DEBUG				?= n
+
+# chip name
 #CHIPNAME			= NXP4330
 CHIPNAME			= S5P4418
 
-DEBUG				= n
-
+# (ddr3/lpddr3) memory type
 MEMTYPE				= DDR3
 #MEMTYPE			= LPDDR3
 MEMTEST				= n
 
+# power management ic(pmic) on/off
 INITPMIC			= YES
 #INITPMIC			= NO
 
 CRC_CHECK			= n
 
-CFLAGS				:=
-
+# supported (thridboot) boot mode
 SUPPORT_USB_BOOT		= y
 SUPPORT_SDMMC_BOOT		= y
-
-# System Log Message
-SYSLOG				?= n
-
-# Secure Boot
-SECURE_ON			?= 0
 
 ifeq ($(CHIPNAME), NXP4330)
 BOARD				= LEPUS
@@ -53,13 +49,24 @@ BOARD				= LEPUS
 else
 #BOARD				= SVT
 #BOARD				= ASB
-#BOARD				= DRONE
+BOARD				= DRONE
 #BOARD				= AVN
 #BOARD				= LAVENDA
-BOARD				?= RAPTOR
+#BOARD				?= RAPTOR
 endif
 
-SECURE				?= NO
+# supported kernel version (3.18-3.4/4.1-4.4)
+KERNEL_VER			?= 3
+#KERNEL_VER			?= 4
+
+# system log Message
+SYSLOG				?= y
+
+# secure boot
+SECURE_ON			?= 0
+
+# arm mode - secure/non-secure
+SECURE				?= YES
 
 # cross-tool pre-header
 ifeq ($(OS),Windows_NT)
@@ -70,16 +77,12 @@ CROSS_TOOL_TOP			=
 CROSS_TOOL			= $(CROSS_TOOL_TOP)arm-eabi-
 endif
 
-###########################################################################
 # Top Names
-###########################################################################
 PROJECT_NAME			= $(CHIPNAME)_2ndboot_$(MEMTYPE)_$(VERINFO)
 TARGET_NAME			= bl1-$(shell echo $(BOARD) | tr A-Z a-z)
 LDS_NAME			= pyrope_2ndboot
 
-###########################################################################
 # Directories
-###########################################################################
 DIR_PROJECT_TOP			=
 
 DIR_OBJOUTPUT			= obj
@@ -87,9 +90,7 @@ DIR_TARGETOUTPUT		= out
 
 CODE_MAIN_INCLUDE		=
 
-###########################################################################
 # Build Environment
-###########################################################################
 CPU				= cortex-a9
 CC				= $(CROSS_TOOL)gcc
 LD 				= $(CROSS_TOOL)ld
@@ -113,9 +114,7 @@ CFLAGS				= -DNX_RELEASE -Os
 Q				= @
 endif
 
-###########################################################################
 # MISC tools for MS-DOS
-###########################################################################
 ifeq ($(OS),Windows_NT)
 MKDIR				= mkdir
 RM				= del /q /F
@@ -133,9 +132,11 @@ CP				= cp
 ECHO				= echo
 RMDIR				= rm -rf
 endif
-###########################################################################
+
+#########################################################################
+# flags variables
+#########################################################################
 # FLAGS
-###########################################################################
 ARFLAGS				= rcs
 ARFLAGS_REMOVE			= -d
 ARLIBFLAGS			= -v -s
@@ -155,24 +156,34 @@ CFLAGS				+=	-g -Wall				\
 					-DCHIPID_$(CHIPNAME)			\
 					-D_2NDBOOT_MODE -D$(BOARD)
 
-ifeq ($(SYSLOG), y)
-CFLAGS				+=	-DSYSLOG_ON
-endif
-
-ifeq ($(INITPMIC), YES)
-CFLAGS				+=	-D$(BOARD)_PMIC_INIT
-endif
-
+# arm mode - secure/non-secure
 ifeq ($(SECURE), YES)
 CFLAGS				+=	-DSECURE_MODE
 endif
 
+# supported kernel version (3.18-4.3/4.1-4.4)
+ifeq ($(KERNEL_VER), 3)
+CFLAGS				+=	-DKERNEL_VER_3_4
+endif
+
+# system log messgae
+ifeq ($(SYSLOG), y)
+CFLAGS				+=	-DSYSLOG_ON
+endif
+
+# power managemnt ic(pmic) on/off
+ifeq ($(INITPMIC), YES)
+CFLAGS				+=	-D$(BOARD)_PMIC_INIT
+endif
+
+# memory test
 ifeq ($(MEMTEST), y)
 #MEMTEST_TYPE			+=	STANDARD
 MEMTEST_TYPE			+=	SIMPLE
 CFLAGS				+=	-D$(MEMTEST_TYPE)_MEMTEST
 endif
 
+# supported crc check
 ifeq ($(CRC_CHECK), y)
 CHECKSUM			+=	CRC_CHECK
 CFLAGS				+=	-D$(CHECKSUM)_ON

@@ -248,7 +248,7 @@ extern U32  g_RDvwmc;
 extern U32  g_WRvwmc;
 
 extern void enterSelfRefresh(void);
-extern U32 __calc_crc(void *addr, int len);
+extern U32 calc_crc(void *addr, int len);
 extern void DMC_Delay(int milisecond);
 
 int s5p4418_resume_check(void)
@@ -287,7 +287,7 @@ void s5p4418_resume(void)
 	mmio_write_32(&pReg_Alive->ALIVESCRATCHRST4, 0xFFFFFFFF);
 
 	if (SUSPEND_SIGNATURE == signature) {
-		unsigned int crc = __calc_crc((void *)mem, len);
+		unsigned int crc = calc_crc((void *)mem, len);
 		NOTICE("Reference CRC : 0x%08X, Calcurated CRC : 0x%08X \r\n", ref_crc, crc);
 		if (kernel_addr && (ref_crc == crc)) {
 			NOTICE("It's WARM BOOT\r\nJump to Kernel!\r\n");

@@ -20,7 +20,7 @@
 #include <psci.h>
 
 /* External function */
-extern unsigned int __calc_crc(void *addr, int len);
+extern unsigned int calc_crc(void *addr, int len);
 
 /* Macro for Suspend/Resume */
 #define PSCI_SUSPEND		0
@@ -44,7 +44,7 @@ static void suspend_mark(unsigned int state, unsigned int entrypoint, unsigned i
 	mmio_write_32(&pReg_Alive->ALIVESCRATCHRST4, 0xFFFFFFFF);
 
 	if (state == PSCI_SUSPEND) {
-		crc = __calc_crc((void *)mem, size);
+		crc = calc_crc((void *)mem, size);
 		mmio_write_32(&pReg_Alive->ALIVESCRATCHSETREG, SUSPEND_SIGNATURE);
 		mmio_write_32(&pReg_Alive->ALIVESCRATCHSET1, entrypoint);
 		mmio_write_32(&pReg_Alive->ALIVESCRATCHSET2, crc);
