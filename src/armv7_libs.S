@@ -16,7 +16,7 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 #include "nx_pyrope.h"
-#include "cfgBootDefine.h"
+#include <s5p4418.h>
 
 //==================================================================
 // PLL Change

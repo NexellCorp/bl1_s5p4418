@@ -1004,17 +1004,17 @@ static CBOOL SDMMCBOOT(SDXCBOOTSTATUS *pSDXCBootStatus, struct NX_SecondBootInfo
 				for(j=0; j<16; j++) {
 					dprintf("%02X ", buff[i+j]);
 				}
-				DebugPutch(' ');
+				putchar(' ');
 				for(j=0; j<16; j++) {
 					if(buff[i+j]<0x20 || buff[i+j]>0x80)
 					{
-						DebugPutch('.');
+						putchar('.');
 					} else {
-						DebugPutch(buff[i+j]);
+						putchar(buff[i+j]);
 					}
 				}
-				DebugPutch('\r');
-				DebugPutch('\n');
+				putchar('\r');
+				putchar('\n');
 				i+= 16;
 			}
 		}

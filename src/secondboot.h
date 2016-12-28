@@ -18,7 +18,7 @@
 #ifndef __NX_SECONDBOOT_H__
 #define __NX_SECONDBOOT_H__
 
-#include "cfgBootDefine.h"
+#include <s5p4418.h>
 
 
 #define HEADER_ID       ((((U32)'N')<< 0) | (((U32)'S')<< 8) | (((U32)'I')<<16) | (((U32)'H')<<24))

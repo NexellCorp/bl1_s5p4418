@@ -16,18 +16,17 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 #include <stdarg.h>
-#include "nx_type.h"
-#include "printf.h"
+#include <printf.h>
 
 static void printchar(char **str, int c)
 {
-	extern void DebugPutch(S8 ch);
+	extern void putchar(char ch);
 
 	if (str) {
 		**str = c;
 		++(*str);
 	} else
-		(void)putchar((S8)c);
+		(void)putchar((char)c);
 }
 
 #define PAD_RIGHT 1

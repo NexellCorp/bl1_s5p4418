@@ -56,6 +56,9 @@ extern void s5p4418_resume(void);
 
 extern int CRC_Check(void* buf, unsigned int size, unsigned int ref_crc);
 
+void __init cache_setup_ema(void);
+void ema_information(void);
+
 void delay_ms(int ms)
 {
 	int i, k;
@@ -126,10 +129,10 @@ void __init BootMain(void)
 	U32 signature;
 #endif
 	U32 is_resume = 0;
-	U32 debug_ch = 0;
+	U32 serial_ch = 0;
 
 #if defined(AVN) || defined(NAVI) || defined(RAPTOR)
-	debug_ch = 3;
+	serial_ch = 3;
 #endif
 
 	/* setp 01. set the ema for sram and instruction-cache */
@@ -145,7 +148,7 @@ void __init BootMain(void)
 
 #if 0 // Low Level Debug Message
 	/*  Low Level Debug Message */
-	DebugInit(debug_ch);
+	serial_init(serial_ch);
 #endif
 
 #if (CONFIG_SUSPEND_RESUME == 1)
@@ -167,7 +170,7 @@ void __init BootMain(void)
 	initClock();
 
 	/* Console initialize */
-	DebugInit(debug_ch);
+	serial_init(serial_ch);
 
 	/* Build information */
 	buildinfo();
@@ -269,10 +272,10 @@ void __init BootMain(void)
 		void (*pLaunch)(U32, U32) = (void (*)(U32, U32))pTBI->LAUNCHADDR;
 		SYSMSG("Image Loading Done!\r\n");
 		SYSMSG("Launch to 0x%08X\r\n", (U32)pLaunch);
-		while (!DebugIsUartTxDone());
+		while (!serial_done());
 		pLaunch(0, 4330);
 	}
 
 	SYSMSG("Image Loading Failure Try to USB boot\r\n");
-	while (!DebugIsUartTxDone());
+	while (!serial_done());
 }

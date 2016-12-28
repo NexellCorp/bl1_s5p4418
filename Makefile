@@ -27,7 +27,7 @@ LDFLAGS		=	-Bstatic							\
 			-nostdlib
 
 SYS_OBJS	+=	startup.o armv7_libs.o clockinit.o secondboot.o subcpu.o	\
-			plat_pm.o ema.o resetcon.o GPIO.o debug.o util.o CRC32.o	\
+			plat_pm.o ema.o resetcon.o GPIO.o serial.o util.o CRC32.o	\
 			gic.o arm_gic.o dpc.o buildinfo.o printf.o
 
 #SYS_OBJS	+=	sysbus.o

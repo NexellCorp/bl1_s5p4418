@@ -51,7 +51,7 @@
 	#define NX_DEBUG_BYTE( _val_ )		DebugPutByte( _val_ )
 	#define NX_DEBUG_WORD( _val_ )		DebugPutWord( _val_ )
 	#define NX_DEBUG_DWORD( _val_ )		DebugPutDWord( _val_ )
-	#define NX_DEBUG_PUTCH( _val_ )		DebugPutch( _val_ )
+	#define NX_DEBUG_PUTCH( _val_ )		putchar( _val_ )
 
 	#define NX_ASSERT(expr)						\
 	{											\

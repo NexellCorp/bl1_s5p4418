@@ -251,6 +251,22 @@ extern void enterSelfRefresh(void);
 extern U32 __calc_crc(void *addr, int len);
 extern void DMC_Delay(int milisecond);
 
+int s5p4418_resume_check(void)
+{
+	int signature;
+	int is_resume = 0;		// 0: no resume, 1:resume
+
+	/* Get resume information. */
+	mmio_write_32(&pReg_Alive->ALIVEPWRGATEREG, 1);
+	signature = mmio_read_32(&pReg_Alive->ALIVESCRATCHREADREG);
+	if ((SUSPEND_SIGNATURE == signature) &&
+			mmio_read_32(&pReg_Alive->WAKEUPSTATUS)) {
+		is_resume = 1;
+	}
+
+	return is_resume;
+}
+
 void s5p4418_resume(void)
 {
 	unsigned int kernel_addr, signature, mem, ref_crc, len;
@@ -276,7 +292,7 @@ void s5p4418_resume(void)
 		if (kernel_addr && (ref_crc == crc)) {
 			NOTICE("It's WARM BOOT\r\nJump to Kernel!\r\n");
 			NOTICE("Kernel Address : %08X(%08X) \r\n", jumpkernel, kernel_addr );
-			while(!DebugIsUartTxDone());
+			while(!serial_done());
 			jumpkernel();
 		}
 	} else {

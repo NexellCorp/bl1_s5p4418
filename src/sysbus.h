@@ -22,7 +22,7 @@
 #if 0
 #include "nx_type.h"
 #include "printf.h"
-#include "debug.h"
+#include <serial.h>
 #include <nx_debug2.h>
 #include "nx_peridot.h"
 #include <nx_tieoff.h>

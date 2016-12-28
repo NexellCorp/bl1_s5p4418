@@ -18,7 +18,7 @@
 #ifndef __SYS_HEADER_H__
 #define __SYS_HEADER_H__
 
-#include "cfgBootDefine.h"
+#include <s5p4418.h>
 #include "cfgFreqDefine.h"
 
 #include <nx_pyrope.h>
@@ -41,9 +41,51 @@
 
 #include "secondboot.h"
 #include "printf.h"
-#include "debug.h"
+#include <serial.h>
 #include "type.h"
 #include <common.h>
+
+#include <clkgen.h>
+
+#define LOG_LEVEL			30
+
+#define LOG_LEVEL_NONE			0
+#define LOG_LEVEL_ERROR			10
+#define LOG_LEVEL_NOTICE		20
+#define LOG_LEVEL_WARNING		30
+#define LOG_LEVEL_INFO			40
+#define LOG_LEVEL_VERBOSE		50
+
+
+#if ((LOG_LEVEL >= LOG_LEVEL_NOTICE) && defined(SYSLOG_ON))
+# define NOTICE(...)	printf("NOTICE:  " __VA_ARGS__)
+#else
+# define NOTICE(...)
+#endif
+
+#if ((LOG_LEVEL >= LOG_LEVEL_ERROR) && defined(SYSLOG_ON))
+# define ERROR(...)	printf("ERROR:   " __VA_ARGS__)
+#else
+# define ERROR(...)
+#endif
+
+#if ((LOG_LEVEL >= LOG_LEVEL_WARNING) && defined(SYSLOG_ON))
+# define WARN(...)	printf("WARNING: " __VA_ARGS__)
+#else
+# define WARN(...)
+#endif
+
+#if ((LOG_LEVEL >= LOG_LEVEL_INFO) && defined(SYSLOG_ON))
+# define INFO(...)	printf("INFO:    " __VA_ARGS__)
+#else
+# define INFO(...)
+#endif
+
+#if ((LOG_LEVEL >= LOG_LEVEL_VERBOSE) && defined(SYSLOG_ON))
+# define VERBOSE(...)	printf("VERBOSE: " __VA_ARGS__)
+#else
+# define VERBOSE(...)
+#endif
 
 #define BL1_SDRAMBOOT_LOADADDR			(0xFFFF0000)
 #define BL1_SDMMCBOOT_DEVADDR			(0x200)
