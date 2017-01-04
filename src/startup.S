@@ -27,15 +27,14 @@
 /*
  * entry point of main function
  */
-.global BootMain
+.global main
 .global SubCPUBoot
 .global exception_v
 .global monitor_mode_init
 .global tieoff_set_secure
 .text
-//==================================================================
-// vectors
-//==================================================================
+
+/* arm exceptions vectors */
 .global vectors
 vectors:
         b       reset_handler       		// 00 - Reset
@@ -47,7 +46,7 @@ vectors:
         b       .                   		// 18 - IRQ interrupts
         b       .                   		// 1C - FIQ interrupts
 
-	b	.				// 20 - Reserved.
+	b	system_sleep			// 20 - suspend routine.
 
 buildinfo:
         .word   0x44180602          		// 24 - Chip name - 4418, Build num - v0.6.01
@@ -122,11 +121,11 @@ reset_handler:
 
         mrc     p15, 0, r12, c0, c0, 5         	// Get our cpu id
         ands    r12, r12, #0xF			// Save CPU id
-        bne     main
+        bne     asm_main
 #endif // if defined(SECURE_MODE)
 
 	/* Release pad holding */
-	ldr     r0, =0xC0010800			// alive base address
+	ldr     r0, =0xC0010800		// alive base address
 	mov     r1, #0x01
 	str     r1, [r0, #0x00]			// open write gate
 //	mov     r1, #0x3C0
@@ -158,7 +157,7 @@ clbss_l:
         addlo   r1, r1, #4			// move to next
         blo     clbss_l
 
-main:
+asm_main:
 #if defined(SECURE_MODE)
 	/* Setup to Stack */
         msr     CPSR_c, #(Mode_SVC|I_Bit|F_Bit)
@@ -169,7 +168,7 @@ main:
         sub     sp, sp, #0x60
         mov     r0, r12
 
-        bl      BootMain			// save this in register for possible long jump
+        bl      main			// save this in register for possible long jump
         b       exception_v
 #else	// Non-Secure Mode
 	/* Change to Secure -> Non-Secure */
@@ -249,14 +248,12 @@ svc_start:
         movs    r0, r12
 
 	blne	subcpu_boot
-        bleq    BootMain                            //; save this in register for possible long jump
+        bleq    main                            //; save this in register for possible long jump
         b       exception_v
 #endif	// #if defined(SECURE_MODE)
 
 #if defined(SECURE_MODE)
-//===================================================================
-// CPU 1, 2, 3 initialize
-//===================================================================
+/* core 1, 2, 3 initialize */
 secondary_startup:
         mrc     p15, 0, r0, c1, c0, 0			// Read CP15 System Control register
         bic     r0, r0, #(BIT1_V|BIT1_I|BIT1_Z)		// Clear V:13, I:12, Z:11 bit to disable High Vector, I-Cache, Branch Prediction
@@ -265,10 +262,9 @@ secondary_startup:
 
         msr     CPSR_c, #(Mode_SVC|I_Bit|F_Bit)		// Set CPU to SVC32 Mode
 
-//===================================================================
-// Set Vector Base Address Register (VBAR) to point to this
-// application's vector table
-//===================================================================
+
+/* Set Vector Base Address Register (VBAR) to point to this application's vector table */
+
         ldr     r0, =vectors
         mcr     p15, 0, r0, c12, c0, 0			// Write Secure or Non-secure Vector Base Address
         mrc     p15, 0, r0, c1, c0, 0			// Read SCTLR
@@ -278,9 +274,7 @@ secondary_startup:
         bl      Invalidate_entire_branch_predictor
         bl      InvalidateDataCache
 
-//==================================================================
-// Set SMP Mode for CPU 1, 2, 3
-//==================================================================
+/* set smp mode for core 1, 2, 3 */
         // Ensure interrupts can get through the priority mask
         mov     r1, #0xF0000000
         mov     r0, #0xFF
@@ -316,9 +310,8 @@ secondary_startup:
 
         mov     r0, r12
         b       subcpu_boot
-//==================================================================
-// CPU 1, 2, 3 wait
-//==================================================================
+
+/* waiting for core 1, 2, 3 */
 .global subcpu_wfi
 subcpu_wfi:
         WFI
@@ -337,9 +330,7 @@ subcpu_wfi:
 
 .align 8
 .global system_sleep
-//==================================================================
-// suspend/resume routine
-//==================================================================
+/* suspend/resume routine */
 #if (CONFIG_SUSPEND_RESUME == 1)	// this code is call linux kernel, so here is virtual memory space.
 .global s5p4418_suspend
 system_sleep:				// r0:alive r1:drex
@@ -355,7 +346,6 @@ disable_mmu:
         mcr     p15, 0, r1, c1, c0, 0
 
         //; Jump to the physical address of the 'PhysicalStart' label.
-        //;
         mov     pc, r0                  		// jump to new physical address
         nop
         nop

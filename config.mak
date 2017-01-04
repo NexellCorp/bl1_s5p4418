@@ -25,39 +25,39 @@ CFLAGS				:=
 DEBUG				?= n
 
 # chip name
-#CHIPNAME			= NXP4330
-CHIPNAME			= S5P4418
+#CHIPNAME			?= NXP4330
+CHIPNAME			?= S5P4418
 
 # (ddr3/lpddr3) memory type
-MEMTYPE				= DDR3
-#MEMTYPE			= LPDDR3
-MEMTEST				= n
+MEMTYPE				?= DDR3
+#MEMTYPE			?= LPDDR3
+MEMTEST				?= n
 
 # power management ic(pmic) on/off
-INITPMIC			= YES
-#INITPMIC			= NO
+INITPMIC			?= YES
+#INITPMIC			?= NO
 
-CRC_CHECK			= n
+CRC_CHECK			?= n
 
 # supported (thridboot) boot mode
-SUPPORT_USB_BOOT		= y
-SUPPORT_SDMMC_BOOT		= y
+SUPPORT_USB_BOOT		?= y
+SUPPORT_SDMMC_BOOT		?= y
 
 ifeq ($(CHIPNAME), NXP4330)
-BOARD				= LEPUS
-#BOARD				= NAVI
+BOARD				?= LEPUS
+#BOARD				?= NAVI
 else
-#BOARD				= SVT
-#BOARD				= ASB
-BOARD				= DRONE
-#BOARD				= AVN
-#BOARD				= LAVENDA
+#BOARD				?= SVT
+#BOARD				?= ASB
+#BOARD				?= DRONE
+BOARD				?= AVN
+#BOARD				?= LAVENDA
 #BOARD				?= RAPTOR
 endif
 
 # supported kernel version (3.18-3.4/4.1-4.4)
-KERNEL_VER			?= 3
-#KERNEL_VER			?= 4
+#KERNEL_VER			?= 3
+KERNEL_VER			?= 4
 
 # system log Message
 SYSLOG				?= y

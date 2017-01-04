@@ -23,7 +23,6 @@
 
 #include <nx_pyrope.h>
 #include <nx_type.h>
-#include <nx_debug2.h>
 #include <nx_chip.h>
 #include <nx_rstcon.h>
 

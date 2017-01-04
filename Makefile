@@ -26,9 +26,9 @@ LDFLAGS		=	-Bstatic							\
 			-Wl,--build-id=none						\
 			-nostdlib
 
-SYS_OBJS	+=	startup.o armv7_libs.o clockinit.o secondboot.o subcpu.o		\
+SYS_OBJS	+=	startup.o armv7_libs.o clockinit.o main.o subcpu.o		\
 			plat_pm.o ema.o resetcon.o GPIO.o serial.o util.o crc.o		\
-			gic.o arm_gic.o dpc.o buildinfo.o printf.o
+			gic.o arm_gic.o dpc.o buildinfo.o printf.o nxp4330.o
 
 #SYS_OBJS	+=	sysbus.o
 
@@ -69,6 +69,10 @@ endif
 SYS_OBJS_LIST	=	$(addprefix $(DIR_OBJOUTPUT)/,$(SYS_OBJS))
 
 SYS_INCLUDES	=	-I src				\
+			-I src/boot			\
+			-I src/devices			\
+			-I src/devices/pmic		\
+			-I src/devices/memory		\
 			-I src/services			\
 			-I src/services/std_svc		\
 			-I src/services/std_svc/psci	\
@@ -84,13 +88,23 @@ $(DIR_OBJOUTPUT)/%.o: src/%.S
 	@echo [compile....$<]
 	$(Q)$(CC) -MMD $< -c -o $@ $(ASFLAG) $(CFLAGS) $(SYS_INCLUDES)
 ###################################################################################################
-
-###################################################################################################
-$(DIR_OBJOUTPUT)/%.o: src/pmic/%.c
+$(DIR_OBJOUTPUT)/%.o: src/boot/%.c
 	@echo [compile....$<]
 	$(Q)$(CC) -MMD $< -c -o $@ $(CFLAGS) $(SYS_INCLUDES)
 ###################################################################################################
-$(DIR_OBJOUTPUT)/%.o: src/memory/%.c
+$(DIR_OBJOUTPUT)/%.o: src/devices/%.c
+	@echo [compile....$<]
+	$(Q)$(CC) -MMD $< -c -o $@ $(CFLAGS) $(SYS_INCLUDES)
+###################################################################################################
+$(DIR_OBJOUTPUT)/%.o: src/devices/memory/%.c
+	@echo [compile....$<]
+	$(Q)$(CC) -MMD $< -c -o $@ $(CFLAGS) $(SYS_INCLUDES)
+###################################################################################################
+$(DIR_OBJOUTPUT)/%.o: src/devices/pmic/%.c
+	@echo [compile....$<]
+	$(Q)$(CC) -MMD $< -c -o $@ $(CFLAGS) $(SYS_INCLUDES)
+###################################################################################################
+$(DIR_OBJOUTPUT)/%.o: src/test/%.c
 	@echo [compile....$<]
 	$(Q)$(CC) -MMD $< -c -o $@ $(CFLAGS) $(SYS_INCLUDES)
 ###################################################################################################
