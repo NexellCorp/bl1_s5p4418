@@ -63,7 +63,7 @@ void __init main(void)
 	unsigned int is_resume = 0;
 	int ret = 0;
 
-#if defined(AVN) || defined(NAVI) || defined(RAPTOR)
+#if defined(AVN) || defined(NAVI) || defined(RAPTOR) || defined(SMART_VOICE)
 	serial_ch = 3;
 #endif
 
@@ -78,7 +78,7 @@ void __init main(void)
 	nxp4330_self_boot();
 #endif
 
-#if 1	/* (early) low level - log message */
+#if 0	/* (early) low level - log message */
 	/* step xx. serial console(uartX) initialize. */
 	serial_init(serial_ch);
 #endif

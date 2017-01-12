@@ -44,8 +44,9 @@ SUPPORT_USB_BOOT		?= y
 SUPPORT_SDMMC_BOOT		?= y
 
 ifeq ($(CHIPNAME), NXP4330)
-BOARD				?= LEPUS
-#BOARD				?= NAVI
+#BOARD				?= LEPUS
+BOARD				?= NAVI
+#BOARD				?= SMART_VOICE
 else
 #BOARD				?= SVT
 #BOARD				?= ASB

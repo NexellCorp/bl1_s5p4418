@@ -114,6 +114,15 @@ void DMC_Delay(int milisecond);
 #define NXE2000_I2C_SDA_ALT		0
 #endif
 
+#if defined(SMART_VOICE)
+#undef NXE2000_I2C_GPIO_GRP
+#define NXE2000_I2C_GPIO_GRP		4 // E group, NXE2000
+#define NXE2000_I2C_SCL 		9
+#define NXE2000_I2C_SDA			8
+#define NXE2000_I2C_SCL_ALT		0
+#define NXE2000_I2C_SDA_ALT		0
+#endif
+
 #if (AXP_I2C_GPIO_GRP > -1)
 #include "pmic_axp228.h"
 #endif
