@@ -18,7 +18,7 @@
 #include <sysheader.h>
 
 /* External Variables */
-unsigned int g_cahce_ema;
+unsigned int __initdata g_cahce_ema;
 
 /* External Function */
 extern void     flushICache(void);

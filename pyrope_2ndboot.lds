@@ -9,6 +9,7 @@ SECTIONS
 	.text :
 	{
 		obj/startup.o	(.text)
+		obj/armv7_libs.o (.text)
 		*(.init.text)
 		*(.init.data)
 		*(.init.code)

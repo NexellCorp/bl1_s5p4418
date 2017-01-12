@@ -17,8 +17,12 @@
  */
  #include <sysheader.h>
 
- #ifdef CHIPID_NXP4330
+#ifdef CHIPID_NXP4330
+
+#define ROMBOOT_SYSCONFIG		0xC001027C
+
 extern unsigned int __init sdmmc_self_boot(void);
+
 
 /*
  * NXP4330 a part to overcome the limitations
@@ -26,17 +30,19 @@ extern unsigned int __init sdmmc_self_boot(void);
  */
 int __init nxp4330_self_boot(void)
 {
-	int boot_option  = pSBI->DBI.SDMMCBI.LoadDevice;
-	unsigned int fix_bl1_size = (16 * 1024);
+	char* boot_option = ROMBOOT_SYSCONFIG;
+	unsigned int fix_bl1_size = BL1_SDMMCBOOT_LOADSIZE;
 	int ret = 0;
 
 	/* Make sure than the size loaded in Romboot, built size is large. */
 	if (pSBI->LOADSIZE > fix_bl1_size) {
 		/* Check to boot type. */
-		switch (boot_option) {
-			case BOOT_FROM_SDMMC:
+		switch (((*boot_option) >> 0) & 0x7) {
+	#if defined(SUPPORT_SDMMC_BOOT)
+			case ROMBOOT_FROM_MMC:
 				ret = sdmmc_self_boot();
 				break;
+	#endif
 		}
 	}
 

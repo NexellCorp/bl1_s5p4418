@@ -28,14 +28,15 @@ LDFLAGS		=	-Bstatic							\
 
 SYS_OBJS	+=	startup.o armv7_libs.o clockinit.o main.o subcpu.o		\
 			plat_pm.o ema.o resetcon.o GPIO.o serial.o util.o crc.o		\
-			gic.o arm_gic.o dpc.o buildinfo.o printf.o nxp4330.o
+			gic.o buildinfo.o printf.o nxp4330.o
 
 #SYS_OBJS	+=	sysbus.o
 
 ifeq ($(SECURE), NO)
 SYS_OBJS	+=	non_secure.o smc_entry.o smc_handler.o sip_main.o std_svc_setup.o	\
 			arm_topology.o psci_system_off.o psci_off.o psci_on.o 			\
-			psci_suspend.o psci_common.o psci_main.o bclk-dfs.o
+			psci_suspend.o psci_common.o psci_main.o bclk-dfs.o arm_gic.o		\
+			dpc.o
 endif
 
 ifeq ($(MEMTYPE),DDR3)
