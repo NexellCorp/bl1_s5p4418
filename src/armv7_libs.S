@@ -45,9 +45,9 @@ pllchangedelayloop:                                 //; this code will be alread
 //==================================================================
 .global Invalidate_entire_branch_predictor
 Invalidate_entire_branch_predictor:
-        mov     r0, #0
-        mcr     p15, 0, r0, c7, c5, 0               //; invalidate all instruction caches
-        mcr     p15, 0, r0, c7, c5, 6               //; BPIALL - Invalidate entire branch predictor array
+        mov     r11, #0
+        mcr     p15, 0, r11, c7, c5, 0               //; invalidate all instruction caches
+        mcr     p15, 0, r11, c7, c5, 6               //; Invalidate entire branch predictor array
         bx      lr
 
 .global InvalidateDataCache

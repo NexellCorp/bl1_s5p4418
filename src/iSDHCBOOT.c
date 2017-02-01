@@ -19,6 +19,7 @@
 
 #include <nx_sdmmc.h>
 #include "iSDHCBOOT.h"
+#include "nx_bootheader.h"
 
 #ifdef NX_DEBUG
 #define dprintf         printf
@@ -50,7 +51,6 @@ struct NX_SDMMC_RegisterSet *const pgSDXCReg[3] = {
 };
 
 //------------------------------------------------------------------------------
-#if 1
 typedef struct {
 	U32 nPllNum;
 	U32 nFreqHz;
@@ -93,7 +93,6 @@ exit_getparam:
 
 	return fRet;
 }
-#endif
 
 //------------------------------------------------------------------------------
 //static CBOOL	NX_SDMMC_SetClock( SDXCBOOTSTATUS * pSDXCBootStatus, CBOOL enb, U32 divider )
@@ -106,7 +105,7 @@ static CBOOL	NX_SDMMC_SetClock( SDXCBOOTSTATUS * pSDXCBootStatus, CBOOL enb, U32
 	CBOOL ret;
 
 #if defined(VERBOSE)
-	dprintf("NX_SDMMC_SetClock : divider = %d\r\n", divider);
+//	dprintf("NX_SDMMC_SetClock : divider = %d\r\n", divider);
 #endif
 
 	//	NX_ASSERT( (1==divider) || (0==(divider&1)) );		// 1 or even number
@@ -977,80 +976,113 @@ End:
 
 //------------------------------------------------------------------------------
 extern void Decrypt(U32 *SrcAddr, U32 *DestAddr, U32 Size);
-static CBOOL SDMMCBOOT(SDXCBOOTSTATUS *pSDXCBootStatus, struct NX_SecondBootInfo *pTBI) // U32 option )
+static CBOOL SDMMCBOOT(SDXCBOOTSTATUS *pSDXCBootStatus,
+		struct NX_SecondBootInfo *pTBI) // U32 option)
 {
+#if !defined(SECURE_MODE)
+	unsigned int i;
+	struct nx_bootheader *ptbh = (struct nx_bootheader *)pTBI;
+	struct nx_bootheader *psbh = (struct nx_bootheader *)pSBI;
+#endif
 	CBOOL	result = CFALSE;
-	register struct NX_SDMMC_RegisterSet * const pSDXCReg = pgSDXCReg[pSDXCBootStatus->SDPort];
+	register struct NX_SDMMC_RegisterSet * const pSDXCReg =
+		pgSDXCReg[pSDXCBootStatus->SDPort];
 
-	if( CTRUE == NX_SDMMC_Open(pSDXCBootStatus) ) {
-		if( 0 == (pSDXCReg->STATUS & NX_SDXC_STATUS_FIFOEMPTY) ) {
-			dprintf( "FIFO Reset!!!\r\n" );
-			pSDXCReg->CTRL = NX_SDXC_CTRL_FIFORST;				// Reset the FIFO.
-			while( pSDXCReg->CTRL & NX_SDXC_CTRL_FIFORST );		// Wait until the FIFO reset is completed.
+	if (CFALSE == NX_SDMMC_Open(pSDXCBootStatus)) {
+		printf("Cannot Detect SDMMC\r\n");
+		return CFALSE;
+	}
+	if (0 == (pSDXCReg->STATUS & NX_SDXC_STATUS_FIFOEMPTY)) {
+		dprintf("FIFO Reset!!!\r\n");
+		pSDXCReg->CTRL = NX_SDXC_CTRL_FIFORST;	// Reset the FIFO.
+		// Wait until the FIFO reset is completed.
+		while (pSDXCReg->CTRL & NX_SDXC_CTRL_FIFORST)
+			;
+	}
+	printf("Load from :0x%08X Sector\r\n",
+			pSBI->DEVICEADDR / BLOCK_LENGTH);
+	result = NX_SDMMC_ReadSectors(pSDXCBootStatus,
+			pSBI->DEVICEADDR / BLOCK_LENGTH,
+			2, (U32 *)pTBI);
+	if(result == CFALSE) {
+		printf("cannot read boot header! SDMMC boot failure\r\n");
+		return result;
+	}
+
+//#ifdef SECURE_ON
+	if (pReg_ClkPwr->SYSRSTCONFIG & 1 << 14)
+		Decrypt((U32 *)pTBI, (U32 *)pTBI, sizeof(struct nx_bootheader));
+//#endif
+#if 0
+	do {
+	U32 i;
+	U8 *buff = (U8 *)pTBI;
+
+	for (i = 0; i < 0x200;) {
+		U32 j;
+		printf("0x%08X ", &buff[i]);
+		for (j = 0; j < 16; j++) {
+			printf("%02X ", buff[i + j]);
 		}
-		dprintf("Load from :0x%08X Sector\r\n", pSBI->DEVICEADDR/BLOCK_LENGTH);
-
-#if 1
-		result = NX_SDMMC_ReadSectors( pSDXCBootStatus, pSBI->DEVICEADDR/BLOCK_LENGTH, 1, (U32 *)pTBI );
-#else
-		{
-			U32 i;
-			U8 *buff = 0x40100000;
-			result = NX_SDMMC_ReadSectors( pSDXCBootStatus, 1, 32, (U32 *)buff );
-
-			for(i=0; i<16384; ) {
-				U32 j;
-				dprintf("0x%08X ", &buff[i]);
-				for(j=0; j<16; j++) {
-					dprintf("%02X ", buff[i+j]);
-				}
-				DebugPutch(' ');
-				for(j=0; j<16; j++) {
-					if(buff[i+j]<0x20 || buff[i+j]>0x80)
-					{
-						DebugPutch('.');
-					} else {
-						DebugPutch(buff[i+j]);
-					}
-				}
-				DebugPutch('\r');
-				DebugPutch('\n');
-				i+= 16;
+		DebugPutch(' ');
+		for (j = 0; j < 16; j++) {
+			if (buff[i + j] < 0x20 || buff[i + j] > 0x80) {
+				DebugPutch('.');
+			} else {
+				DebugPutch(buff[i + j]);
 			}
 		}
+		DebugPutch('\r');
+		DebugPutch('\n');
+		i+= 16;
+	}
+	} while (0);
 #endif
-		if(result == CFALSE) {
-			dprintf("cannot read boot header! SDMMC boot failure\r\n");
-			return result;
-		}
+	if (pTBI->SIGNATURE != HEADER_ID) {
+		printf("0x%08X\r\n3rd boot Sinature is wrong! SDMMC boot failure\r\n",
+				pTBI->SIGNATURE);
+		return CFALSE;
+	}
 
-#ifdef SECURE_ON
-		if (pReg_ClkPwr->SYSRSTCONFIG & 1<<14)
-			Decrypt((U32 *)pTBI, (U32 *)pTBI, sizeof(struct NX_SecondBootInfo));
-#endif
-		if(pTBI->SIGNATURE != HEADER_ID ) {
-			dprintf("0x%08X\r\n3rd boot Sinature is wrong! SDMMC boot failure\r\n", pTBI->SIGNATURE);
-			return CFALSE;
-		}
-
-		//		pTBI->LOADADDR = 0x40c00000;
-		//		pTBI->LOADSIZE = 0x00050000;
-		//		pTBI->LAUNCHADDR = 0x40c00000;
-		dprintf("Load Addr :0x%08X,  Load Size :0x%08X,  Launch Addr :0x%08X\r\n",
-				pTBI->LOADADDR, pTBI->LOADSIZE, pTBI->LAUNCHADDR);
-
-		result = NX_SDMMC_ReadSectors( pSDXCBootStatus, pSBI->DEVICEADDR/BLOCK_LENGTH+1, (pTBI->LOADSIZE+BLOCK_LENGTH-1)/BLOCK_LENGTH, (U32 *)pTBI->LOADADDR );
-
-#ifdef SECURE_ON
-		if (pReg_ClkPwr->SYSRSTCONFIG & 1<<14)
-			Decrypt((U32 *)pTBI->LOADADDR, (U32 *)pTBI->LOADADDR, pTBI->LOADSIZE);
+#if defined(SECURE_MODE)
+	dprintf("Load Addr :0x%08X,  Load Size :0x%08X,  Launch Addr :0x%08X\r\n",
+			pTBI->LOADADDR, pTBI->LOADSIZE, pTBI->LAUNCHADDR);
 #endif
 
-		if(result == CFALSE) {
-			dprintf("Image Read Failure\r\n");
-		}
-	} else {
-		dprintf("Cannot Detect SDMMC\r\n");
+#if !defined(SECURE_MODE)
+	printf("Load Addr :0x%08X,  Load Size :0x%08X,  Launch Addr :0x%08X\r\n",
+		ptbh->tbbi.loadaddr, ptbh->tbbi.loadsize, ptbh->tbbi.startaddr);
+
+	U32 *src = (U32*)pTBI;
+	U32 *dst = (U32*)ptbh->tbbi.loadaddr;
+	U32 *tb_load = dst;
+	for (i = 0; i < sizeof(struct nx_bootheader) / 4; i++)
+		*dst++ = *src++;
+
+	dst = tb_load;
+
+#endif
+#if defined(SECURE_MODE)
+	result = NX_SDMMC_ReadSectors(pSDXCBootStatus,
+			pSBI->DEVICEADDR / BLOCK_LENGTH + 1,
+			(pTBI->LOADSIZE + BLOCK_LENGTH - 1) / BLOCK_LENGTH,
+			(U32 *)pTBI->LOADADDR);
+#else
+	result = NX_SDMMC_ReadSectors(pSDXCBootStatus,
+			pSBI->DEVICEADDR / BLOCK_LENGTH + 2,
+			(ptbh->tbbi.loadsize + (BLOCK_LENGTH - 1)) / BLOCK_LENGTH,
+			(U32 *)(ptbh->tbbi.loadaddr + BLOCK_LENGTH * 2));
+	pTBI->LAUNCHADDR = ptbh->tbbi.startaddr;
+#endif
+//#ifdef SECURE_ON
+	if (pReg_ClkPwr->SYSRSTCONFIG & 1 << 14)
+		Decrypt((U32 *)(ptbh->tbbi.loadaddr + sizeof(struct nx_bootheader)),
+			(U32 *)(ptbh->tbbi.loadaddr + sizeof(struct nx_bootheader)),
+			ptbh->tbbi.loadsize);
+//#endif
+
+	if (result == CFALSE) {
+		printf("Image Read Failure\r\n");
 	}
 
 	return result;
@@ -1200,8 +1232,8 @@ U32 iSDXCBOOT(struct NX_SecondBootInfo *pTBI)
 	pSBI->DBI.SDMMCBI.PortNumber = 0;
 #endif
 
-	//	pSBI->DBI.SDMMCBI.PortNumber = 1;
-	//	pSBI->DEVICEADDR = 128 * 1024;
+//	pSBI->DBI.SDMMCBI.PortNumber = 1;
+//	pSBI->DEVICEADDR = 128 * 1024;
 
 	NX_ASSERT(pSBI->DBI.SDMMCBI.PortNumber < 3);
 	pSDXCBootStatus->SDPort = pSBI->DBI.SDMMCBI.PortNumber;

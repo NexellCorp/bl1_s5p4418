@@ -691,9 +691,11 @@ CBOOL DDR_Gate_Leveling(U32 isResume)
 		//----------------------------------------------------------
 		WriteIO32(&pReg_DDRPHY->PHY_CON[5], GATE_CENTER_CYCLE);
 		g_GateCycle = ReadIO32(&pReg_DDRPHY->PHY_CON[19 + 1]);
+		pSBI->GateCycle = g_GateCycle;
 
 		WriteIO32(&pReg_DDRPHY->PHY_CON[5], GATE_CENTER_CODE);
 		g_GateCode = ReadIO32(&pReg_DDRPHY->PHY_CON[19 + 1]);
+		pSBI->GateCode = g_GateCode;
 		//----------------------------------------------------------
 	}
 
@@ -959,6 +961,7 @@ CBOOL DDR_Read_DQ_Calibration(U32 isResume)
 		//------------------------------------------------------
 		WriteIO32(&pReg_DDRPHY->PHY_CON[5], RD_VWMC);
 		g_RDvwmc = ReadIO32(&pReg_DDRPHY->PHY_CON[19 + 1]);
+		pSBI->RDvwmc = g_RDvwmc;
 		//--------------------------------------------------------
 	}
 
@@ -1204,6 +1207,7 @@ CBOOL DDR_Write_DQ_Calibration(U32 isResume)
 //		WriteIO32( &pReg_DDRPHY->PHY_CON[5],    VWM_CENTER);
 		WriteIO32(&pReg_DDRPHY->PHY_CON[5], WR_VWMC);
 		g_WRvwmc = ReadIO32(&pReg_DDRPHY->PHY_CON[19 + 1]);
+		pSBI->WRvwmc = g_WRvwmc;
 		//---------------------------------------------------------
 	}
 
@@ -1730,12 +1734,15 @@ void init_DDR3(U32 isResume)
 
 	// Step 11. MemBaseConfig
 	WriteIO32( &pReg_Drex->MEMBASECONFIG[0],
-			(0x0        <<  16) |                   // chip_base[26:16]. AXI Base Address. if 0x20 ==> AXI base addr of memory : 0x2000_0000
+			(0x51        <<  16) |                   // chip_base[26:16]. AXI Base Address. if 0x20 ==> AXI base addr of memory : 0x2000_0000
+#if 0
 #if (CFG_NSIH_EN == 0)
 			(chip_mask  <<   0));                   // 256MB:0x7F0, 512MB: 0x7E0, 1GB:0x7C0, 2GB: 0x780, 4GB:0x700
 #else
 	(pSBI->DII.ChipMask <<   0));           // chip_mask[10:0]. 1GB:0x7C0, 2GB:0x780
 #endif
+#endif
+	(0x7E0 <<   0));
 
 #if (CFG_NSIH_EN == 0)
 #if (_DDR_CS_NUM > 1)

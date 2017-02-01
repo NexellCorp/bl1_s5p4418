@@ -254,7 +254,7 @@ extern void DMC_Delay(int milisecond);
 void s5p4418_resume(void)
 {
 	unsigned int kernel_addr, signature, mem, ref_crc, len;
-	void (*jumpkernel)(void) = 0;
+	void (*jumpkernel)(U32) = 0;
 
 	mmio_write_32(&pReg_Alive->ALIVEPWRGATEREG, 1); 		// open alive power gate
 	signature   = mmio_read_32(&pReg_Alive->ALIVESCRATCHREADREG);
@@ -262,7 +262,15 @@ void s5p4418_resume(void)
 	ref_crc     = mmio_read_32(&pReg_Alive->ALIVESCRATCHVALUE2);
 	mem = mmio_read_32(&pReg_Alive->ALIVESCRATCHVALUE3);
 	len = mmio_read_32(&pReg_Alive->ALIVESCRATCHVALUE4);
-	jumpkernel = (void (*)(void))kernel_addr;
+//	jumpkernel = (void (*)(U32))kernel_addr;
+	jumpkernel = (void (*)(U32))pReg_RTC->RTCSCRATCH;
+
+	pSBI->BL2_START = pReg_RTC->RTCSCRATCH;
+	pSBI->GateCycle = mmio_read_32(&pReg_Alive->ALIVESCRATCHVALUE5);
+	pSBI->GateCode = mmio_read_32(&pReg_Alive->ALIVESCRATCHVALUE6);
+	pSBI->RDvwmc = mmio_read_32(&pReg_Alive->ALIVESCRATCHVALUE7);
+	pSBI->WRvwmc = mmio_read_32(&pReg_Alive->ALIVESCRATCHVALUE8);
+	pSBI->EntryPoint = kernel_addr;
 
 	mmio_write_32(&pReg_Alive->ALIVESCRATCHRSTREG, 0xFFFFFFFF);
 	mmio_write_32(&pReg_Alive->ALIVESCRATCHRST1, 0xFFFFFFFF);
@@ -275,9 +283,10 @@ void s5p4418_resume(void)
 		NOTICE("Reference CRC : 0x%08X, Calcurated CRC : 0x%08X \r\n", ref_crc, crc);
 		if (kernel_addr && (ref_crc == crc)) {
 			NOTICE("It's WARM BOOT\r\nJump to Kernel!\r\n");
-			NOTICE("Kernel Address : %08X(%08X) \r\n", jumpkernel, kernel_addr );
-			while(!DebugIsUartTxDone());
-			jumpkernel();
+			NOTICE("Kernel Address : %08X(%08X) \r\n", jumpkernel, kernel_addr);
+			while (!DebugIsUartTxDone())
+				;
+			jumpkernel(CTRUE);
 		}
 	} else {
 		WARN("Suspend Signature is different\r\nRead Signature :0x%08X\r\n", signature);

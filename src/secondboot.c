@@ -53,6 +53,8 @@ extern void printClkInfo(void);
 
 extern void setEMA(void);
 extern void s5p4418_resume(void);
+extern void run_secure_svc(U32 jumpaddr);
+extern void run_bl2(U32 jumpaddr);
 
 extern int CRC_Check(void* buf, unsigned int size, unsigned int ref_crc);
 
@@ -76,6 +78,13 @@ void enableL2Cache(unsigned int enb)
 		reg &= ~(3UL << 12);
 
 	WriteIO32(&pReg_Tieoff->TIEOFFREG[0], reg);
+}
+
+void device_set_env(void)
+{
+	/* (Device Port Number) for U-BOOT  */
+	unsigned int dev_portnum = pSBI->DBI.SDMMCBI.PortNumber;
+	WriteIO32(&pReg_ClkPwr->SCRATCH[1], dev_portnum );
 }
 
 void BootMain(void)
@@ -146,7 +155,6 @@ void BootMain(void)
 #ifdef MEM_TYPE_LPDDR23
 	init_LPDDR3(is_resume);
 #endif
-
 	/* Exit to Self Refresh */
 	if (is_resume) 
 		exitSelfRefresh();
@@ -179,14 +187,21 @@ void BootMain(void)
 #endif
 #endif // #if (CONFIG_SUSPEND_RESUME == 1)
 
-	if (pSBI->SIGNATURE != HEADER_ID)
+	/*
+	 * SD/MMC,SPI - port number stored for u-boot.
+	 */
+	device_set_env();
+
+
+	if (pSBI->SIGNATURE != HEADER_ID) {
 		ERROR("2nd Boot Header is invalid, Please check it out!\r\n");
+	}
 
 	/* Check the (SDRAM)Memory */
 #if defined(STANDARD_MEMTEST)
-	memtester_main((U32)0x40000000UL, (U32)0x50000000UL, 0x10);
+	memtester_main((U32)0x91000000UL, (U32)0xb1000000UL, 0x10);
 #elif defined(SIMPLE_MEMTEST)
-	simple_memtest((U32*)0x40000000UL, (U32*)0x60000000UL);
+	simple_memtest((U32*)0x91000000UL, (U32*)0xb1000000UL);
 #endif
 
 #if defined(LOAD_FROM_USB)
@@ -196,17 +211,17 @@ void BootMain(void)
 
 	switch (pSBI->DBI.SPIBI.LoadDevice) {
 #if defined(SUPPORT_USB_BOOT)
-		case BOOT_FROM_USB:
-			SYSMSG("Loading from usb...\r\n");
-			ret = iUSBBOOT(pTBI);	// for USB boot
-			break;
+	case BOOT_FROM_USB:
+		SYSMSG("Loading from usb...\r\n");
+		ret = iUSBBOOT(pTBI);	// for USB boot
+		break;
 #endif
 
 #if defined(SUPPORT_SDMMC_BOOT)
-		case BOOT_FROM_SDMMC:
-			SYSMSG("Loading from sdmmc...\r\n");
-			ret = iSDXCBOOT(pTBI);	// for SD boot
-			break;
+	case BOOT_FROM_SDMMC:
+		SYSMSG("Loading from sdmmc...\r\n");
+		ret = iSDXCBOOT(pTBI);	// for SD boot
+		break;
 #endif
 	}
 
@@ -216,11 +231,22 @@ void BootMain(void)
 			,(unsigned int)pTBI->DBI.SDMMCBI.CRC32);
 #endif
 	if (ret) {
+#if defined(SECURE_MODE)
 		void (*pLaunch)(U32, U32) = (void (*)(U32, U32))pTBI->LAUNCHADDR;
 		SYSMSG("Image Loading Done!\r\n");
 		SYSMSG("Launch to 0x%08X\r\n", (U32)pLaunch);
-		while (!DebugIsUartTxDone());
+		while (!DebugIsUartTxDone())
+			;
 		pLaunch(0, 4330);
+#else
+		SYSMSG("Image Loading Done!\r\n");
+		SYSMSG("Launch to 0x%08X\r\n", pTBI->LAUNCHADDR);
+		while (!DebugIsUartTxDone())
+			;
+//		run_secure_svc(pTBI->LAUNCHADDR);
+		pSBI->BL2_START = pTBI->LAUNCHADDR;
+		run_bl2(pTBI->LAUNCHADDR);
+#endif
 	}
 
 	SYSMSG("Image Loading Failure Try to USB boot\r\n");
