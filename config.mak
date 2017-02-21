@@ -158,7 +158,7 @@ CFLAGS				+=	-g -Wall				\
 					-D_2NDBOOT_MODE -D$(BOARD)
 
 # arm mode - secure/non-secure
-ifeq ($(SECURE), YES)
+ifeq ($(SECURE), y)
 CFLAGS				+=	-DSECURE_MODE
 endif
 

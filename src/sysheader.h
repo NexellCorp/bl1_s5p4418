@@ -46,6 +46,34 @@
 
 #include <clkgen.h>
 
+#include <gpio.h>
+
+#if defined(CHIPID_NXP4330)
+#if defined(LEPUS)
+#include <nxp4330_lepus.h>
+#elif defined(NAVI)
+#include <nxp4330_navi.h>
+#elif defined(SMART_VOICE)
+#include <nxp4330_smart_voice.h>
+#endif
+#endif
+
+#if defined(CHIPID_S5P4418)
+#if defined(AVN)
+#include <s5p4418_avn_ref.h>
+#elif defined(DRONE)
+#include <s5p4418_drone.h>
+#elif defined(SVT)
+#include <s5p4418_svt.h>
+#elif defined(RAPTOR)
+#include <s5p4418_raptor.h>
+#elif defined(LEPUS)
+#include <nxp4330_lepus.h>
+#else
+#include <s5p4418_general.h>
+#endif
+#endif
+
 #define LOG_LEVEL			30
 
 #define LOG_LEVEL_NONE			0

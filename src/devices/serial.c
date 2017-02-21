@@ -21,11 +21,11 @@
 /* External Function */
 extern unsigned int getquotient(int dividend, int divisor);
 extern unsigned int getremainder(int dividend, int divisor);
-extern void NX_CLKPWR_SetOSCFreq(unsigned int FreqKHz);
+extern void clkpwr_set_oscfreq(unsigned int freq_khz);
 
 extern void ResetCon(unsigned int devicenum, int en);
 extern void GPIOSetAltFunction(unsigned int AltFunc);
-extern unsigned int NX_CLKPWR_GetPLLFrequency(unsigned int PllNumber);
+extern int clkpwr_get_pllfreq(unsigned int pll_num);
 
 static struct s5p4418_uart_reg *g_uart_reg;
 
@@ -33,7 +33,7 @@ static const unsigned int g_alt_num[] = {
 	PADINDEX_OF_UART0_UARTRXD,
 	PADINDEX_OF_UART0_UARTTXD,
 	PADINDEX_OF_pl01115_Uart_modem_UARTRXD,
-	PADINDEX_OF_pl01115_Uart_modem_UARTTXD, 
+	PADINDEX_OF_pl01115_Uart_modem_UARTTXD,
 	PADINDEX_OF_UART1_UARTRXD,PADINDEX_OF_UART1_UARTTXD,
 	PADINDEX_OF_pl01115_Uart_nodma0_UARTRXD,
 	PADINDEX_OF_pl01115_Uart_nodma0_UARTTXD,
@@ -103,9 +103,9 @@ int serial_init(unsigned int channel)
 	int clk_num = CONFIG_S5P_SERIAL_SRCCLK;
 	int clk_freq = 0, reg_value = 0;
 
-	NX_CLKPWR_SetOSCFreq(OSC_KHZ);
+	clkpwr_set_oscfreq(OSC_KHZ);
 
-	clk_freq = NX_CLKPWR_GetPLLFrequency(clk_num);
+	clk_freq = clkpwr_get_pllfreq(clk_num);
 
 	/* Disable the UartX - SmartCard Interface (default:0) */
 	reg_value = (1 << ((g_uart_smc[channel * 3 + 0]) & 0x1F));

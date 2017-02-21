@@ -30,7 +30,7 @@ extern U32 getquotient(U32 dividend, U32 divisor);
 
 void ResetCon(U32 devicenum, CBOOL en);
 void GPIOSetAltFunction(U32 AltFunc);
-U32 NX_CLKPWR_GetPLLFrequency(U32 PllNumber);
+extern int clkpwr_get_pllfreq(unsigned int pll_num);
 
 //------------------------------------------------------------------------------
 static struct NX_CLKGEN_RegisterSet *const __initdata pgSDClkGenReg[3] = {
@@ -64,7 +64,7 @@ CBOOL __init NX_SDMMC_GetClkParam( NX_CLKINFO_SDMMC *pClkInfo )
 	U32 nRetry = 1, nTemp = 0;
 	CBOOL   fRet = CFALSE;
 
-	srcFreq = NX_CLKPWR_GetPLLFrequency(pClkInfo->nPllNum);
+	srcFreq = clkpwr_get_pllfreq(pClkInfo->nPllNum);
 
 retry_getparam:
 	for (pClkInfo->nClkDiv = 2; ; pClkInfo->nClkDiv += 2) {
@@ -1277,6 +1277,9 @@ U32 iSDXCBOOT(struct NX_SecondBootInfo *pTBI)
 
 	NX_ASSERT(pSBI->DBI.SDMMCBI.PortNumber < 3);
 	pSDXCBootStatus->SDPort = pSBI->DBI.SDMMCBI.PortNumber;
+
+	printf(" pSBI->DBI.SDMMCBI.PortNumber : %d \r\n", pSBI->DBI.SDMMCBI.PortNumber);
+	printf(" pTBI->DEVICEADDR : %d \r\n", pTBI->DEVICEADDR);
 
 	NX_SDPADSetALT(pSDXCBootStatus->SDPort);
 

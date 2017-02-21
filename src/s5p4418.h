@@ -1,8 +1,6 @@
 #ifndef __S5P4418_H__
 #define __S5P4418_H__
 
-#define CFG_NSIH_EN				1
-
 /* NXPXX30 - Chip Product */
 #define ARCH_S5P4418
 

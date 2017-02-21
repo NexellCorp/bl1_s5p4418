@@ -73,7 +73,10 @@ void __init main(void)
 	/* step xx. check to binary(bl1) size */
 	check_bl1_size();
 
-#ifdef CHIPID_NXP4330
+#if defined(CHIPID_NXP4330)
+	/* SD/eMMC Card Detect Ready */
+	delay_ms(0x100);
+
 	/* step xx. must be self loading*/
 	nxp4330_self_boot();
 #endif
@@ -83,27 +86,30 @@ void __init main(void)
 	serial_init(serial_ch);
 #endif
 
+	mmio_write_32(&pReg_Alive->ALIVEPWRGATEREG, 1);
+#if (CONFIG_SUSPEND_RESUME == 1)
 	/* step xx. check the suspend, resume */
 	is_resume = s5p4418_resume_check();
+#endif
 
 	/* step 02. set the pmic(power management ic) */
-#if defined(INITPMIC_YES)
-	initPMIC();
+#if defined(PMIC_ON)
+	pmic_initalize();
 #endif
 	DMC_Delay(0xFFFFF);
 
 	/* step 03. clock(pll) intialize */
-	initClock();
+	clock_initialize();
 
 	/* step 04. serial console(uartX) initialize. */
 	serial_init(serial_ch);
 
 	/* step xx. build information. version, build time and date */
 	if (build_information() < 0)
-		WARN("NSIH Version(or File) Mismatch...!!\r\n");	
+		WARN("NSIH Version(or File) Mismatch...!!\r\n");
 
 	/* step xx. display the clock information */
-	printClkInfo();
+	clock_information();
 
 #if defined(SECURE_MODE)
 	/* step 05. set the secondary-core */
@@ -111,20 +117,16 @@ void __init main(void)
 #endif
 
 	/* step 06. (ddr3/lpddr3) sdram memory initialize */
-#ifdef MEM_TYPE_DDR3
 	init_DDR3(is_resume);
-#endif
-#ifdef MEM_TYPE_LPDDR23
-	init_LPDDR3(is_resume);
-#endif
-	NOTICE("(LPDDR3/DDR3) Initialize Done!\r\n");
 
 	/* step xx. display the ema(extra margin adjustments) information.  */
 	ema_information();
 
 	/* step 07-1. exit the (sdram) self-refresh  */
-	if (is_resume) 
+#if (CONFIG_SUSPEND_RESUME == 1)
+	if (is_resume)
 		exitSelfRefresh();
+#endif
 
 	/* step 08-1. set the system bus configuration */
 #if (CONFIG_BUS_RECONFIG == 1)
@@ -153,15 +155,15 @@ void __init main(void)
 
 	/* step xx. check the memory test (optional) */
 #if defined(STANDARD_MEMTEST)
-	memtester_main((unsigned int)0x40000000UL, (unsigned int)0x50000000UL, 0x10);
+	memtester_main((unsigned int)0x40000000UL, (unsigned int)0x80000000, 0x2);
 #elif defined(SIMPLE_MEMTEST)
-	simple_memtest((unsigned int*)0x40000000UL, (unsigned int*)0x60000000UL);
+	simple_memtest((unsigned int*)0x40000000UL, (unsigned int*)0x8FFFFFFF);
 #endif
 
-	/* 
-	  * step 10-1. check the (thirdboot) boot mode
-	  * step 10-2. loading the next file (thirdboot)
-	  */
+	/*
+	 * step 10-1. check the (thirdboot) boot mode
+	 * step 10-2. loading the next file (thirdboot)
+	 */
 	switch (pSBI->DBI.SPIBI.LoadDevice) {
 #if defined(SUPPORT_USB_BOOT)
 		case BOOT_FROM_USB:
@@ -196,4 +198,3 @@ void __init main(void)
 	ERROR("Image Loading Failure Try to USB boot\r\n");
 	while (!serial_done());
 }
-
