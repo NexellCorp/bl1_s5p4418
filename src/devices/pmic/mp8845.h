@@ -1,6 +1,6 @@
 /*
  * Copyright (C) 2016  Nexell Co., Ltd.
- * Author: DeokJin, Lee <truevirtue@nexell.co.kr>
+ * Author: Sangjong, Han <hans@nexell.co.kr>
  *
  * This program is free software; you can redistribute it and/or
  * modify it under the terms of the GNU General Public License
@@ -15,34 +15,21 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
+#ifndef __PMIC_MP8845_H__
+#define __PMIC_MP8845_H__
 
-#include <sysheader.h>
-#include <pmic.h>
+#define MP8845C_REG_VSEL                0x00
+#define MP8845C_REG_SYSCNTL1            0x01
+#define MP8845C_REG_SYSCNTL2            0x02
+#define MP8845C_REG_ID1                 0x03
+#define MP8845C_REG_ID2                 0x04
+#define MP8845C_REG_STATUS              0x05
 
-void pmic_initalize(void)
-{
-#if defined(CHIPID_NXP4330)
+#define I2C_ADDR_MP8845                 (0x38 >> 1)  // SVT & ASB
 
-#if defined(LEPUS_PMIC)
-	pmic_lepus();
-#elif defined(NAVI_PMIC)
-	pmic_navi();
-#elif defined(SMART_VOICE_PMIC)
-	pmic_smartvoice();
-#endif
+/* Function Define */
+ int mp8845_write(char addr, char *pdata, int size);
+ int mp8845_read(char addr, char *pdata, int size);
 
-#elif defined(CHIPID_S5P4418)
 
-#if defined(DRONE_PMIC)
-	pmic_drone();
-#elif defined(AVN_PMIC)
-	pmic_avn();
-#elif defined(SVT_PMIC)
-	pmic_svt();
-#elif defined(RAPTOR_PMIC)
-	pmic_raptor();
-#endif
-
-#endif
-	DMC_Delay(100 * 1000);
-}
+#endif	// ifdef __PMIC_MP8845_H__

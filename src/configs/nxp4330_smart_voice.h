@@ -15,8 +15,8 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-#ifndef __NXP4330_AVN_REF_H__
-#define __NXP4330_AVN_REF_H__
+#ifndef __NXP4330_SMART_VOICE_H__
+#define __NXP4330_SMART_VOICE_H__
 
 #include <clock.h>
 #include <freq.h>
@@ -77,7 +77,7 @@
 
 /* device(dram) drive strength configuration */
 #define CONFIG_DRAM_MR1_ODS			0				// MR1_ODS - 0: RZQ/6, 1 : RZQ/7
-#define CONFIG_DRAM_MR1_RTT_Nom			2				// MR1_RTT_Nom - 001: RZQ/4, 010: RZQ/2, 011: RZQ/6, 100: RZQ/12, 101: RZQ/8
+#define CONFIG_DRAM_MR1_RTT_Nom			3				// MR1_RTT_Nom - 001: RZQ/4, 010: RZQ/2, 011: RZQ/6, 100: RZQ/12, 101: RZQ/8
 #define CONFIG_DRAM_MR2_RTT_WR			1				// MR2_RTT_WR - 0: ODT disable, 1: RZQ/4, 2: RZQ/2
 
 /* memory controller(dphy) drive strengh configuration  */
@@ -122,4 +122,4 @@
 #define AUTO_VOLTAGE_CONTROL			1
 #define ARM_VOLTAGE_CONTROL_SKIP		0
 
-#endif // #ifndef __NXP4330_AVN_REF_H__
+#endif // #ifndef __NXP4330_SMART_VOICE_H__

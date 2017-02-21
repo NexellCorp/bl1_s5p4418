@@ -51,8 +51,6 @@
 						((2 - 1) << DVO0_BITPOS)	 | \
 						((2 - 1) << DVO1_BITPOS))
 
-
-
 /* sdram ddr3 configuration */
 #define CONFIG_DDR3_MEMCLK			800				// 533, 666, 800
 

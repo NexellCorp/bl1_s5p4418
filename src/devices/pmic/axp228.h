@@ -47,4 +47,8 @@
 
 #define I2C_ADDR_AXP228                 (0x68 >> 1)  // DroneL
 
+/* Function Define */
+ int axp228_write(char addr, char *pdata, int size);
+ int axp228_read(char addr, char *pdata, int size);
+
 #endif	// ifdef __PMIC_AXP228_H__

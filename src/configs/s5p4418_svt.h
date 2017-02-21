@@ -15,14 +15,14 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-#ifndef __NXP4330_NAVI_H__
-#define __NXP4330_NAVI_H__
+#ifndef __S5P4418_SVT_H__
+#define __S5P4418_SVT_H__
 
 #include <clock.h>
 #include <freq.h>
 
 /* system clock macro */
-#define CONFIG_S5P_PLL0_FREQ			533
+#define CONFIG_S5P_PLL0_FREQ			800
 #define CONFIG_S5P_PLL1_FREQ			800
 #define CONFIG_S5P_PLL2_FREQ			614
 #define CONFIG_S5P_PLL3_FREQ			800
@@ -32,29 +32,29 @@
 						((1 - 1) << DVO0_BITPOS)	 | \
 	                			((4 - 1) << DVO1_BITPOS))
 // BUSDVOREG
-#define CONFIG_S5P_PLLx_DVO1			((CLKSRC_PLL_3 << CLKSRC_BITPOS) | \
+#define CONFIG_S5P_PLLx_DVO1			((CLKSRC_PLL_0 << CLKSRC_BITPOS) | \
 	                			((2 - 1) << DVO0_BITPOS)	 | \
 	                			((2 - 1) << DVO1_BITPOS))
 // MEMDVOREG
-#define CONFIG_S5P_PLLx_DVO2			((CLKSRC_PLL_0 << CLKSRC_BITPOS) | \
+#define CONFIG_S5P_PLLx_DVO2			((CLKSRC_PLL_3 << CLKSRC_BITPOS) | \
 						((1 - 1) << DVO0_BITPOS)	 | \
 						((1 - 1) << DVO1_BITPOS) 	 | \
 						((2 - 1) << DVO2_BITPOS) 	 | \
 						((2 - 1) << DVO3_BITPOS))
 
-#define CONFIG_S5P_PLLx_DVO3			((CLKSRC_PLL_3 << CLKSRC_BITPOS) | \
+#define CONFIG_S5P_PLLx_DVO3			((CLKSRC_PLL_0 << CLKSRC_BITPOS) | \
 						((2 - 1) << DVO0_BITPOS)	 | \
 						((2 - 1) << DVO1_BITPOS))
 
 
-#define CONFIG_S5P_PLLx_DVO4			((CLKSRC_PLL_3 << CLKSRC_BITPOS) | \
+#define CONFIG_S5P_PLLx_DVO4			((CLKSRC_PLL_0 << CLKSRC_BITPOS) | \
 						((2 - 1) << DVO0_BITPOS)	 | \
 						((2 - 1) << DVO1_BITPOS))
 
-/* sdram lpddr3 configuration */
+/* sdram ddr3 configuration */
 #define CONFIG_DDR3_MEMCLK			800				// 533, 666, 800
 
-#define CONFIG_DDR3_CS_NUM			 2				// 1 : 1CS, 2: 2CS
+#define CONFIG_DDR3_CS_NUM			 1				// 1 : 1CS, 2: 2CS
 #define CONFIG_DDR3_BANK_NUM			 3				// 3: 8 Bank
 #define CONFIG_DDR3_ROW_NUM			15
 #define CONFIG_DDR3_COLUMN_NUM			10
@@ -70,7 +70,6 @@
 
 #define CONFIG_DDR3_CS_PERSIZE			(CONFIG_DDR3_CHIP_PERSIZE *	\
 						 (32/CONFIG_DDR3_BUS_WIDTH))	// CS Per Byte Size
-
 #define CONFIG_DDR3_MEMSIZE			((((1 << CONFIG_DDR3_ROW_NUM)/8) *	\
 						  (1 << CONFIG_DDR3_COLUMN_NUM) * 	\
 						  (1 << CONFIG_DDR3_BANK_NUM) *		\
@@ -91,7 +90,7 @@
 #define CONFIG_DPHY_DRVDS_CS			6
 #define CONFIG_DPHY_DRVDS_CA			6
 
-#define CONFIG_DPHY_ZQ_DDS			4
+#define CONFIG_DPHY_ZQ_DDS			5
 #define CONFIG_DPHY_ZQ_ODT			1
 
 /* ddr3 leveling & training configuration */
@@ -117,10 +116,10 @@
 
 #define CONFIG_UART_CLKGEN_CLOCK_HZ		0
 
+/* sd/mmc configuration */
+#define CONFIG_S5P_SDMMC_SRCLK			2
+
 /* pmic(power management ic) configuration */
 #define NXE2000_PMIC_ENABLE
 
-#define AUTO_VOLTAGE_CONTROL			1
-#define ARM_VOLTAGE_CONTROL_SKIP		0
-
-#endif // #ifndef __NXP4330_NAVI_H__
+#endif // #ifndef __S5P4418_SVT_H__

@@ -15,8 +15,8 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-#ifndef __NXP4330_AVN_REF_H__
-#define __NXP4330_AVN_REF_H__
+#ifndef __NXP4330_LEPUS_H__
+#define __NXP4330_LEPUS_H__
 
 #include <clock.h>
 #include <freq.h>
@@ -122,4 +122,4 @@
 #define AUTO_VOLTAGE_CONTROL			1
 #define ARM_VOLTAGE_CONTROL_SKIP		0
 
-#endif // #ifndef __NXP4330_AVN_REF_H__
+#endif // #ifndef __NXP4330_LEPUS_H__

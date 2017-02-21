@@ -16,7 +16,7 @@ void initClock(void);
 void printClkInfo(void);
 
 /* PMIC(power management ic) Function */
-void initPMIC(void);
+void pmic_initalize(void);
 
 /* Bus, Drex Fuction */
 void setBusConfig(void);

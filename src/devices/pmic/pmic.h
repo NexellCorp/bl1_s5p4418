@@ -15,34 +15,18 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
+#ifndef __PMIC_H__
+#define __PMIC_H__
 
-#include <sysheader.h>
-#include <pmic.h>
-
-void pmic_initalize(void)
-{
 #if defined(CHIPID_NXP4330)
-
-#if defined(LEPUS_PMIC)
-	pmic_lepus();
-#elif defined(NAVI_PMIC)
-	pmic_navi();
-#elif defined(SMART_VOICE_PMIC)
-	pmic_smartvoice();
-#endif
-
-#elif defined(CHIPID_S5P4418)
-
-#if defined(DRONE_PMIC)
-	pmic_drone();
-#elif defined(AVN_PMIC)
-	pmic_avn();
-#elif defined(SVT_PMIC)
-	pmic_svt();
-#elif defined(RAPTOR_PMIC)
-	pmic_raptor();
+void pmic_lepus(void);
+void pmic_navi(void);
+void pmic_smartvoice(void);
+#else
+void pmic_avn(void);
+void pmic_drone(void);
+void pmic_svt(void);
+void pmic_raptor(void);
 #endif
 
 #endif
-	DMC_Delay(100 * 1000);
-}

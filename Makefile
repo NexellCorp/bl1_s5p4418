@@ -27,8 +27,8 @@ LDFLAGS		=	-Bstatic							\
 			-nostdlib
 
 SYS_OBJS	+=	startup.o armv7_libs.o clock.o clkpwr.o main.o subcpu.o		\
-			plat_pm.o ema.o resetcon.o GPIO.o serial.o util.o crc.o		\
-			gic.o buildinfo.o printf.o nxp4330.o
+			plat_pm.o ema.o resetcon.o GPIO.o serial.o libstd.o crc.o	\
+			gic.o board_${BOARD}.o buildinfo.o printf.o nxp4330.o
 
 #SYS_OBJS	+=	sysbus.o
 
@@ -49,8 +49,8 @@ endif
 SYS_OBJS	+=	CRYPTO.o
 #SYS_OBJS	+=	nx_tieoff.o
 
-ifeq ($(INITPMIC),YES)
-SYS_OBJS	+=	i2c_gpio.o pmic.o
+ifeq ($(PMIC_ON),y)
+SYS_OBJS	+=	i2c_gpio.o pmic.o nxe1500.o nxe2000.o mp8845.o axp228.o
 endif
 
 ifeq ($(SUPPORT_USB_BOOT),y)
@@ -70,13 +70,14 @@ endif
 SYS_OBJS_LIST	=	$(addprefix $(DIR_OBJOUTPUT)/,$(SYS_OBJS))
 
 SYS_INCLUDES	=	-I src				\
-			-I src/configs			\
 			-I src/boot			\
+			-I src/configs			\
 			-I src/devices			\
 			-I src/devices/pmic		\
 			-I src/devices/memory		\
 			-I src/devices/memory/ddr3	\
 			-I src/devices/memory/lpddr3	\
+			-I src/board			\
 			-I src/services			\
 			-I src/services/std_svc		\
 			-I src/services/std_svc/psci	\
@@ -112,8 +113,11 @@ $(DIR_OBJOUTPUT)/%.o: src/devices/memory/lpddr3/%.c
 	@echo [compile....$<]
 	$(Q)$(CC) -MMD $< -c -o $@ $(CFLAGS) $(SYS_INCLUDES)
 ###################################################################################################
-
 $(DIR_OBJOUTPUT)/%.o: src/devices/pmic/%.c
+	@echo [compile....$<]
+	$(Q)$(CC) -MMD $< -c -o $@ $(CFLAGS) $(SYS_INCLUDES)
+###################################################################################################
+$(DIR_OBJOUTPUT)/%.o: src/board/%.c
 	@echo [compile....$<]
 	$(Q)$(CC) -MMD $< -c -o $@ $(CFLAGS) $(SYS_INCLUDES)
 ###################################################################################################

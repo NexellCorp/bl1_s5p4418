@@ -15,34 +15,15 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
+#ifndef __SVT_H__
+#define __SVT_H__
 
-#include <sysheader.h>
-#include <pmic.h>
+#define AUTO_VOLTAGE_CONTROL			1
+#define ARM_VOLTAGE_CONTROL_SKIP		0
 
-void pmic_initalize(void)
-{
-#if defined(CHIPID_NXP4330)
-
-#if defined(LEPUS_PMIC)
-	pmic_lepus();
-#elif defined(NAVI_PMIC)
-	pmic_navi();
-#elif defined(SMART_VOICE_PMIC)
-	pmic_smartvoice();
-#endif
-
-#elif defined(CHIPID_S5P4418)
-
-#if defined(DRONE_PMIC)
-	pmic_drone();
-#elif defined(AVN_PMIC)
-	pmic_avn();
-#elif defined(SVT_PMIC)
-	pmic_svt();
-#elif defined(RAPTOR_PMIC)
-	pmic_raptor();
-#endif
-
-#endif
-	DMC_Delay(100 * 1000);
-}
+#define NXE2000_I2C_GPIO_GRP 			3				// GPIOD
+#define NXE2000_I2C_SCL 			2				// SCL : GPIOD02
+#define NXE2000_I2C_SDA 			3				// SDA: GPIOD03
+#define NXE2000_I2C_SCL_ALT 			0				// SCL: ALT0
+#define NXE2000_I2C_SDA_ALT			0				// SDA: ALT 0
+#endif // __SVT_H__

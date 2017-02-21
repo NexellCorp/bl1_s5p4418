@@ -34,8 +34,8 @@ MEMTYPE				?= DDR3
 MEMTEST				?= n
 
 # power management ic(pmic) on/off
-INITPMIC			?= YES
-#INITPMIC			?= NO
+PMIC_ON				?= y
+#PMIC_ON				?= n
 
 CRC_CHECK			?= n
 
@@ -44,16 +44,15 @@ SUPPORT_USB_BOOT		?= y
 SUPPORT_SDMMC_BOOT		?= y
 
 ifeq ($(CHIPNAME), NXP4330)
-#BOARD				?= LEPUS
-BOARD				?= NAVI
-#BOARD				?= SMART_VOICE
+#BOARD				?= lepus
+BOARD				?= navi
+#BOARD				?= smart_voice
 else
-#BOARD				?= SVT
-#BOARD				?= ASB
-#BOARD				?= DRONE
-BOARD				?= AVN
-#BOARD				?= LAVENDA
-#BOARD				?= RAPTOR
+#BOARD				?= svt
+#BOARD				?= asb
+#BOARD				?= drone
+BOARD				?= avn
+#BOARD				?= raptor
 endif
 
 # supported kernel version (3.18-3.4/4.1-4.4)
@@ -155,7 +154,8 @@ CFLAGS				+=	-g -Wall				\
 					-DMEMTYPE_$(MEMTYPE)			\
 					-DINITPMIC_$(INITPMIC)			\
 					-DCHIPID_$(CHIPNAME)			\
-					-D_2NDBOOT_MODE -D$(BOARD)
+					-D_2NDBOOT_MODE				\
+					-D$(shell echo $(BOARD) | tr a-z A-Z)
 
 # arm mode - secure/non-secure
 ifeq ($(SECURE), y)
@@ -173,8 +173,9 @@ CFLAGS				+=	-DSYSLOG_ON
 endif
 
 # power managemnt ic(pmic) on/off
-ifeq ($(INITPMIC), YES)
-CFLAGS				+=	-D$(BOARD)_PMIC_INIT
+ifeq ($(PMIC_ON), y)
+CFLAGS				+=	-DPMIC_ON
+CFLAGS				+=	-D$(shell echo $(BOARD) | tr a-z A-Z)_PMIC
 endif
 
 # memory test

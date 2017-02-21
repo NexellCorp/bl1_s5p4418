@@ -122,4 +122,4 @@
 /* pmic(power management ic) configuration */
 #define NXE1500_PMIC_ENABLE
 
-#endif // #ifndef __S5P4418_AVN_REF_H__
+#endif // #ifndef __S5P4418_RAPTOR_H__
