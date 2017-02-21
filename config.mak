@@ -57,8 +57,8 @@ BOARD				?= AVN
 endif
 
 # supported kernel version (3.18-3.4/4.1-4.4)
-#KERNEL_VER			?= 3
-KERNEL_VER			?= 4
+KERNEL_VER			?= 3
+#KERNEL_VER			?= 4
 
 # system log Message
 SYSLOG				?= y
@@ -67,7 +67,7 @@ SYSLOG				?= y
 SECURE_ON			?= 0
 
 # arm mode - secure/non-secure
-SECURE				?= YES
+SECURE				?= y
 
 # cross-tool pre-header
 ifeq ($(OS),Windows_NT)

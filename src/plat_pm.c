@@ -23,7 +23,7 @@ extern void ResetCon(U32 devicenum, CBOOL en);
 
 
 #if (CONFIG_SUSPEND_RESUME == 1)
-extern void enterSelfRefresh(void);
+extern void enter_self_refresh(void);
 extern unsigned int __calc_crc(void *addr, int len);
 extern void DMC_Delay(int milisecond);
 #endif
@@ -247,7 +247,7 @@ extern U32  g_GateCode;
 extern U32  g_RDvwmc;
 extern U32  g_WRvwmc;
 
-extern void enterSelfRefresh(void);
+extern void enter_self_refresh(void);
 extern U32 calc_crc(void *addr, int len);
 extern void DMC_Delay(int milisecond);
 
@@ -349,7 +349,7 @@ static void suspend_vdd_pwroff(void)
  *************************************************************/
 void s5p4418_suspend(void)
 {
-	enterSelfRefresh();
+	enter_self_refresh();
 	suspend_vdd_pwroff();
 }
 #endif	// #if (CONFIG_SUSPEND_RESUME == 1)

@@ -117,7 +117,7 @@ void __init main(void)
 #endif
 
 	/* step 06. (ddr3/lpddr3) sdram memory initialize */
-	init_DDR3(is_resume);
+	ddr3_initialize();
 
 	/* step xx. display the ema(extra margin adjustments) information.  */
 	ema_information();
@@ -125,7 +125,7 @@ void __init main(void)
 	/* step 07-1. exit the (sdram) self-refresh  */
 #if (CONFIG_SUSPEND_RESUME == 1)
 	if (is_resume)
-		exitSelfRefresh();
+		exit_self_refresh();
 #endif
 
 	/* step 08-1. set the system bus configuration */
