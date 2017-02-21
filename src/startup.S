@@ -46,7 +46,22 @@ vectors:
         b       .                   		// 18 - IRQ interrupts
         b       .                   		// 1C - FIQ interrupts
 
-	b	system_sleep			// 20 - suspend routine.
+	.skip	0x20, 0x00			//20 : Reserved (0x20 ~ 0x40)
+
+header_info:
+	.word	0x00008000			// 40 : Device Address
+	.word	0x00008000			// 44 : Next Bootloader Load Size
+	.word	0xFFFF0000			// 48 : Load Address
+	.word	0xFFFF0000			// 4C : Launch Address
+
+	.skip	0xB0, 0x00			// 50 : Reserved (0x50 ~ 0x100)
+	.skip	0x100, 0x00			// 100 : Reserved (0x100 ~ 0x200)
+
+	.skip	0x20, 0x00			// 200: Reserved (0x200 ~ 0x200)
+
+#if (CONFIG_SUSPEND_RESUME == 1)
+	b	system_sleep			// 220:  suspend routine.
+#endif
 
 buildinfo:
         .word   0x44180602          		// 24 - Chip name - 4418, Build num - v0.6.01
