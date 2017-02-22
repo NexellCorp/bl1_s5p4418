@@ -48,6 +48,8 @@
 #define I2C_ADDR_AXP228                 (0x68 >> 1)  // DroneL
 
 /* Function Define */
+unsigned char axp228_get_dcdc_step(int want_vol, int step, int min, int max);
+
  int axp228_write(char addr, char *pdata, int size);
  int axp228_read(char addr, char *pdata, int size);
 

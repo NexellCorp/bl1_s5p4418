@@ -29,5 +29,6 @@
 #define serial_empty	serial_is_tx_empty
 
 int printf(const char *format, ...);
+int empty_printf(const char *format, ...);
 
 #endif

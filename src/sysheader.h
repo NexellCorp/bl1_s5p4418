@@ -19,7 +19,6 @@
 #define __SYS_HEADER_H__
 
 #include <s5p4418.h>
-#include "cfgFreqDefine.h"
 
 #include <nx_pyrope.h>
 #include <nx_type.h>
@@ -39,14 +38,26 @@
 #include <nx_wdt.h>
 
 #include "secondboot.h"
-#include "printf.h"
+#include <printf.h>
 #include <serial.h>
-#include "type.h"
+#include <type.h>
 #include <common.h>
 
+#include <clock.h>
 #include <clkgen.h>
+#include <clkpwr.h>
 
 #include <gpio.h>
+#include <memory.h>
+#include <pmic.h>
+#include <plat_pm.h>
+
+#include <libstd.h>
+
+#include <memory.h>
+
+#include <serial.h>
+#include <printf.h>
 
 #if defined(CHIPID_NXP4330)
 #if defined(LEPUS)
@@ -74,6 +85,26 @@
 #endif
 #endif
 
+#if defined(SYSLOG_ON)
+#define SYSMSG	printf
+#else
+#define SYSMSG	empty_printf
+#endif
+
+// Memory debug message
+#if defined(SYSLOG_ON)
+#define MEMMSG  printf
+#else
+#define MEMMSG	empty_printf
+#endif
+
+// UserDebug Message
+#if 0
+#define DBGOUT  printf
+#else
+#define DBGOUT	empty_printf
+#endif
+
 #define LOG_LEVEL			30
 
 #define LOG_LEVEL_NONE			0
@@ -87,31 +118,31 @@
 #if ((LOG_LEVEL >= LOG_LEVEL_NOTICE) && defined(SYSLOG_ON))
 # define NOTICE(...)	printf("NOTICE:  " __VA_ARGS__)
 #else
-# define NOTICE(...)
+# define NOTICE(...)	empty_printf("NOTICE:  " __VA_ARGS__)
 #endif
 
 #if ((LOG_LEVEL >= LOG_LEVEL_ERROR) && defined(SYSLOG_ON))
 # define ERROR(...)	printf("ERROR:   " __VA_ARGS__)
 #else
-# define ERROR(...)
+# define ERROR(...)	empty_printf("ERROR:   " __VA_ARGS__)
 #endif
 
 #if ((LOG_LEVEL >= LOG_LEVEL_WARNING) && defined(SYSLOG_ON))
 # define WARN(...)	printf("WARNING: " __VA_ARGS__)
 #else
-# define WARN(...)
+# define WARN(...)	empty_printf("WARNING: " __VA_ARGS__)
 #endif
 
 #if ((LOG_LEVEL >= LOG_LEVEL_INFO) && defined(SYSLOG_ON))
 # define INFO(...)	printf("INFO:    " __VA_ARGS__)
 #else
-# define INFO(...)
+# define INFO(...)	empty_printf("INFO:    " __VA_ARGS__)
 #endif
 
 #if ((LOG_LEVEL >= LOG_LEVEL_VERBOSE) && defined(SYSLOG_ON))
 # define VERBOSE(...)	printf("VERBOSE: " __VA_ARGS__)
 #else
-# define VERBOSE(...)
+# define VERBOSE(...)	empty_printf("VERBOSE: " __VA_ARGS__)
 #endif
 
 #define BL1_SDRAMBOOT_LOADADDR			(0xFFFF0000)
@@ -124,30 +155,6 @@
 #define __init		__section(.init.text)
 #define __initdata	__section(.init.data)
 #define __initcode	__section(.init.code)
-
-//------------------------------------------------------------------------------
-//  Set DEBUG Macro
-//------------------------------------------------------------------------------
-
-#if defined(SYSLOG_ON)
-#define SYSMSG printf
-#else
-#define SYSMSG(x, ...)
-#endif
-
-// Memory debug message
-#if defined(SYSLOG_ON)
-#define MEMMSG  printf
-#else
-#define MEMMSG(x, ...)
-#endif
-
-// UserDebug Message
-#if 0
-#define DBGOUT  printf
-#else
-#define DBGOUT(x, ...)
-#endif
 
 //------------------------------------------------------------------------------
 //  Set global variables

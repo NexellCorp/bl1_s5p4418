@@ -54,7 +54,7 @@ unsigned int sget_fcs(int fcs, unsigned short data)
          return fcs;
 }
 
-unsigned int iget_fcs(unsigned int fcs, unsigned int data)
+unsigned int __init iget_fcs(unsigned int fcs, unsigned int data)
 {
 	int i;
 

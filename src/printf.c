@@ -192,6 +192,12 @@ int printf(const char *format, ...)
 	return ret;
 }
 
+int empty_printf(const char *format, ...)
+{
+	format = format;
+	return 0;
+}
+
 #if 0
 int sprintf(char *out, const char *format, ...)
 {

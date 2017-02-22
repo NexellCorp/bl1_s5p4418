@@ -67,7 +67,7 @@ int __aeabi_idivmod(void)
 
 static void fflush(void)
 {
-	while(!DebugIsUartTxDone());
+	while(!serial_done());
 }
 
 /* Function definitions. */

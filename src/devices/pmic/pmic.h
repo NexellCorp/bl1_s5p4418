@@ -29,4 +29,6 @@ void pmic_svt(void);
 void pmic_raptor(void);
 #endif
 
+void pmic_initalize(void);
+
 #endif

@@ -257,7 +257,6 @@ int s5p4418_resume_check(void)
 	int is_resume = 0;		// 0: no resume, 1:resume
 
 	/* Get resume information. */
-	mmio_write_32(&pReg_Alive->ALIVEPWRGATEREG, 1);
 	signature = mmio_read_32(&pReg_Alive->ALIVESCRATCHREADREG);
 	if ((SUSPEND_SIGNATURE == signature) &&
 			mmio_read_32(&pReg_Alive->WAKEUPSTATUS)) {

@@ -320,6 +320,8 @@ void gate_leveling_information(void)
 	unsigned int max_slice = 4, slice;
 	unsigned int LockValue = g_DDRLock;
 
+	LockValue = LockValue;
+
 	/* DQ Calibration Fail Status */
 	mmio_write_32(&g_ddrphy_reg->PHY_CON[5], VWM_FAIL_STATUS);
 	status = mmio_read_32(&g_ddrphy_reg->PHY_CON[19 + 1]);

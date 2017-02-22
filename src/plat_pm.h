@@ -28,6 +28,8 @@ void s5p4418_cpu_off_wfi_ready(void);
 
 void s5p4418_reset_cpu(void);
 
+ int s5p4418_resume_check(void);
+
 void s5p4418_suspend(void);
 void s5p4418_resume(void);
 

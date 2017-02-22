@@ -11,12 +11,6 @@ void ResetCon(unsigned int devicenum, int en);
 void __init cache_setup_ema(void);
 void ema_information(void);
 
-/* Clock(PLL) Function */
-void initClock(void);
-void printClkInfo(void);
-
-/* PMIC(power management ic) Function */
-void pmic_initalize(void);
 
 /* Bus, Drex Fuction */
 void setBusConfig(void);
@@ -25,8 +19,6 @@ void setBusConfig(void);
 void enter_self_refresh(void);
 void exit_self_refresh(void);
 
-/* Secondary CPU Function */
-void s5p4418_resume(void);
 
 /* Secondary CPU Function */
 void subcpu_bringup(void);

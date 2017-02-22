@@ -23,8 +23,6 @@
 extern struct s5p4418_clkpwr_reg* g_clkpwr_reg;
 
 /* External Function */
-extern unsigned int getquotient(int dividend, int divisor);
-extern unsigned int getremainder(int dividend, int divisor);
 
 extern void pll_change(volatile unsigned int data,
 		volatile unsigned int* addr,unsigned int delay);
