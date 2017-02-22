@@ -22,10 +22,8 @@ void pmic_initalize(void);
 void setBusConfig(void);
 
 /* (ddr3/lpdde3) sdram memory function define */
-void init_DDR3(unsigned int);
-void init_LPDDR3(unsigned int);
-void enterSelfRefresh(void);
-void exitSelfRefresh(void);
+void enter_self_refresh(void);
+void exit_self_refresh(void);
 
 /* Secondary CPU Function */
 void s5p4418_resume(void);

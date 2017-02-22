@@ -27,10 +27,9 @@ LDFLAGS		=	-Bstatic							\
 			-nostdlib
 
 SYS_OBJS	+=	startup.o armv7_libs.o clock.o clkpwr.o main.o subcpu.o		\
-			plat_pm.o ema.o resetcon.o GPIO.o serial.o libstd.o crc.o	\
-			gic.o board_${BOARD}.o buildinfo.o printf.o nxp4330.o
-
-#SYS_OBJS	+=	sysbus.o
+			plat_pm.o ema.o resetcon.o GPIO.o serial.o libstd.o gic.o	\
+			${MEMTYPE}_sdram.o memory.o crc.o buildinfo.o printf.o		\
+			board_${BOARD}.o nxp4330.o
 
 ifeq ($(SECURE), n)
 SYS_OBJS	+=	non_secure.o smc_entry.o smc_handler.o sip_main.o std_svc_setup.o	\
@@ -39,15 +38,7 @@ SYS_OBJS	+=	non_secure.o smc_entry.o smc_handler.o sip_main.o std_svc_setup.o	\
 			dpc.o
 endif
 
-ifeq ($(MEMTYPE),DDR3)
-SYS_OBJS	+=	ddr3_sdram.o
-endif
-ifeq ($(MEMTYPE),LPDDR3)
-SYS_OBJS	+=	init_LPDDR3.o
-endif
-
 SYS_OBJS	+=	CRYPTO.o
-#SYS_OBJS	+=	nx_tieoff.o
 
 ifeq ($(PMIC_ON),y)
 SYS_OBJS	+=	i2c_gpio.o pmic.o nxe1500.o nxe2000.o mp8845.o axp228.o

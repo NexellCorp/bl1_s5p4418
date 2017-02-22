@@ -25,12 +25,12 @@ CFLAGS				:=
 DEBUG				?= n
 
 # chip name
-#CHIPNAME			?= NXP4330
-CHIPNAME			?= S5P4418
+#CHIPNAME			?= nxp4330
+CHIPNAME			?= s5p4418
 
 # (ddr3/lpddr3) memory type
-MEMTYPE				?= DDR3
-#MEMTYPE			?= LPDDR3
+MEMTYPE				?= ddr3
+#MEMTYPE				?= lpddr3
 MEMTEST				?= n
 
 # power management ic(pmic) on/off
@@ -41,9 +41,9 @@ CRC_CHECK			?= n
 
 # supported (thridboot) boot mode
 SUPPORT_USB_BOOT		?= y
-SUPPORT_SDMMC_BOOT		?= y
+SUPPORT_SDMMC_BOOT		?= n
 
-ifeq ($(CHIPNAME), NXP4330)
+ifeq ($(CHIPNAME), nxp4330)
 #BOARD				?= lepus
 BOARD				?= navi
 #BOARD				?= smart_voice
@@ -55,18 +55,23 @@ BOARD				?= avn
 #BOARD				?= raptor
 endif
 
+# (sd/mmc, spi, nand, etc) device port number
+#DEVICE_PORT			?= 2
+#DEVICE_PORT			?= 1
+DEVICE_PORT			?= 0
+
 # supported kernel version (3.18-3.4/4.1-4.4)
 KERNEL_VER			?= 3
 #KERNEL_VER			?= 4
 
 # system log Message
-SYSLOG				?= y
+SYSLOG				?= n
 
 # secure boot
-SECURE_ON			?= 0
+SECURE_ON			?= n
 
 # arm mode - secure/non-secure
-SECURE				?= y
+ARM_SECURE			?= y
 
 # cross-tool pre-header
 ifeq ($(OS),Windows_NT)
@@ -102,8 +107,8 @@ RANLIB 				= $(CROSS_TOOL)ranlib
 
 GCC_LIB				= $(shell $(CC) -print-libgcc-file-name)
 
-ifeq ($(SECURE_ON), 1)
-CFLAGS              +=  -DSECURE_ON
+ifeq ($(SECURE_ON), y)
+CFLAGS				+=  -DSECURE_ON
 endif
 
 ifeq ($(DEBUG), y)
@@ -143,22 +148,21 @@ ARLIBFLAGS			= -v -s
 
 ASFLAG				= -D__ASSEMBLY__
 
-CFLAGS				+=	-g -Wall				\
-					-Wextra -ffreestanding -fno-builtin	\
-					-msoft-float				\
-					-mlittle-endian				\
-					-mcpu=$(CPU)				\
-					-mstructure-size-boundary=32		\
-					$(CODE_MAIN_INCLUDE)			\
-					-D__arm -DLOAD_FROM_$(BOOTFROM)		\
-					-DMEMTYPE_$(MEMTYPE)			\
-					-DINITPMIC_$(INITPMIC)			\
-					-DCHIPID_$(CHIPNAME)			\
-					-D_2NDBOOT_MODE				\
+CFLAGS				+=	-g -Wall					\
+					-Wextra -ffreestanding -fno-builtin		\
+					-msoft-float					\
+					-mlittle-endian					\
+					-mcpu=$(CPU)					\
+					-mstructure-size-boundary=32			\
+					$(CODE_MAIN_INCLUDE)				\
+					-D__arm -DLOAD_FROM_$(BOOTFROM)			\
+					-DCHIPID_$(shell echo $(CHIPNAME) | tr a-z A-Z)	\
+					-DMEMTYPE_$(shell echo $(MEMTYPE) | tr a-z A-Z)	\
+					-D_2NDBOOT_MODE					\
 					-D$(shell echo $(BOARD) | tr a-z A-Z)
 
 # arm mode - secure/non-secure
-ifeq ($(SECURE), y)
+ifeq ($(ARM_SECURE), y)
 CFLAGS				+=	-DSECURE_MODE
 endif
 
@@ -180,8 +184,8 @@ endif
 
 # memory test
 ifeq ($(MEMTEST), y)
-#MEMTEST_TYPE			+=	STANDARD
-MEMTEST_TYPE			+=	SIMPLE
+MEMTEST_TYPE			+=	STANDARD
+#MEMTEST_TYPE			+=	SIMPLE
 CFLAGS				+=	-D$(MEMTEST_TYPE)_MEMTEST
 endif
 

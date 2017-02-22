@@ -116,17 +116,11 @@ void __init main(void)
 	subcpu_bringup();
 #endif
 
-	/* step 06. (ddr3/lpddr3) sdram memory initialize */
-	ddr3_initialize();
-
 	/* step xx. display the ema(extra margin adjustments) information.  */
 	ema_information();
 
-	/* step 07-1. exit the (sdram) self-refresh  */
-#if (CONFIG_SUSPEND_RESUME == 1)
-	if (is_resume)
-		exit_self_refresh();
-#endif
+	/* step 06. memory initialize */
+	memory_initialize(is_resume);
 
 	/* step 08-1. set the system bus configuration */
 #if (CONFIG_BUS_RECONFIG == 1)
