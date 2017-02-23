@@ -30,4 +30,6 @@ struct	s5p4418_gpio_reg {
 	volatile unsigned char reserved1[0x1000-0x70];
 };
 
+void gpio_set_alt_function(unsigned int alt_num);
+
 #endif

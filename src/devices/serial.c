@@ -19,8 +19,6 @@
 
 
 /* External Function */
-extern void GPIOSetAltFunction(unsigned int AltFunc);
-
 static struct s5p4418_uart_reg *g_uart_reg;
 
 static const unsigned int g_alt_num[] = {
@@ -110,8 +108,8 @@ int serial_init(unsigned int channel)
 	mmio_clear_32(&pReg_Tieoff->TIEOFFREG[((g_uart_smc[channel * 3 + 2]) & 0xFFFF) >> 5], reg_value);
 
 	/* step xx. change the (tx, rx)io gpio-alternate  */
-	GPIOSetAltFunction(g_alt_num[channel * 2 + 0]);
-	GPIOSetAltFunction(g_alt_num[channel * 2 + 1]);
+	gpio_set_alt_function(g_alt_num[channel * 2 + 0]);
+	gpio_set_alt_function(g_alt_num[channel * 2 + 1]);
 
 	/* step xx. change the reset state in uart block */
 	reset_con(serial_get_resetnum(channel), 1);				// reset on
