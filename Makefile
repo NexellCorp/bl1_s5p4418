@@ -139,7 +139,7 @@ $(DIR_OBJOUTPUT)/%.o: src/services/std_svc/psci/%.S
 	$(Q)$(CC) -MMD $< -c -o $@ $(ASFLAG) $(CFLAGS) $(SYS_INCLUDES)
 ###################################################################################################
 
-all: mkobjdir $(SYS_OBJS_LIST) link bin
+all: mkobjdir $(SYS_OBJS_LIST) link bin bingen
 
 mkobjdir:
 ifeq ($(OS),Windows_NT)
@@ -167,6 +167,10 @@ link:
 bin:
 	@echo [binary.... $(DIR_TARGETOUTPUT)/$(TARGET_NAME).bin]
 	$(Q)$(MAKEBIN) -O binary $(DIR_TARGETOUTPUT)/$(TARGET_NAME).elf $(DIR_TARGETOUTPUT)/$(TARGET_NAME).bin
+
+bingen:
+	./tools/bingen -c $(CHIPNAME) -i $(DIR_TARGETOUTPUT)/$(TARGET_NAME).bin -o $(DIR_TARGETOUTPUT)/bl1-emmcboot.bin -l 0xFFFF0000 -e 0xFFFF0000 -d SDMMC -u $(DEVICE_PORT) -a 0x8000
+
 ifeq ($(OS),Windows_NT)
 	@if exist $(DIR_OBJOUTPUT)			\
 		@$(RM) $(DIR_OBJOUTPUT)\buildinfo.o
