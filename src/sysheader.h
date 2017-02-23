@@ -78,8 +78,6 @@
 #include <s5p4418_svt.h>
 #elif defined(RAPTOR)
 #include <s5p4418_raptor.h>
-#elif defined(LEPUS)
-#include <nxp4330_lepus.h>
 #else
 #include <s5p4418_general.h>
 #endif

@@ -116,9 +116,6 @@
 
 #define CONFIG_UART_CLKGEN_CLOCK_HZ		0
 
-/* sd/mmc configuration */
-#define CONFIG_S5P_SDMMC_SRCLK			2
-
 /* pmic(power management ic) configuration */
 #define NXE1500_PMIC_ENABLE
 

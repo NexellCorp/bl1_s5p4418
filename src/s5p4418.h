@@ -27,17 +27,4 @@
 #define MEM_TYPE_LPDDR23
 #endif
 
-/* Serial Console Configuration */
-#define CONFIG_S5P_SERIAL
-#define CONFIG_S5P_SERIAL_INDEX			0
-#define CONFIG_S5P_SERIAL_CLOCK			50000000
-
-#define CONFIG_S5P_SERIAL_SRCCLK		0
-#define CONFIG_S5P_SERIAL_DIVID			4
-#define CONFIG_S5P_SERIAL_
-
-#define CONFIG_BAUDRATE				115200
-
-#define CONFIG_UART_CLKGEN_CLOCK_HZ		0
-
 #endif

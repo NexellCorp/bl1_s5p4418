@@ -118,10 +118,6 @@
 
 #define CONFIG_UART_CLKGEN_CLOCK_HZ		0
 
-/* (sd/emmc) configuration */
-#define CONFIG_S5P_SDMMC_SRCCLK			2
-#define CONFIG_S5P_SDMMC_CLOCK			25000000
-
 /* pmic(power management ic) configuration */
 #define MP8845_PMIC_ENABLE
 

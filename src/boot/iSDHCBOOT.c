@@ -20,6 +20,10 @@
 #include <nx_sdmmc.h>
 #include "iSDHCBOOT.h"
 
+/* (sd/emmc) configuration */
+#define CONFIG_S5P_SDMMC_SRCCLK			2
+#define CONFIG_S5P_SDMMC_CLOCK			25000000
+
 #ifdef NX_DEBUG
 #define dprintf         printf
 #else
@@ -152,7 +156,7 @@ static CBOOL __init NX_SDMMC_SetClock( SDXCBOOTSTATUS * pSDXCBootStatus, CBOOL e
 		| (0UL<<1);							// set clock invert
 #else
 
-	clkInfo.nPllNum = NX_CLKSRC_SDMMC;
+	clkInfo.nPllNum = CONFIG_S5P_SDMMC_SRCCLK;
 	clkInfo.nFreqHz = nFreq;
 	ret = NX_SDMMC_GetClkParam( &clkInfo );
 	if (ret == CTRUE) {
@@ -678,8 +682,8 @@ CBOOL __init NX_SDMMC_Init(SDXCBOOTSTATUS *pSDXCBootStatus)
 	NX_CLKINFO_SDMMC clkInfo;
 	CBOOL ret;
 
-	clkInfo.nPllNum = NX_CLKSRC_SDMMC;
-	clkInfo.nFreqHz = 25000000;
+	clkInfo.nPllNum = CONFIG_S5P_SDMMC_SRCCLK;
+	clkInfo.nFreqHz = CONFIG_S5P_SDMMC_CLOCK;
 
 	ret = NX_SDMMC_GetClkParam(&clkInfo);
 	if (ret == CFALSE)
@@ -785,7 +789,7 @@ CBOOL __init NX_SDMMC_Open(SDXCBOOTSTATUS *pSDXCBootStatus) // U32 option )
 	if( CFALSE == NX_SDMMC_SetClock( pSDXCBootStatus, CTRUE, SDXC_CLKGENDIV) )
 		return CFALSE;
 #else
-	if (CFALSE == NX_SDMMC_SetClock(pSDXCBootStatus, CTRUE, 25000000))
+	if (CFALSE == NX_SDMMC_SetClock(pSDXCBootStatus, CTRUE, CONFIG_S5P_SDMMC_CLOCK))
 		return CFALSE;
 #endif
 	if (CFALSE == NX_SDMMC_SelectCard(pSDXCBootStatus))
@@ -1277,9 +1281,6 @@ U32 iSDXCBOOT(struct NX_SecondBootInfo *pTBI)
 
 	NX_ASSERT(pSBI->DBI.SDMMCBI.PortNumber < 3);
 	pSDXCBootStatus->SDPort = pSBI->DBI.SDMMCBI.PortNumber;
-
-	printf(" pSBI->DBI.SDMMCBI.PortNumber : %d \r\n", pSBI->DBI.SDMMCBI.PortNumber);
-	printf(" pTBI->DEVICEADDR : %d \r\n", pTBI->DEVICEADDR);
 
 	NX_SDPADSetALT(pSDXCBootStatus->SDPort);
 

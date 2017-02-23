@@ -40,8 +40,8 @@ PMIC_ON				?= y
 CRC_CHECK			?= n
 
 # supported (thridboot) boot mode
-SUPPORT_USB_BOOT		?= y
-SUPPORT_SDMMC_BOOT		?= n
+SUPPORT_USB_BOOT		?= n
+SUPPORT_SDMMC_BOOT		?= y
 
 ifeq ($(CHIPNAME), nxp4330)
 #BOARD				?= lepus
@@ -56,9 +56,9 @@ BOARD				?= avn
 endif
 
 # (sd/mmc, spi, nand, etc) device port number
-#DEVICE_PORT			?= 2
+DEVICE_PORT			?= 2
 #DEVICE_PORT			?= 1
-DEVICE_PORT			?= 0
+#DEVICE_PORT			?= 0
 
 # supported kernel version (3.18-3.4/4.1-4.4)
 KERNEL_VER			?= 3
@@ -71,7 +71,7 @@ SYSLOG				?= n
 SECURE_ON			?= n
 
 # arm mode - secure/non-secure
-ARM_SECURE			?= y
+ARM_SECURE			?= n
 
 # cross-tool pre-header
 ifeq ($(OS),Windows_NT)
