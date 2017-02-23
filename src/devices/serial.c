@@ -19,7 +19,6 @@
 
 
 /* External Function */
-extern void ResetCon(unsigned int devicenum, int en);
 extern void GPIOSetAltFunction(unsigned int AltFunc);
 
 static struct s5p4418_uart_reg *g_uart_reg;
@@ -115,8 +114,8 @@ int serial_init(unsigned int channel)
 	GPIOSetAltFunction(g_alt_num[channel * 2 + 1]);
 
 	/* step xx. change the reset state in uart block */
-	ResetCon(serial_get_resetnum(channel), 1);				// reset on
-	ResetCon(serial_get_resetnum(channel), 0);				// reset negate
+	reset_con(serial_get_resetnum(channel), 1);				// reset on
+	reset_con(serial_get_resetnum(channel), 0);				// reset negate
 
 	/* step xx. set the (ext:uart clock)clock in uart block*/
 	mmio_write_32(&clkgen_reg->clkenb, (1 << 3));				// PCLKMODE : always, Clock Gen Disable

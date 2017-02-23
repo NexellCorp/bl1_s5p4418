@@ -18,8 +18,6 @@
 #include <sysheader.h>
 
 extern void subcpu_wfi(void);
-extern void ResetCon(unsigned int devicenum, int en);
-
 #if !defined(SECURE_MODE)
 extern void (*g_psci_ep)();
 #endif
@@ -38,12 +36,12 @@ int subcpu_on_start(unsigned int cpu_id)
 	mmio_clear_32(&pReg_Tieoff->TIEOFFREG[0], ((1 << cpu_id) << 18));	// Low Vector
 #endif
 
-	ResetCon(cpu_id, CTRUE);						// Reset Assert
+	reset_con(cpu_id, CTRUE);						// Reset Assert
 
 	/* CPUCLKOFF Set to 1 except CPU0 */
 	mmio_set_32(&pReg_Tieoff->TIEOFFREG[1], ((1 << cpu_id) << (37 - 32)));
 
-	ResetCon(cpu_id, CFALSE);						// Reset DeAssert
+	reset_con(cpu_id, CFALSE);						// Reset DeAssert
 
 	/*
 	 * CPUCLKOFF Set to 0 except CPU0

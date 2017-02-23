@@ -28,8 +28,6 @@
 
 extern U32 iget_fcs(U32 fcs, U32 data);
 
-void ResetCon(U32 devicenum, CBOOL en);
-
 static NX_USB20OTG_APB_RegisterSet *const pUSB20OTGAPBReg =
 (NX_USB20OTG_APB_RegisterSet *)PHY_BASEADDR_USB20OTG_MODULE_APB;
 static struct NX_USB_OTG_RegisterSet *const pUOReg =
@@ -739,8 +737,8 @@ CBOOL iUSBBOOT(struct NX_SecondBootInfo *pTBI)
 {
 	USBBOOTSTATUS USBBootStatus;
 	USBBOOTSTATUS *pUSBBootStatus = &USBBootStatus;
-	ResetCon(RESETINDEX_OF_USB20OTG_MODULE_i_nRST, CTRUE);  // reset on
-	ResetCon(RESETINDEX_OF_USB20OTG_MODULE_i_nRST, CFALSE); // reset negate
+	reset_con(RESETINDEX_OF_USB20OTG_MODULE_i_nRST, CTRUE);  // reset on
+	reset_con(RESETINDEX_OF_USB20OTG_MODULE_i_nRST, CFALSE); // reset negate
 
 	/* CRC Check for variables */
 	g_TBI = pTBI;
@@ -810,7 +808,7 @@ CBOOL iUSBBOOT(struct NX_SecondBootInfo *pTBI)
 	pReg_Tieoff->TIEOFFREG[13] &= ~(1<<3);                  //nUtmiResetSync = 0
 	pReg_Tieoff->TIEOFFREG[13] &= ~(1<<2);                  //nResetSync = 0
 	pReg_Tieoff->TIEOFFREG[13] |= 3<<7;                     //POR_ENB=1, POR=1
-	ResetCon(RESETINDEX_OF_USB20OTG_MODULE_i_nRST, CTRUE);  // reset on
+	reset_con(RESETINDEX_OF_USB20OTG_MODULE_i_nRST, CTRUE);  // reset on
 
 	printf("\r\n\nusb image download is done!\r\n\n");
 

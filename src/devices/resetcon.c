@@ -15,31 +15,33 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-#include "sysheader.h"
+#include <sysheader.h>
 
-static unsigned int RESET_IDX_LIST[2] =
+static unsigned int reset_idx[2] =
 {
 	RESETINDEX_OF_TIMER_MODULE_PRESETn,
 	RESETINDEX_OF_PWM_MODULE_PRESETn
 };
 
-void __init ResetCon(U32 devicenum, CBOOL en)
-{
-	if (en)
-		ClearIO32(&pReg_RstCon->REGRST[(devicenum >> 5) & 0x3],
-			  (0x1 << (devicenum & 0x1F))); // reset
-	else
-		SetIO32(&pReg_RstCon->REGRST[(devicenum >> 5) & 0x3],
-			(0x1 << (devicenum & 0x1F))); // reset negate
-}
+struct s5p4418_resetgen_reg *const g_rstgen_reg =
+	(struct s5p4418_resetgen_reg * const)PHY_BASEADDR_RSTCON_MODULE;
 
-void device_reset(void)
+void reset_con(unsigned int device_num, int enable)
 {
-	unsigned int i;
-	for (i = 0; i < (sizeof(RESET_IDX_LIST)/sizeof(unsigned int)); i++) {
-		ResetCon(RESET_IDX_LIST[i], CTRUE);	// reset on
-		ResetCon(RESET_IDX_LIST[i], CFALSE);	// reset negate
+	if (enable) {
+		mmio_clear_32(&g_rstgen_reg->regrst[(device_num >> 5) & 0x3],
+			  (0x1 << (device_num & 0x1F)));			// reset
+	} else {
+		mmio_set_32(&g_rstgen_reg->regrst[(device_num >> 5) & 0x3],
+			(0x1 << (device_num & 0x1F)));				// reset negate
 	}
 }
 
-
+void common_resetgen(void)
+{
+	unsigned int i;
+	for (i = 0; i < (sizeof(reset_idx)/sizeof(unsigned int)); i++) {
+		reset_con(reset_idx[i], TRUE);					// reset on
+		reset_con(reset_idx[i], FALSE);					// reset negate
+	}
+}

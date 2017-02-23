@@ -15,9 +15,8 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
+#include <sysheader.h>
 #include <nx_pyrope.h>
-#include <nx_type.h>
-
 
 #include <nx_chip.h>
 
@@ -334,8 +333,6 @@ void Decrypt(U32 *SrcAddr, U32 *DestAddr, U32 Size)
 	}
 }
 #else
-void ResetCon(U32 devicenum, CBOOL en);
-
 static struct NX_ECID_RegisterSet *const pECIDReg =
 (struct NX_ECID_RegisterSet *)PHY_BASEADDR_ECID_MODULE;
 static struct NX_CLKGEN_RegisterSet *const pCryptoClkGenReg =
@@ -346,13 +343,13 @@ static NX_CRYPTO_RegisterSet *const pCrypto =
 void Decrypt(U32 *SrcAddr, U32 *DestAddr, U32 Size)
 {
 	register U32 i=0, DataSize = ((Size+15) & 0xFFFFFFF0);
-	ResetCon(RESETINDEX_OF_ECID_MODULE_i_nRST, CTRUE);	// reset on
-	ResetCon(RESETINDEX_OF_ECID_MODULE_i_nRST, CFALSE);	// reset negate
+	reset_con(RESETINDEX_OF_ECID_MODULE_i_nRST, CTRUE);	// reset on
+	reset_con(RESETINDEX_OF_ECID_MODULE_i_nRST, CFALSE);	// reset negate
 
 	while (!(pECIDReg->EC[2] & 0x1 << 15)); // wait for ecid ready
 
-	ResetCon(RESETINDEX_OF_CRYPTO_MODULE_i_nRST, CTRUE);  // reset on
-	ResetCon(RESETINDEX_OF_CRYPTO_MODULE_i_nRST, CFALSE); // reset negate
+	reset_con(RESETINDEX_OF_CRYPTO_MODULE_i_nRST, CTRUE);  // reset on
+	reset_con(RESETINDEX_OF_CRYPTO_MODULE_i_nRST, CFALSE); // reset negate
 
 	pCryptoClkGenReg->CLKENB = 1<<3; // pclk always mode.
 

@@ -26,7 +26,6 @@ void subcpu_bringup(void);
 /* Build Infomation Function */
 int build_information(void);
 
-void device_reset(void);
 
 /* CRC Algorithm Check Function */
  int crc_check(void* buf, unsigned int size, unsigned int ref_crc);

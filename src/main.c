@@ -144,8 +144,8 @@ void __init main(void)
 	/* step xx. enable the l2-cache */
 	l2cache_set_enb(CTRUE);
 
-	/* step xx. s5p4418 - device reset (temporary) */
-	device_reset();
+	/* step xx. s5p4418 - moudle resetgen (for kernel4.4) */
+	common_resetgen();
 
 	/* step xx. check the memory test (optional) */
 #if defined(STANDARD_MEMTEST)

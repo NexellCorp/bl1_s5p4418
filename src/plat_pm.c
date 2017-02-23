@@ -19,9 +19,6 @@
 #include <gic.h>
 
 /* External Function */
-extern void ResetCon(U32 devicenum, CBOOL en);
-
-
 #if (CONFIG_SUSPEND_RESUME == 1)
 extern void enter_self_refresh(void);
 extern unsigned int __calc_crc(void *addr, int len);
@@ -109,7 +106,7 @@ int s5p4418_cpu_on(unsigned int cpu_id)
 	mmio_set_32(&pReg_Tieoff->TIEOFFREG[0], ((1 << cpu_id) << 18));
 
 	/* Step 01. CPUx Block Reset Assert */
-	ResetCon(cpu_id, CTRUE);
+	reset_con(cpu_id, CTRUE);
 	dmb();
 
 	/* Step 02. CPUx Power Active (Power Gating Cells)  (1: Power Down, 0:Active) */
@@ -137,7 +134,7 @@ int s5p4418_cpu_on(unsigned int cpu_id)
 	dmb();
 
 	/* Step 08. CPUx Block Reset Negate */
-	ResetCon(cpu_id, CFALSE);
+	reset_con(cpu_id, CFALSE);
 	dmb();
 
 	/* Step 09. Set to (CPUx) Clamp Signal Low */
