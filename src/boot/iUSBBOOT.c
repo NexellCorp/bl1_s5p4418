@@ -26,14 +26,21 @@
 #define dprintf(x, ...)
 #endif
 
+static int __initdata g_selfboot = 0;
+#if defined(CHIPID_NXP4330)
+static int __initdata g_selfboot_cfg = 0;
+#endif
+
 extern U32 iget_fcs(U32 fcs, U32 data);
 
-static NX_USB20OTG_APB_RegisterSet *const pUSB20OTGAPBReg =
+void reset_con(unsigned int device_num, int enable);
+
+static NX_USB20OTG_APB_RegisterSet *const __initdata pUSB20OTGAPBReg =
 (NX_USB20OTG_APB_RegisterSet *)PHY_BASEADDR_USB20OTG_MODULE_APB;
-static struct NX_USB_OTG_RegisterSet *const pUOReg =
+static struct NX_USB_OTG_RegisterSet *const __initdata pUOReg =
 (struct NX_USB_OTG_RegisterSet *)PHY_BASEADDR_USB20OTG_MODULE_AHBS0;
 
-static U8 __attribute__((aligned(4))) gs_DeviceDescriptorFS[DEVICE_DESCRIPTOR_SIZE] =
+static U8 __attribute__((aligned(4))) __initdata gs_DeviceDescriptorFS[DEVICE_DESCRIPTOR_SIZE] =
 {
 	18,                             //  0 desc size
 	(U8)(DESCRIPTORTYPE_DEVICE),    //  1 desc type (DEVICE)
@@ -55,7 +62,7 @@ static U8 __attribute__((aligned(4))) gs_DeviceDescriptorFS[DEVICE_DESCRIPTOR_SI
 	0x01                            // 17 num of possible configurations
 };
 
-static U8 __attribute__((aligned(4))) gs_DeviceDescriptorHS[DEVICE_DESCRIPTOR_SIZE] =
+static U8 __attribute__((aligned(4))) __initdata gs_DeviceDescriptorHS[DEVICE_DESCRIPTOR_SIZE] =
 {
 	18,                             //  0 desc size
 	(U8)(DESCRIPTORTYPE_DEVICE),    //  1 desc type (DEVICE)
@@ -78,7 +85,7 @@ static U8 __attribute__((aligned(4))) gs_DeviceDescriptorHS[DEVICE_DESCRIPTOR_SI
 };
 
 
-static const U8 __attribute__((aligned(4))) gs_ConfigDescriptorFS[CONFIG_DESCRIPTOR_SIZE] =
+static U8 __attribute__((aligned(4))) __initdata gs_ConfigDescriptorFS[CONFIG_DESCRIPTOR_SIZE] =
 {
 	//--------------------------------------------------------------------------
 	// Configuration Descriptor
@@ -125,7 +132,7 @@ static const U8 __attribute__((aligned(4))) gs_ConfigDescriptorFS[CONFIG_DESCRIP
 	0x00                                        // [ 6] polling interval (4ms/bit=time,500ms)
 };
 
-static const U8 __attribute__((aligned(4))) gs_ConfigDescriptorHS[CONFIG_DESCRIPTOR_SIZE] =
+static U8 __attribute__((aligned(4))) __initdata gs_ConfigDescriptorHS[CONFIG_DESCRIPTOR_SIZE] =
 {
 	//--------------------------------------------------------------------------
 	// Configuration Descriptor
@@ -172,7 +179,7 @@ static const U8 __attribute__((aligned(4))) gs_ConfigDescriptorHS[CONFIG_DESCRIP
 	0x00                                        // [ 6] polling interval (4ms/bit=time,500ms)
 };
 
-static void nx_usb_write_in_fifo(U32 ep, U8 *buf, S32 num)
+static void __init nx_usb_write_in_fifo(U32 ep, U8 *buf, S32 num)
 {
 	S32 i;
 	U32 *dwbuf = (U32 *)buf; /* assume all data ptr is 4 bytes aligned */
@@ -184,11 +191,11 @@ static void nx_usb_write_in_fifo(U32 ep, U8 *buf, S32 num)
  * CRC Check for modifications.
  * A global variable for a CRC check.
  * */
-static struct NX_SecondBootInfo *g_TBI;
-static USBBOOTSTATUS *g_USBBootStatus;
-static unsigned int g_fcs = 0;
+static struct NX_SecondBootInfo __initdata *g_TBI;
+static USBBOOTSTATUS __initdata *g_USBBootStatus;
+static unsigned int __initdata g_fcs = 0;
 
-static void nx_usb_read_out_fifo(U32 ep, U8 *buf, S32 num)
+static void __init nx_usb_read_out_fifo(U32 ep, U8 *buf, S32 num)
 {
 	S32 i;
 	U32 *dwbuf = (U32 *)buf;
@@ -203,7 +210,7 @@ static void nx_usb_read_out_fifo(U32 ep, U8 *buf, S32 num)
 	g_TBI->DBI.SDMMCBI.CRC32 = g_fcs;
 }
 
-static void nx_usb_ep0_int_hndlr(USBBOOTSTATUS *pUSBBootStatus)
+static void __init nx_usb_ep0_int_hndlr(USBBOOTSTATUS *pUSBBootStatus)
 {
 	U32 buf[2];
 	SetupPacket *pSetupPacket = (SetupPacket *)buf;
@@ -326,7 +333,7 @@ static void nx_usb_ep0_int_hndlr(USBBOOTSTATUS *pUSBBootStatus)
 	}
 }
 
-static void nx_usb_transfer_ep0(USBBOOTSTATUS *pUSBBootStatus)
+static void __init nx_usb_transfer_ep0(USBBOOTSTATUS *pUSBBootStatus)
 {
 	switch (pUSBBootStatus->ep0_state) {
 		case EP0_STATE_INIT:
@@ -380,7 +387,7 @@ static void nx_usb_transfer_ep0(USBBOOTSTATUS *pUSBBootStatus)
 	}
 }
 
-static void nx_usb_int_bulkin(USBBOOTSTATUS *pUSBBootStatus)
+static void __init nx_usb_int_bulkin(USBBOOTSTATUS *pUSBBootStatus)
 {
 	U8 *bulkin_buf;
 	U32 remain_cnt;
@@ -414,7 +421,7 @@ static void nx_usb_int_bulkin(USBBOOTSTATUS *pUSBBootStatus)
 		pUOReg->DCSR.DEPIR[BULK_IN_EP].DIEPCTL = (DEPCTL_SNAK|DEPCTL_BULK_TYPE);
 	}
 }
-static void nx_usb_int_bulkout(USBBOOTSTATUS * pUSBBootStatus, struct NX_SecondBootInfo * pTBI, U32 fifo_cnt_byte)
+static void __init nx_usb_int_bulkout(USBBOOTSTATUS * pUSBBootStatus, struct NX_SecondBootInfo * pTBI, U32 fifo_cnt_byte)
 {
 	U32 *pdwBuffer;
 
@@ -476,7 +483,43 @@ static void nx_usb_int_bulkout(USBBOOTSTATUS * pUSBBootStatus, struct NX_SecondB
 		pUSBBootStatus->bulkout_max_pktsize << 0;
 }
 
-static void nx_usb_reset(USBBOOTSTATUS *pUSBBootStatus)
+#if defined(CHIPID_NXP4330)
+static void __init nxp4330_usb_int_bulkout(USBBOOTSTATUS * usb_status, U32 fifo_cnt_byte)
+{
+	unsigned int bl1_loadsize = *((unsigned int*)(0xFFFF0000 + 0x44));
+	unsigned int romboot_loadsize = BL1_SDMMCBOOT_LOADSIZE;
+
+	if (g_selfboot_cfg == 1) {
+		usb_status->bHeaderReceived = CFALSE;
+		usb_status->RxBuffAddr = (U8*)0xFFFF4000;
+		usb_status->iRxSize = (bl1_loadsize - romboot_loadsize);
+		g_selfboot_cfg = 0;
+	}
+
+	NX_ASSERT((usb_status->iRxSize) > 0);
+	NX_ASSERT( 0 == ((U32)usb_status->RxBuffAddr & 3) );
+	nx_usb_read_out_fifo(BULK_OUT_EP, (U8 *)usb_status->RxBuffAddr, fifo_cnt_byte);
+
+	usb_status->RxBuffAddr += fifo_cnt_byte;
+	usb_status->iRxSize -= fifo_cnt_byte;
+
+	if (usb_status->iRxSize <= 0) {
+		usb_status->bDownLoading = CFALSE;
+		usb_status->bHeaderReceived = CFALSE;
+		g_selfboot = 0;
+	}
+
+	pUOReg->DCSR.DEPOR[BULK_OUT_EP].DOEPTSIZ =
+		(1 << 19) | (usb_status->bulkout_max_pktsize << 0);
+
+	/*ep2 enable, clear nak, bulk, usb active, next ep2, max pkt 64*/
+	pUOReg->DCSR.DEPOR[BULK_OUT_EP].DOEPCTL =
+		1u << 31 | 1 << 26 | 2 << 18 | 1 << 15 |
+		usb_status->bulkout_max_pktsize << 0;
+}
+#endif
+
+static void __init nx_usb_reset(USBBOOTSTATUS *pUSBBootStatus)
 {
 	U32 i;
 	/* set all out ep nak */
@@ -502,7 +545,7 @@ static void nx_usb_reset(USBBOOTSTATUS *pUSBBootStatus)
 	pUOReg->DCSR.DCFG &= ~(0x7F << 4);
 }
 
-static S32 nx_usb_set_init(USBBOOTSTATUS *pUSBBootStatus)
+static S32 __init nx_usb_set_init(USBBOOTSTATUS *pUSBBootStatus)
 {
 	U32 status = pUOReg->DCSR.DSTS; /* System status read */
 	union {
@@ -601,7 +644,7 @@ static S32 nx_usb_set_init(USBBOOTSTATUS *pUSBBootStatus)
 	return CTRUE;
 }
 
-static void nx_usb_pkt_receive(USBBOOTSTATUS *pUSBBootStatus, struct NX_SecondBootInfo *pTBI)
+static void __init nx_usb_pkt_receive(USBBOOTSTATUS *pUSBBootStatus, struct NX_SecondBootInfo *pTBI)
 {
 	U32 rx_status;
 	U32 fifo_cnt_byte;
@@ -618,7 +661,12 @@ static void nx_usb_pkt_receive(USBBOOTSTATUS *pUSBBootStatus, struct NX_SecondBo
 		dprintf("OUT_PKT_RECEIVED\r\n");
 
 		if((rx_status & BULK_OUT_EP)&&(fifo_cnt_byte)) {
-			nx_usb_int_bulkout(pUSBBootStatus, pTBI, fifo_cnt_byte);
+			if (g_selfboot == 0)
+				nx_usb_int_bulkout(pUSBBootStatus, pTBI, fifo_cnt_byte);
+			#if defined(CHIPID_NXP4330)
+			else
+				nxp4330_usb_int_bulkout(pUSBBootStatus, fifo_cnt_byte);
+			#endif
 			pUOReg->GCSR.GINTMSK = INT_RESUME|INT_OUT_EP|INT_IN_EP|INT_ENUMDONE|INT_RESET|INT_SUSPEND|INT_RX_FIFO_NOT_EMPTY;
 			return;
 		}
@@ -633,7 +681,7 @@ static void nx_usb_pkt_receive(USBBOOTSTATUS *pUSBBootStatus, struct NX_SecondBo
 	}
 }
 
-static void nx_usb_transfer(USBBOOTSTATUS *pUSBBootStatus)
+static void __init nx_usb_transfer(USBBOOTSTATUS *pUSBBootStatus)
 {
 	U32 ep_int;
 	U32 ep_int_status;
@@ -678,7 +726,7 @@ static void nx_usb_transfer(USBBOOTSTATUS *pUSBBootStatus)
 	}
 }
 
-static void nx_udc_int_hndlr(USBBOOTSTATUS *pUSBBootStatus, struct NX_SecondBootInfo *pTBI)
+static void __init nx_udc_int_hndlr(USBBOOTSTATUS *pUSBBootStatus, struct NX_SecondBootInfo *pTBI)
 {
 	U32 int_status;
 	S32 tmp;
@@ -726,14 +774,14 @@ static void nx_udc_int_hndlr(USBBOOTSTATUS *pUSBBootStatus, struct NX_SecondBoot
 	}
 	pUOReg->GCSR.GINTSTS = int_status; /* Interrupt Clear */
 }
-void udelay(U32 utime)
+void __init udelay(U32 utime)
 {
 	register volatile U32 i;
 	for (; utime > 0; utime--)
 		for (i = 106; i > 0; i--);
 }
 
-CBOOL iUSBBOOT(struct NX_SecondBootInfo *pTBI)
+CBOOL __init iUSBBOOT(struct NX_SecondBootInfo *pTBI)
 {
 	USBBOOTSTATUS USBBootStatus;
 	USBBOOTSTATUS *pUSBBootStatus = &USBBootStatus;
@@ -743,17 +791,17 @@ CBOOL iUSBBOOT(struct NX_SecondBootInfo *pTBI)
 	/* CRC Check for variables */
 	g_TBI = pTBI;
 
-	pReg_Tieoff->TIEOFFREG[12] &= ~0x3;         // scale mode ( 0: real silicon, 1: test simul, 2, 3)
-	pReg_Tieoff->TIEOFFREG[14] |= 3<<8;         // 8: enable, 9:phy word interface (0: 8 bit, 1: 16 bit)
-	pReg_Tieoff->TIEOFFREG[13] = 0xA3006C00;    // VBUSVLDEXT=1,VBUSVLDEXTSEL=1,POR=0
-	pReg_Tieoff->TIEOFFREG[13] = 0xA3006C80;    // POR_ENB=1
+	pReg_Tieoff->TIEOFFREG[12] &= ~0x3;					// scale mode ( 0: real silicon, 1: test simul, 2, 3)
+	pReg_Tieoff->TIEOFFREG[14] |= 3<<8;					// 8: enable, 9:phy word interface (0: 8 bit, 1: 16 bit)
+	pReg_Tieoff->TIEOFFREG[13] = 0xA3006C00;				// VBUSVLDEXT=1,VBUSVLDEXTSEL=1,POR=0
+	pReg_Tieoff->TIEOFFREG[13] = 0xA3006C80;				// POR_ENB=1
 	udelay(40);     // 40us delay need.
 
-	pReg_Tieoff->TIEOFFREG[13] = 0xA3006C88; // nUtmiResetSync : 00000001
-	udelay(1);				 // 10 clock need
+	pReg_Tieoff->TIEOFFREG[13] = 0xA3006C88;				// nUtmiResetSync : 00000001
+	udelay(1);								// 10 clock need
 
-	pReg_Tieoff->TIEOFFREG[13] = 0xA3006C8C; // nResetSync : 00000001
-	udelay(1);				 // 10 clock need
+	pReg_Tieoff->TIEOFFREG[13] = 0xA3006C8C;				// nResetSync : 00000001
+	udelay(1);								// 10 clock need
 
 	/* usb core soft reset */
 	pUOReg->GCSR.GRSTCTL = CORE_SOFT_RESET;
@@ -792,7 +840,7 @@ CBOOL iUSBBOOT(struct NX_SecondBootInfo *pTBI)
 	pUSBBootStatus->speed = USB_HIGH;
 	pUSBBootStatus->ep0_state = EP0_STATE_INIT;
 
-	printf("2ndboot usb boot ready!\r\n");
+//	printf("2ndboot usb boot ready!\r\n");
 
 	pUSBBootStatus->bDownLoading = CTRUE;
 	while (pUSBBootStatus->bDownLoading) {
@@ -810,10 +858,20 @@ CBOOL iUSBBOOT(struct NX_SecondBootInfo *pTBI)
 	pReg_Tieoff->TIEOFFREG[13] |= 3<<7;                     //POR_ENB=1, POR=1
 	reset_con(RESETINDEX_OF_USB20OTG_MODULE_i_nRST, CTRUE);  // reset on
 
-	printf("\r\n\nusb image download is done!\r\n\n");
+//	printf("\r\n\nusb image download is done!\r\n\n");
 
-	printf("USB Load Address = 0x%08X Launch Address = 0x%08X, size = %d bytes\r\n",
-			pTBI->LOADADDR, pTBI->LAUNCHADDR, pTBI->LOADSIZE);
+//	printf("USB Load Address = 0x%08X Launch Address = 0x%08X, size = %d bytes\r\n",
+//			pTBI->LOADADDR, pTBI->LAUNCHADDR, pTBI->LOADSIZE);
 
 	return CTRUE;
 }
+
+#if defined(CHIPID_NXP4330)
+int __init usb_self_boot(void)
+{
+	struct NX_SecondBootInfo SBI;
+	g_selfboot = g_selfboot_cfg = 1;
+
+	return iUSBBOOT(&SBI);
+}
+#endif

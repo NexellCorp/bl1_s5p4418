@@ -17,11 +17,12 @@
  */
  #include <sysheader.h>
 
-#ifdef CHIPID_NXP4330
+#if defined(CHIPID_NXP4330)
 
 #define ROMBOOT_SYSCONFIG		0xC001027C
 
 extern unsigned int __init sdmmc_self_boot(void);
+extern int __init usb_self_boot(void);
 
 /*
  * NXP4330 a part to overcome the limitations
@@ -40,6 +41,12 @@ int __init nxp4330_self_boot(void)
 	#if defined(SUPPORT_SDMMC_BOOT)
 			case ROMBOOT_FROM_MMC:
 				ret = sdmmc_self_boot();
+				break;
+	#endif
+
+	#if defined(SUPPORT_USB_BOOT)
+			case ROMBOOT_FROM_USB:
+				ret = usb_self_boot();
 				break;
 	#endif
 		}
