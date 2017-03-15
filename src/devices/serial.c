@@ -17,6 +17,8 @@
  */
 #include <sysheader.h>
 
+#define CONFIG_S5P_SERIAL_SRCCLK		0
+#define CONFIG_S5P_SERIAL_DIVID			4
 
 /* External Function */
 static struct s5p4418_uart_reg *g_uart_reg;
