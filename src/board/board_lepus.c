@@ -16,11 +16,16 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 #include <sysheader.h>
-#include <lepus.h>
+#if defined(PMIC_ON)
 #include <i2c_gpio.h>
 #include <nxe2000.h>
 
-#if defined(LEPUS_PMIC)
+#define NXE2000_I2C_GPIO_GRP 			4				// GPIOD
+#define NXE2000_I2C_SCL 			14				// SCL : GPIOD14
+#define NXE2000_I2C_SDA 			15				// SDA : GPIOD15
+#define NXE2000_I2C_SCL_ALT 			0				// SCL : ALT0
+#define NXE2000_I2C_SDA_ALT 			0				// SDA : ALT0
+
 /************************************************
   * Raptor Board (PMIC: NXE2000)  - Reference 2016.04.05
   * ARM		: 1.25V
@@ -28,7 +33,7 @@
   * DDR		: 1.5V
   * DDR_IO	: 1.5V
   ************************************************/
-void pmic_lepus(void)
+void pmic_board_init(void)
 {
 	char data[4];
 

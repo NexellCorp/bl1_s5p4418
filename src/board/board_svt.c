@@ -16,12 +16,20 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 #include <sysheader.h>
-#include <svt.h>
+#if defined(PMIC_ON)
 #include <i2c_gpio.h>
 #include <nxe2000.h>
 #include <mp8845.h>
 
-#if defined(SVT_PMIC)
+#define AUTO_VOLTAGE_CONTROL			1
+#define ARM_VOLTAGE_CONTROL_SKIP		0
+
+#define NXE2000_I2C_GPIO_GRP 			3				// GPIOD
+#define NXE2000_I2C_SCL 			2				// SCL : GPIOD02
+#define NXE2000_I2C_SDA 			3				// SDA: GPIOD03
+#define NXE2000_I2C_SCL_ALT 			0				// SCL: ALT0
+#define NXE2000_I2C_SDA_ALT			0				// SDA: ALT 0
+
 /************************************************
   * SVT Board (PMIC: NXE2000, MP8845)  - Reference 2016.04.05
   * ARM		: 1.25V
@@ -29,7 +37,7 @@
   * DDR		: 1.5V
   * DDR_IO	: 1.5V
   ************************************************/
-void pmic_svt(void)
+void pmic_board_init(void)
 {
 	char data[4];
 

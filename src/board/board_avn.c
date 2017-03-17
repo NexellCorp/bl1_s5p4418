@@ -16,17 +16,28 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 #include <sysheader.h>
-#include <avn.h>
+#if defined(PMIC_ON)
 #include <i2c_gpio.h>
 #include <mp8845.h>
 
-#if defined(AVN_PMIC)
+#define MP8845_CORE_I2C_GPIO_GRP 		4
+#define MP8845_CORE_I2C_SCL 			11
+#define MP8845_CORE_I2C_SDA 			10
+#define MP8845_CORE_I2C_SCL_ALT			0
+#define MP8845_CORE_I2C_SDA_ALT			0
+
+#define MP8845_ARM_I2C_GPIO_GRP 		4
+#define MP8845_ARM_I2C_SCL 			9
+#define MP8845_ARM_I2C_SDA 			8
+#define MP8845_ARM_I2C_SCL_ALT			0
+#define MP8845_ARM_I2C_SDA_ALT			0
+
 /************************************************
   * AVN Board (PMIC: MP8845C)  - Reference 2016.04.05
   * ARM		: 1.25V
   * CORE	: 1.1V
   ************************************************/
-void pmic_avn(void)
+void pmic_board_init(void)
 {
 	char data[4];
 

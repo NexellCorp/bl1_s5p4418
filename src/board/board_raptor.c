@@ -16,11 +16,16 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 #include <sysheader.h>
-#include <raptor.h>
+#if defined(PMIC_ON)
 #include <i2c_gpio.h>
 #include <nxe1500.h>
 
-#if defined(RAPTOR_PMIC)
+#define NXE1500_I2C_GPIO_GRP 			2
+#define NXE1500_I2C_SCL 			15
+#define NXE1500_I2C_SDA 			16
+#define NXE1500_I2C_SCL_ALT 			1
+#define NXE1500_I2C_SDA_ALT 			1
+
 /************************************************
   * Raptor Board (PMIC: NXE2000)  - Reference 2016.04.05
   * ARM		: 1.25V
@@ -28,7 +33,7 @@
   * DDR		: 1.5V
   * DDR_IO	: 1.5V
   ************************************************/
-void pmic_raptor(void)
+void pmic_board_init(void)
 {
 	char data[4];
 

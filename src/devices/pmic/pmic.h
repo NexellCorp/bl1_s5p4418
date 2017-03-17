@@ -18,17 +18,6 @@
 #ifndef __PMIC_H__
 #define __PMIC_H__
 
-#if defined(CHIPID_NXP4330)
-void pmic_lepus(void);
-void pmic_navi(void);
-void pmic_smartvoice(void);
-#else
-void pmic_avn(void);
-void pmic_drone(void);
-void pmic_svt(void);
-void pmic_raptor(void);
-#endif
-
 void pmic_initalize(void);
 
 #endif
