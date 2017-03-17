@@ -85,7 +85,7 @@ endif
 # Top Names
 PROJECT_NAME			= $(CHIPNAME)_2ndboot_$(MEMTYPE)_$(VERINFO)
 TARGET_NAME			= bl1-$(shell echo $(BOARD) | tr A-Z a-z)
-LDS_NAME			= pyrope_2ndboot
+LDS_NAME			= bl1
 
 # Directories
 DIR_PROJECT_TOP			=
