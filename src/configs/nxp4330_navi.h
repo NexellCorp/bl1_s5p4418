@@ -106,7 +106,7 @@
 						(CONFIG_DDR3_WRITE_DQ_EN  << 4)
 
 /* serial console configuration */
-#define CONFIG_S5P_SERIAL_INDEX			0
+#define CONFIG_S5P_SERIAL_INDEX			3
 #define CONFIG_BAUDRATE				115200
 
 /* pmic(power management ic) configuration */
