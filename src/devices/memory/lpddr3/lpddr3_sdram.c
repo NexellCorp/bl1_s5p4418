@@ -25,7 +25,6 @@
 #define DDR_NEW_LEVELING_TRAINING       (1)
 
 #if defined(CHIPID_NXP4330)
-
 #define DDR_CA_CALIBRATION_EN           (1)     // for LPDDR3
 #define DDR_CA_SWAP_MODE                (0)
 #define DDR_CA_AUTO_CALIB               (1)     // for LPDDR3
@@ -41,12 +40,9 @@
 #define DDR_RESET_GATE_LVL              (1)
 #define DDR_RESET_READ_DQ               (1)
 #define DDR_RESET_WRITE_DQ              (1)
-
-#define DDR_RESET_QOS1                  (1)     // Release version is '1'
 #endif  // #if defined(CHIPID_NXP4330)
 
 #if defined(CHIPID_S5P4418)
-
 #define DDR_CA_CALIBRATION_EN           (1)     // for LPDDR3
 #define DDR_CA_AUTO_CALIB               (1)     // for LPDDR3
 
@@ -61,8 +57,6 @@
 #define DDR_RESET_GATE_LVL              (1)
 #define DDR_RESET_READ_DQ               (1)
 #define DDR_RESET_WRITE_DQ              (1)
-
-#define DDR_RESET_QOS1                  (1)     // Release version is '1'
 #endif  // #if defined(CHIPID_S5P4418)
 
 #define CFG_DDR_LOW_FREQ                (0)
@@ -77,13 +71,13 @@ struct s5p4418_drex_sdram_reg *const g_drex_reg =
 struct s5p4418_ddrphy_reg *const g_ddrphy_reg =
     (struct s5p4418_ddrphy_reg * const)PHY_BASEADDR_DREX_MODULE_CH1_APB;
 
-unsigned int g_DDRLock;
+struct dram_device_info g_ddr3_info;
+
+unsigned int g_ddr_lockvalue;
 unsigned int g_GateCycle;
 unsigned int g_GateCode;
 unsigned int g_RDvwmc;
 unsigned int g_WRvwmc;
-
-struct dram_device_info g_ddr3_info;
 
 void DMC_Delay(int milisecond)
 {
@@ -302,7 +296,7 @@ int ddr_ca_calibration(void)
 {
 	int ret = FALSE;
 #if (DDR_CA_AUTO_CALIB == 1)
-	unsigned int lock_div4 = (g_DDRLock >> 2);
+	unsigned int lock_div4 = (g_ddr_lockvalue >> 2);
 	unsigned int offsetd;
 	unsigned int vwml, vwmr, vwmc;
 	unsigned int temp, mr41, mr48;
@@ -405,11 +399,11 @@ int ddr_ca_calibration(void)
 		}
 	}
 
-	lock_div4 = (g_DDRLock >> 2);
+	lock_div4 = (g_ddr_lockvalue >> 2);
 	vwmc = (vwml + vwmr) >> 1;
 
 	/*
-	  * (g_DDRLock >> 2) means "T/4", lock value means the number of delay
+	  * (g_ddr_lockvalue >> 2) means "T/4", lock value means the number of delay
 	  * cell for one period.
 	  */
 	code = (int)(vwmc - lock_div4);
@@ -418,7 +412,7 @@ int ddr_ca_calibration(void)
 
 ca_error_ret:
 
-#if 1//(MEM_CALIBRATION_INFO == 1)
+#if (MEM_CALIBRATION_INFO == 1)
 	if (ret != TRUE) {
 		printf("\r\n CA Calibration Failed!! \r\n");
 	} else {
@@ -480,7 +474,7 @@ void gate_leveling_information(void)
 	unsigned int gate_vwmc[4];
 #endif
 	unsigned int max_slice = 4, slice;
-	unsigned int LockValue = g_DDRLock;
+	unsigned int LockValue = g_ddr_lockvalue;
 
 	/* DQ Calibration Fail Status */
 	mmio_write_32(&g_ddrphy_reg->PHY_CON[5], VWM_FAIL_STATUS);
@@ -621,7 +615,7 @@ gate_err_ret:
 	for (cal_count= 0; cal_count < 4; cal_count++)
 		cycle[cal_count] = ((g_GateCycle >> (8 * cal_count)) & 0xFF);
 
-	offset = GetVWMC_Offset(g_GateCode, (g_DDRLock >> 2));
+	offset = GetVWMC_Offset(g_GateCode, (g_ddr_lockvalue >> 2));
 #if (DDR_GATE_LVL_COMPENSATION_EN == 1)
 	c_offset = GetVWMC_Compensation(offset);
 #else
@@ -712,7 +706,7 @@ void read_dq_calibration_information(void)
 		unsigned int Range;
 		for(slice = 0; slice < max_slice; slice++) {
 			Range = VWMR[slice] - VWML[slice];
-			printf("SLICE%d: %d ~ %d ~ %d (Range: %d)(Deskew: %d) \r\n",
+			printf("SLICE%2d: %2d ~ %2d ~ %2d (Range: %2d)(Deskew: %2d) \r\n",
 					slice, VWML[slice], VWMC[slice], VWMR[slice],
 					Range, Deskew[slice]);
 		}
@@ -727,7 +721,7 @@ void read_dq_calibration_information(void)
 		}
 	#endif
 	}
-	printf("\r\n###########################################\r\n");
+	printf("###########################################\r\n");
 
 }
 #endif
@@ -838,7 +832,7 @@ rd_err_ret:
 #if 0
 #if (DDR_RESET_READ_DQ == 1)
 	unsigned int offset, c_offset;;
-	offset = GetVWMC_Offset(g_RDvwmc, (g_DDRLock >> 2));
+	offset = GetVWMC_Offset(g_RDvwmc, (g_ddr_lockvalue >> 2));
 #if (DDR_READ_DQ_COMPENSATION_EN == 1)
 	c_offset = GetVWMC_Compensation(offset);
 #else
@@ -929,7 +923,7 @@ void write_dq_calibration_information(void)
 		unsigned int Range;
 		for(slice = 0; slice < max_slice; slice++) {
 			Range = VWMR[slice] - VWML[slice];
-			printf("SLICE%d: %d ~ %d ~ %d (Range: %d)(Deskew: %d) \r\n",
+			printf("SLICE%2d: %2d ~ %2d ~ %2d (Range: %2d)(Deskew: %2d) \r\n",
 					slice, VWML[slice], VWMC[slice], VWMR[slice],
 					Range, Deskew[slice]);
 		#if 0
@@ -942,7 +936,7 @@ void write_dq_calibration_information(void)
 		}
 	#endif
 	}
-	printf("\r\n###########################################\r\n");
+	printf("###########################################\r\n");
 }
 #endif
 
@@ -1669,12 +1663,12 @@ int lpddr3_initialize(unsigned int is_resume)
 
 		temp = mmio_read_32(&g_ddrphy_reg->PHY_CON[13]);		// read lock value
 	} while((temp & 0x7) != 0x7);
-	g_DDRLock = (temp >> 8) & 0x1FF;
+	g_ddr_lockvalue = (temp >> 8) & 0x1FF;
 
 	/* Step 31-2. Update "ctrl_force[8:0]" in PHY_CON12[15:7] by the value of "ctrl_lock_value[8:0] */
 	temp  = mmio_read_32(&g_ddrphy_reg->PHY_CON[12]);
 	temp &= ~(0x7F <<  8);
-	temp |= ((g_DDRLock >> 2) << 8);					// ctrl_force[14:8]
+	temp |= ((g_ddr_lockvalue >> 2) << 8);					// ctrl_force[14:8]
 	mmio_write_32(&g_ddrphy_reg->PHY_CON[12], temp);
 
 	/* Step XX. Set the Read ODT Disable (Disable the LPDDR3 unconditionally) */
@@ -1723,21 +1717,6 @@ int lpddr3_initialize(unsigned int is_resume)
 #endif
 	}
 #endif	// Skip Training
-
-#if 0
-	int w_offset = 0;
-
-	w_offset  = 0x13131313;
-#if 0
-	w_offset |= 0x80808080;
-#else
-	w_offset &= ~(0x80808080);
-#endif
-
-
-	mmio_write_32(&g_ddrphy_reg->PHY_CON[4], 0x88888888);
-//	mmio_write_32(&g_ddrphy_reg->PHY_CON[6], w_offset);
-#endif
 
 	mmio_set_32  (&g_drex_reg->PHYCONTROL[0], (0x1 << 3));			// Force DLL Resyncronization
 	mmio_clear_32(&g_drex_reg->PHYCONTROL[0], (0x1 << 3));			// Force DLL Resyncronization
@@ -1794,7 +1773,7 @@ int lpddr3_initialize(unsigned int is_resume)
 	temp &= ~((0x1 << 14) | (0x1 << 13) | (0x1 << 8));
 	mmio_write_32 (&g_ddrphy_reg->PHY_CON[0], temp);
 
-	MEMMSG("DLL Lock Value  = %d\r\n", g_DDRLock);
+	MEMMSG("DLL Lock Value  = %d\r\n", g_ddr_lockvalue);
 
 	MEMMSG("CA CAL CODE = 0x%08X\r\n", mmio_read_32(&g_ddrphy_reg->PHY_CON[10]));
 	MEMMSG("GATE CYC    = 0x%08X\r\n", mmio_read_32(&g_ddrphy_reg->PHY_CON[3]));

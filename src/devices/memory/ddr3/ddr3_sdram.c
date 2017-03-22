@@ -24,25 +24,20 @@
 
 #define DDR_NEW_LEVELING_TRAINING       (1)
 
-#define DDR_RW_CAL			0
-
 #if defined(CHIPID_NXP4330)
 #define DDR_WRITE_LEVELING_EN           (0)
 #define DDR_GATE_LEVELING_EN            (1)     // for DDR3, great then 667MHz
 #define DDR_READ_DQ_CALIB_EN            (1)
-#define DDR_WRITE_LEVELING_CALIB_EN     (0)     // for Fly-by
 #define DDR_WRITE_DQ_CALIB_EN           (1)
 
 #define DDR_READ_DQ_MARGIN_VIEW         (0)
 #define DDR_WRITE_DQ_MARGIN_VIEW        (0)
-
 #endif  // #if defined(CHIPID_NXP4330)
 
 #if defined(CHIPID_S5P4418)
 #define DDR_WRITE_LEVELING_EN           (0)
 #define DDR_GATE_LEVELING_EN            (1)     // for DDR3, great then 667MHz
 #define DDR_READ_DQ_CALIB_EN            (1)
-#define DDR_WRITE_LEVELING_CALIB_EN     (0)     // for Fly-by
 #define DDR_WRITE_DQ_CALIB_EN           (1)
 
 #define DDR_READ_DQ_MARGIN_VIEW         (0)
@@ -60,13 +55,13 @@ struct s5p4418_drex_sdram_reg *const g_drex_reg =
 struct s5p4418_ddrphy_reg *const g_ddrphy_reg =
     (struct s5p4418_ddrphy_reg * const)PHY_BASEADDR_DREX_MODULE_CH1_APB;
 
-unsigned int g_DDRLock;
+struct dram_device_info g_ddr3_info;
+
+unsigned int g_ddr_lockvalue;
 unsigned int g_GateCycle;
 unsigned int g_GateCode;
 unsigned int g_RDvwmc;
 unsigned int g_WRvwmc;
-
-struct dram_device_info g_ddr3_info;
 
 void DMC_Delay(int milisecond)
 {
@@ -77,7 +72,7 @@ void DMC_Delay(int milisecond)
 	}
 }
 
-inline void send_directcmd(SDRAM_CMD cmd, U8 chipnum, SDRAM_MODE_REG mrx,
+void send_directcmd(SDRAM_CMD cmd, U8 chipnum, SDRAM_MODE_REG mrx,
 		U16 value)
 {
 	mmio_write_32((unsigned int *)&g_drex_reg->DIRECTCMD,
@@ -235,6 +230,8 @@ void exit_self_refresh(void)
 #endif // #if (CONFIG_SUSPEND_RESUME == 1)
 
 #if (DDR_NEW_LEVELING_TRAINING == 1)
+
+#if 0
 unsigned int GetVWMC_Offset(unsigned int Code, unsigned int Lock_Div4)
 {
 	U8 VWMC[4];
@@ -306,6 +303,7 @@ unsigned int GetVWMC_Compensation(unsigned int Code)
 	return ret;
 
 }
+#endif
 
 #if (DDR_GATE_LEVELING_EN == 1)
 
@@ -318,7 +316,7 @@ void gate_leveling_information(void)
 	unsigned int gate_vwmc[4];
 #endif
 	unsigned int max_slice = 4, slice;
-	unsigned int LockValue = g_DDRLock;
+	unsigned int LockValue = g_ddr_lockvalue;
 
 	LockValue = LockValue;
 
@@ -347,7 +345,7 @@ void gate_leveling_information(void)
 	#endif
 	}
 
-	MEMMSG("\r\n####### Gate Leveling - Information #######\r\n");
+	MEMMSG("\r\n######## Gate Leveling - Information ########\r\n");
 	MEMMSG("Gate Leveling %s!! \r\n", (status == 0) ? "Success" : "Failed");
 	if (status == 0) {
 		MEMMSG("Gate Cycle : %d/%d/%d/%d \r\n", gate_cycle[0], gate_cycle[1],
@@ -359,7 +357,7 @@ void gate_leveling_information(void)
 				(gate_cycle[1])*LockValue + gate_code[1],
 				(gate_cycle[2])*LockValue + gate_code[2],
 				(gate_cycle[3])*LockValue + gate_code[3]);
-		MEMMSG("###########################################\r\n");
+		MEMMSG("#############################################\r\n");
 	}
 }
 #endif
@@ -435,7 +433,7 @@ int ddr_gate_leveling(void)
 
 	/* Step XX-0. check to success or failed (timeout) */
 	if (cal_count >= 100) {
-		MEMMSG("GATE: Calibration Responese Checking : fail...!!!\r\n");
+		MEMMSG("Gate: Calibration Responese Checking : Fail...!!!\r\n");
 		ret = -1;							// Failure Case
 		goto gate_err_ret;
 	}
@@ -465,7 +463,7 @@ gate_err_ret:
 	for (cal_count= 0; cal_count < 4; cal_count++)
 		cycle[cal_count] = ((g_GateCycle >> (8 * cal_count)) & 0xFF);
 
-	offset = GetVWMC_Offset(g_GateCode, (g_DDRLock >> 2));
+	offset = GetVWMC_Offset(g_GateCode, (g_ddr_lockvalue >> 2));
 #if (DDR_GATE_LVL_COMPENSATION_EN == 1)
 	c_offset = GetVWMC_Compensation(offset);
 #else
@@ -547,7 +545,7 @@ void read_dq_calibration_information(void)
 		}
 	}
 #endif
-	printf("\r\n#### Read DQ Calibration - Information ####\r\n");
+	printf("\r\n##### Read DQ Calibration - Information #####\r\n");
 
 	printf("Read DQ Calibration %s!! \r\n",
 			(DQ_FailStatus == 0) ? "Success" : "Failed" );
@@ -561,7 +559,7 @@ void read_dq_calibration_information(void)
 		unsigned int Range;
 		for(slice = 0; slice < max_slice; slice++) {
 			Range = VWMR[slice] - VWML[slice];
-			printf("SLICE%d: %d ~ %d ~ %d (Range: %d)(Deskew: %d) \r\n",
+			printf("SLICE%2d: %2d ~ %2d ~ %2d (Range: %2d)(Deskew: %2d) \r\n",
 					slice, VWML[slice], VWMC[slice], VWMR[slice],
 					Range, Deskew[slice]);
 		}
@@ -576,7 +574,7 @@ void read_dq_calibration_information(void)
 		}
 	#endif
 	}
-	printf("\r\n###########################################\r\n");
+	printf("#############################################\r\n");
 
 }
 #endif
@@ -672,7 +670,7 @@ rd_err_ret:
 #if 0
 #if (DDR_RESET_READ_DQ == 1)
 	unsigned int offset, c_offset;;
-	offset = GetVWMC_Offset(g_RDvwmc, (g_DDRLock >> 2));
+	offset = GetVWMC_Offset(g_RDvwmc, (g_ddr_lockvalue >> 2));
 #if (DDR_READ_DQ_COMPENSATION_EN == 1)
 	c_offset = GetVWMC_Compensation(offset);
 #else
@@ -749,7 +747,7 @@ void write_dq_calibration_information(void)
 			Deskew[slice] = (DQ_Calibration >> (slice*8)) & 0xFF;
 	}
 
-	printf("\r\n### Write DQ Calibration - Information ####\r\n");
+	printf("\r\n#### Write DQ Calibration - Information ####\r\n");
 
 	printf("Write DQ Calibration %s!! \r\n",
 			(DQ_FailStatus == 0) ? "Success" : "Failed" );
@@ -763,7 +761,7 @@ void write_dq_calibration_information(void)
 		unsigned int Range;
 		for(slice = 0; slice < max_slice; slice++) {
 			Range = VWMR[slice] - VWML[slice];
-			printf("SLICE%d: %d ~ %d ~ %d (Range: %d)(Deskew: %d) \r\n",
+			printf("SLICE%2d: %2d ~ %2d ~ %2d (Range: %2d)(Deskew: %2d) \r\n",
 					slice, VWML[slice], VWMC[slice], VWMR[slice],
 					Range, Deskew[slice]);
 		#if 0
@@ -776,7 +774,7 @@ void write_dq_calibration_information(void)
 		}
 	#endif
 	}
-	printf("\r\n###########################################\r\n");
+	printf("############################################\r\n");
 }
 #endif
 
@@ -1056,8 +1054,6 @@ int ddr3_initialize(unsigned int is_resume)
 	temp |= (0x107F << 16);						// cmd_default= DDR3:0x107F, LPDDDR2 or LPDDDR3:0x000F
 	mmio_write_32(&g_ddrphy_reg->PHY_CON[26 + 1], temp);
 #endif
-
-	MEMMSG("[DDR] Phy Initialize\r\n");
 
 	/* Step 03. Set Write Latency(WL), Read Latency(RL), Burts Length(BL) */
 	/* Step 03-01. Set the RL(Read Latency), , BL(Burst Length) */
@@ -1369,12 +1365,12 @@ int ddr3_initialize(unsigned int is_resume)
 
 		temp = mmio_read_32(&g_ddrphy_reg->PHY_CON[13]);		// read lock value
 	} while((temp & 0x7) != 0x7);
-	g_DDRLock = (temp >> 8) & 0x1FF;
+	g_ddr_lockvalue = (temp >> 8) & 0x1FF;
 
 	/* Step 31-2. Update "ctrl_force[8:0]" in PHY_CON12[15:7] by the value of "ctrl_lock_value[8:0] */
 	temp  = mmio_read_32(&g_ddrphy_reg->PHY_CON[12]);
 	temp &= ~(0x7F <<  8);
-	temp |= ((g_DDRLock >> 2) << 8);					// ctrl_force[14:8]
+	temp |= ((g_ddr_lockvalue >> 2) << 8);					// ctrl_force[14:8]
 	mmio_write_32(&g_ddrphy_reg->PHY_CON[12], temp);
 
 #if 0	// deoks
@@ -1466,8 +1462,8 @@ int ddr3_initialize(unsigned int is_resume)
 	/* [Drex] Step 40. Set the Controller Control */
 	mmio_set_32(&g_drex_reg->CONCONTROL, (0x1 << 5));
 
-	MEMMSG("DLL Lock Value  = %d\r\n", g_DDRLock);
-
+	MEMMSG("\r\n");
+	MEMMSG("DLL Lock Value = %d\r\n", g_ddr_lockvalue);
 	MEMMSG("GATE CYC    = 0x%08X\r\n", mmio_read_32( &g_ddrphy_reg->PHY_CON[3]));
 	MEMMSG("GATE CODE   = 0x%08X\r\n", mmio_read_32( &g_ddrphy_reg->PHY_CON[8]));
 	MEMMSG("Read  DQ    = 0x%08X\r\n", mmio_read_32( &g_ddrphy_reg->PHY_CON[4]));
