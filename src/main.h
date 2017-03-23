@@ -19,7 +19,6 @@ void setBusConfig(void);
 void enter_self_refresh(void);
 void exit_self_refresh(void);
 
-
 /* Secondary CPU Function */
 void subcpu_bringup(void);
 
@@ -32,6 +31,10 @@ int build_information(void);
 
 /* NXP4330 Self Loading */
 int __init nxp4330_self_boot(void);
+
+/* Memory Test (Optional) */
+void simple_memtest(void);
+ int standard_memtester(void);
 
 /* Extern Boot Mode Function */
  int iUSBBOOT(struct NX_SecondBootInfo * pTBI);

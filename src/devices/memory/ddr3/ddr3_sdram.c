@@ -63,6 +63,44 @@ unsigned int g_GateCode;
 unsigned int g_RDvwmc;
 unsigned int g_WRvwmc;
 
+static void get_dram_information(struct dram_device_info *me)
+{
+	int byte = 8;
+
+	/* Nexell Step XX. Memory Address (for Write Training (DRAM)) */
+	me->bank_num	= (DDR3_BANK_NUM);
+	me->row_num	= (DDR3_ROW_NUM + 12);
+	me->column_num	= (DDR3_COL_NUM +  7);
+
+	me->column_size	= (1 << me->column_num)/byte;				// Unit : Byte
+	me->row_size	= (1 << me->row_num);
+	me->bank_size	= (me->row_size * me->column_size);
+#if 1
+	me->chip_size	= (((me->bank_size * (1 << me->bank_num))
+				* DDR3_BUS_WIDTH)/ 1024 / 1024);		// Unit: MB
+	me->sdram_size	= (me->chip_size * (DDR3_CS_NUM * 32 / DDR3_BUS_WIDTH));
+#else
+	me->chip_size	= (CONFIG_DDR3_CHIP_PERSIZE/1024/1024);			// Unit: MB
+	me->sdram_size	= (CONFIG_DDR3_MEMSIZE/1024/1024);
+#endif
+
+#if 0
+	MEMMSG("############## [SDRAM] Memory Specification ###############\r\n");
+	MEMMSG("[Bit] Bank Address   : %d \r\n", me->bank_num);
+	MEMMSG("[Bit] Column Address : %d \r\n", me->column_num);
+	MEMMSG("[Bit] Row Address    : %d \r\n", me->row_num);
+	MEMMSG("[Bit] Data Line      : %d \r\n", DDR3_BUS_WIDTH);
+	MEMMSG("[BYTE] Column    Size: %d \r\n", me->column_size);
+	MEMMSG("[BYTE] Row(Page) Size: %d \r\n", me->row_size);
+	MEMMSG("[BYTE] Bank      Size: %d \r\n", me->bank_size);
+#if 1
+	MEMMSG("[MB]   Chip      Size: %d \r\n", me->chip_size);
+	MEMMSG("[MB]   SDRAM     Size: %d \r\n", me->sdram_size);
+#endif
+	MEMMSG("############################################################\r\n");
+#endif
+}
+
 void DMC_Delay(int milisecond)
 {
 	register volatile int count;
@@ -960,6 +998,9 @@ int ddr3_initialize(unsigned int is_resume)
 	MR3.Reg = 0;
 
 	MEMMSG("\r\nDDR3 POR Init Start\r\n");
+
+	/* Nexell Step XX. Get DRAM Information. */
+	get_dram_information((struct dram_device_info*)&g_ddr3_info);
 
 	/* Step 01. Reset (DPHY, DREX, DRAM)  (Min: 10ns, Typ: 200us) */
 	if (resetgen_sequence() < 0) {

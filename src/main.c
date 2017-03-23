@@ -145,9 +145,9 @@ void __init main(void)
 
 	/* step xx. check the memory test (optional) */
 #if defined(STANDARD_MEMTEST)
-	memtester_main((unsigned int)0x40000000UL, (unsigned int)0x80000000, 0x2);
+	standard_memtester();
 #elif defined(SIMPLE_MEMTEST)
-	simple_memtest((unsigned int*)0x40000000UL, (unsigned int*)0x8FFFFFFF);
+	simple_memtest();
 #endif
 
 	/*

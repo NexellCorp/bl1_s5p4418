@@ -43,8 +43,8 @@ void srand(unsigned int seed)
 #else
 unsigned int rand_ul(void)
 {
-	//return (rand() | rand() << 16);
-	return 1;
+	return (rand() | rand() << 16);
+//	return 1;
 }
 #endif
 
@@ -100,8 +100,6 @@ int test_8bit_wide_random(unsigned long volatile *bufa, unsigned long volatile *
 int test_16bit_wide_random(unsigned long volatile *bufa, unsigned long volatile *bufb, int count);
 #endif
 
-#if defined(STANDARD_MEMTEST)
-extern int memtester_main(unsigned int start, unsigned int end, int repeat);
-#elif defined(SIMPLE_MEMTEST)
-extern void simple_memtest(U32 *pStart, U32 *pEnd);
-#endif
+ int standard_memtester(void);
+void simple_memtest(void);
+

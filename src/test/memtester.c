@@ -15,9 +15,14 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-#include "sysheader.h"
+#include <sysheader.h>
+#include <memtester.h>
+#include <ddr3_sdram.h>
+
+/* External Variable */
+extern struct dram_device_info g_ddr3_info;
+
 #if defined(STANDARD_MEMTEST)
-#include "memtester.h"
 
 #if (0)
 #define pr_dbg(msg...) printf(msg)
@@ -27,38 +32,40 @@
 	} while (0)
 #endif
 
-#define MEMTEST_SINGLE_DBG 0
-#define MEMTEST_CORE_NUMBER 8
+#define MEMTEST_UNSUPPORT_FEATUE	1
+#define MEMTEST_SINGLE_DBG		0
+#define MEMTEST_CORE_NUMBER		8
 
 /* TEST Main  */
 char progress[] = "-\\|/";
-#define PROGRESSLEN 4
-#define PROGRESSOFTEN 2500
-#define ONE 0x00000001L
+#define PROGRESSLEN 			4
+#define PROGRESSOFTEN			2500
+#define ONE				0x00000001L
 
-struct test tests[] = {{"Random Value", test_random_value},
-		       {"Compare XOR", test_xor_comparison},
-		       {"Compare SUB", test_sub_comparison},
-		       {"Compare MUL", test_mul_comparison},
-		       {"Compare DIV", test_div_comparison},
-		       {"Compare OR", test_or_comparison},
-		       {"Compare AND", test_and_comparison},
-		       {"Sequential Increment", test_seqinc_comparison},
-		       {"Solid Bits", test_solidbits_comparison},
-		       {"Block Sequential", test_blockseq_comparison},
-		       {"Checkerboard", test_checkerboard_comparison},
-		       {"Bit Spread", test_bitspread_comparison},
-		       {"Bit Flip", test_bitflip_comparison},
-		       {"Walking Ones", test_walkbits1_comparison},
-		       {"Walking Zeroes", test_walkbits0_comparison},
+struct test tests[] = {
+			{"Random Value", test_random_value},
+			{"Compare XOR", test_xor_comparison},
+			{"Compare SUB", test_sub_comparison},
+			{"Compare MUL", test_mul_comparison},
+			{"Compare DIV", test_div_comparison},
+			{"Compare OR", test_or_comparison},
+			{"Compare AND", test_and_comparison},
+			{"Sequential Increment", test_seqinc_comparison},
+			{"Solid Bits", test_solidbits_comparison},
+			{"Block Sequential", test_blockseq_comparison},
+			{"Checkerboard", test_checkerboard_comparison},
+			{"Bit Spread", test_bitspread_comparison},
+			{"Bit Flip", test_bitflip_comparison},
+			{"Walking Ones", test_walkbits1_comparison},
+			{"Walking Zeroes", test_walkbits0_comparison},
 #ifdef TEST_NARROW_WRITES
-		       {"8-bit Writes", test_8bit_wide_random},
-		       {"16-bit Writes", test_16bit_wide_random},
+			{"8-bit Writes", test_8bit_wide_random},
+			{"16-bit Writes", test_16bit_wide_random},
 #endif
 		       {0, 0}};
 
-int use_phys = 0;
-long physaddrbase = 0;
+int use_phys		= 0;
+long physaddrbase 	= 0;
 
 int __aeabi_idivmod(void)
 {
@@ -85,12 +92,12 @@ int compare_regions(ulv *bufa, ulv *bufb, int count)
 		if (*p1 != *p2) {
 			if (use_phys) {
 				physaddr = physaddrbase + (i * sizeof(ul));
-				printf("FAILURE: 0x%08lx != 0x%08lx at "
-						"physical address 0x%08lx.\r\n",
-						(ul)*p1, (ul)*p2, (ul)physaddr);
+				printf("FAILURE: 0x%08X(0x%08X) != 0x%08X(0x%08X) at "
+						"physical address 0x%08X.\r\n",
+						(ul)*p1, p1,  (ul)*p2, p2, (ul)physaddr);
 			} else {
-				printf("FAILURE: 0x%08lx != 0x%08lx at offset "
-						"0x%08lx.\r\n",
+				printf("FAILURE: 0x%08X != 0x%08X at offset "
+						"0x%08X.\r\n",
 						(ul)*p1, (ul)*p2, (ul)(i * sizeof(ul)));
 			}
 			r = -1;
@@ -127,12 +134,12 @@ int test_stuck_address(ulv *bufa, int count)
 						physaddrbase + (i * sizeof(ul));
 					printf("FAILURE: possible bad address "
 							"line at physical "
-							"address 0x%08lx.\r\n",
+							"address 0x%08X.\r\n",
 							physaddr);
 				} else {
 					printf("FAILURE: possible bad address "
 							"line at offset "
-							"0x%08lx.\r\n",
+							"0x%08X.\r\n",
 							(ul)(i * sizeof(ul)));
 				}
 				printf("Skipping to next test...\r\n");
@@ -462,14 +469,14 @@ int test_bitspread_comparison(ulv *bufa, ulv *bufb, int count)
 		fflush();
 		for (i = 0; i < count; i++) {
 			if (j < UL_LEN) { /* Walk it up. */
-				(U32)(*p1++ = *p2++ = (i % 2 == 0))
-					? (U32)((ONE << j) | (ONE << (j + 2)))
-					: (U32)(UL_ONEBITS ^ ((ONE << j)
+				(unsigned int)(*p1++ = *p2++ = (i % 2 == 0))
+					? (unsigned int)((ONE << j) | (ONE << (j + 2)))
+					: (unsigned int)(UL_ONEBITS ^ ((ONE << j)
 								| (ONE << (j + 2))));
 			} else { /* Walk it back down. */
-				(U32)(*p1++ = *p2++ = (i % 2 == 0))
-					? (U32)((ONE << (UL_LEN * 2 - 1 - j)) | (ONE << (UL_LEN * 2 + 1 - j)))
-					: (U32)(UL_ONEBITS ^ (ONE << (UL_LEN * 2 - 1 - j)
+				(unsigned int)(*p1++ = *p2++ = (i % 2 == 0))
+					? (unsigned int)((ONE << (UL_LEN * 2 - 1 - j)) | (ONE << (UL_LEN * 2 + 1 - j)))
+					: (unsigned int)(UL_ONEBITS ^ (ONE << (UL_LEN * 2 - 1 - j)
 								| (ONE << (UL_LEN * 2 + 1 - j))));
 			}
 		}
@@ -621,26 +628,33 @@ ulv g_bufb[8];
 /*
  * each of the memory test function. (single)
  */
-int memtester_main(unsigned int start, unsigned int end, int repeat)
+int memtester_main(ulv bufa, ulv bufb, int repeat)
 {
-	ulv bufa = (ulv )start;
-	ulv bufb = (ulv )end;
-
-	int count = sizeof(tests) / sizeof(struct test) - 1; // Sub - NULL(1)
-	int pagesize = 1024;
-	int size = (end - start)/2 & pagesize;
+	int count = sizeof(tests) / sizeof(struct test) - 1;			// Sub - NULL(1)
+	int pagesize = 1024;							// 1024, 2048
+	int size = (bufb - bufa)/1000;///2 & pagesize;
 	int i, k, ret = 0;
 
 	srand(1024);
-	g_mem_info.start_addr = start;
-	g_mem_info.end_addr = end;
+	g_mem_info.start_addr = bufa;
+	g_mem_info.end_addr = bufb;
 
 	for(k = 0; k < repeat; k++) {
 		printf("Loop [%d]St. \r\n", k);
+		printf("physaddrbase : 0x%08X, use_phys: 0x%08X \r\n",
+				physaddrbase, use_phys);
+		printf("bufa: 0x%08X, bufb: 0x%08X, size: 0x%04X \r\n",
+			bufa, bufb, size);
 		for (i = 0; i < count; i++) {
 			if (!tests[i].name)
 				break;
-
+	#if 0 //MEMTEST_UNSUPPORT_FEATUE
+			use_phys = 1;
+			physaddrbase = bufa;
+			printf("  %-20s: ", "Stuck_Address: ");
+			test_stuck_address(bufa, size*2);
+			printf("\r\n");
+	#endif
 			printf("  %-20s: ", tests[i].name);
 			if (!tests[i].fp(((ulv *)bufa), ((ulv *)bufb), size)) {
 				g_mem_info.memtest_done[i] = 0;
@@ -665,25 +679,49 @@ int memtester_main(unsigned int start, unsigned int end, int repeat)
 	return ret;
 }
 
+int standard_memtester(void)
+{
+	int bufa = 0x40000000;
+	int bufb = (bufa + (g_ddr3_info.sdram_size * 1024 * 1024 / 2));	//MB -> Byte
+	int repeat = 0x1;
+
+	use_phys = 1;
+	physaddrbase = bufa;
+
+	return memtester_main(bufa, bufb, repeat);
+}
+
 #elif defined(SIMPLE_MEMTEST)
 
 #define MPTRS unsigned int
-void simple_memtest(U32 *pStart, U32 *pEnd)
+
+void simple_memtest(void)
 {
-	volatile U32 *ptr = pStart;
+	unsigned int* start, *end, *ptr;
+	unsigned int  size;
+	int repeat = 0x1;
 
-	printf("Simple Memory Test Start!!\r\n");
+	start = ((unsigned int *)0x40000000);
+	end   = ((unsigned int *)(0x40000000
+			+ (g_ddr3_info.sdram_size * 1024 * 1024 - 1)));	//MB -> Byte
+	ptr = start;
+	size = (unsigned int)(end - start) * sizeof(unsigned int);
 
+	printf("############## Simple Memory Test Start!! ###############\r\n");
+	printf("Start: 0x%08X, End: 0x%08X, Size: 0x%08X \r\n",
+		start, end, size);
+
+	/* step xx. data write */
 	printf("Read/Write : ");
 	printf("Write  ");
-	while (ptr < pEnd) {
-		*ptr = (U32)((MPTRS)ptr);
+	while (ptr < end) {
+		*ptr = (unsigned int)((MPTRS)ptr);
 #if 0
-		if (((U32)((MPTRS)ptr) & 0x3FFFFFL) == 0)
+		if (((unsigned int)((MPTRS)ptr) & 0x3FFFFFL) == 0)
 			printf("0x%16X:\r\n", ptr);
 #endif
 #if 0
-		if (((U32)((MPTRS)ptr) % PROGRESSOFTEN) == 0) {
+		if (((unsigned int)((MPTRS)ptr) % PROGRESSOFTEN) == 0) {
 			printf("\b");
 			printf("%c", progress[++j%  PROGRESSLEN]);
 		}
@@ -693,13 +731,13 @@ void simple_memtest(U32 *pStart, U32 *pEnd)
 	printf("\b\b\b\b\b\b\b");
 
 	printf("Compare  ");
-	ptr = pStart;
-	while (ptr < pEnd) {
+	ptr = start;
+	while (ptr < end) {
 #if 0
-		if (*ptr != (U32)((MPTRS)ptr))
-			printf("0x%08X: %16X\r\n", (U32)((MPTRS)ptr), *ptr);
+		if (*ptr != (unsigned int)((MPTRS)ptr))
+			printf("0x%08X: %16X\r\n", (unsigned int)((MPTRS)ptr), *ptr);
 #else
-		unsigned int data0 = *ptr, data1 = (U32)((MPTRS)ptr);
+		unsigned int data0 = *ptr, data1 = (unsigned int)((MPTRS)ptr);
 		unsigned int i = 0;
 
 		for (i = 0; i < 32; i++) {
@@ -707,21 +745,21 @@ void simple_memtest(U32 *pStart, U32 *pEnd)
 			data1 &= 1UL << i;
 
 			if (data0 != data1) {
-				// printf("[%dbit] 0x%08X: %08X\r\n", i,
-				// (U32)((MPTRS)ptr), *ptr);
+//				printf("[%dbit] 0x%08X: %08X\r\n", i,
+//				(unsigned int)((MPTRS)ptr), *ptr);
 				printf("--------------------------------------"
 						"\r\n");
 				printf("[%dbit] 0x%08X: %08X(0x%08X: %08X)\r\n",
-						i, data1, data0, (U32)((MPTRS)ptr),
+						i, data1, data0, (unsigned int)((MPTRS)ptr),
 						*ptr);
 				printf("--------------------------------------"
 						"\r\n");
-				// mask_bit |= 1UL << i;
+//				mask_bit |= 1UL << i;
 			}
 #if 0
 			if ( (mask_bit != 0) && (i == 31) ) {
 				printf("[%Xbit] 0x%08X: %08X(0x%08X: %08X)\r\n",
-						mask_bit, data1, data0, (U32)((MPTRS)ptr), *ptr);
+						mask_bit, data1, data0, (unsigned int)((MPTRS)ptr), *ptr);
 			}
 #endif
 		}
@@ -737,18 +775,19 @@ void simple_memtest(U32 *pStart, U32 *pEnd)
 	printf("\b\b\b\b\b\b\b\b\b");
 	printf("Done!   \r\n");
 
+	/* step xx. bit shift test */
 	printf("Bit Shift  : ");
 	printf("Write  ");
-	ptr = pStart;
-	while (ptr < pEnd) {
+	ptr = start;
+	while (ptr < end) {
 		*ptr = (1UL << ((((MPTRS)ptr) & 0x1F << 2) >> 2));
 		ptr++;
 	}
 	printf("\b\b\b\b\b\b\b");
 
 	printf("Compare  ");
-	ptr = pStart;
-	while (ptr < pEnd) {
+	ptr = start;
+	while (ptr < end) {
 		if (*ptr != (1UL << ((((MPTRS)ptr) & 0x1F << 2) >> 2)))
 			printf("0x%16x : 0x%16x\r\n", ptr, *ptr);
 		ptr++;
@@ -756,18 +795,19 @@ void simple_memtest(U32 *pStart, U32 *pEnd)
 	printf("\b\b\b\b\b\b\b\b\b");
 	printf("Done!   \r\n");
 
+	/* step xx. reserve bit test */
 	printf("Reverse Bit: ");
 	printf("Write  ");
-	ptr = pStart;
-	while (ptr < pEnd) {
+	ptr = start;
+	while (ptr < end) {
 		*ptr = ~(1UL << ((((MPTRS)ptr) & 0x1F << 2) >> 2));
 		ptr++;
 	}
 	printf("\b\b\b\b\b\b\b");
 
 	printf("Compare  ");
-	ptr = pStart;
-	while (ptr < pEnd) {
+	ptr = start;
+	while (ptr < end) {
 		if (*ptr != ~(1UL << ((((MPTRS)ptr) & 0x1F << 2) >> 2)))
 			printf("0x%16x : 0x%16x\r\n", ptr, *ptr);
 		ptr++;
@@ -775,6 +815,6 @@ void simple_memtest(U32 *pStart, U32 *pEnd)
 	printf("\b\b\b\b\b\b\b\b\b");
 	printf("Done!   \r\n");
 
-	printf("Simple Memory Test Done!!\r\n");
+	printf("############## Simple Memory Test Done!!! ###############\r\n");
 }
 #endif

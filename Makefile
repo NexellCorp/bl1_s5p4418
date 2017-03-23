@@ -72,6 +72,7 @@ SYS_INCLUDES	=	-I src				\
 			-I src/services			\
 			-I src/services/std_svc		\
 			-I src/services/std_svc/psci	\
+			-I src/test			\
 			-I prototype/base 		\
 			-I prototype/module
 

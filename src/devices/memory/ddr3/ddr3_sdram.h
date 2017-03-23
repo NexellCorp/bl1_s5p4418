@@ -52,7 +52,7 @@ struct dram_device_info {
 	unsigned int column_size;
 	unsigned int row_size;
 	unsigned long bank_size;
-	unsigned short chip_size;
+	unsigned long chip_size;
 	unsigned long sdram_size;
 };
 
