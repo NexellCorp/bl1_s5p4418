@@ -28,7 +28,7 @@ LDFLAGS		=	-Bstatic							\
 
 SYS_OBJS	+=	startup.o armv7_libs.o clock.o clkpwr.o main.o subcpu.o		\
 			plat_pm.o ema.o resetcon.o gpio.o serial.o libstd.o gic.o	\
-			${MEMTYPE}_sdram.o memory.o crc.o buildinfo.o printf.o		\
+			${MEMTYPE}_sdram.o memory.o crc.o build_info.o printf.o		\
 			board_${BOARD}.o nxp4330.o
 
 ifeq ($(ARM_SECURE), n)

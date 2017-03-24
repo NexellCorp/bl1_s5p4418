@@ -64,7 +64,7 @@ header_info:
 #endif
 
 buildinfo:
-        .word   0x44180602          		// 24 - Chip name - 4418, Build num - v0.6.01
+        .word   0x44181000          		// 24 - Chip name - 4418, Build num - Ver.1.0.0
 
 exception_v:
         msr     CPSR_c, #(Mode_SVC|I_Bit|F_Bit)
