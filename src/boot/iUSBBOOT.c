@@ -488,11 +488,12 @@ static void __init nxp4330_usb_int_bulkout(USBBOOTSTATUS * usb_status, U32 fifo_
 {
 	unsigned int bl1_loadsize = *((unsigned int*)(0xFFFF0000 + 0x44));
 	unsigned int romboot_loadsize = BL1_SDMMCBOOT_LOADSIZE;
+	unsigned int header_gap	= 512;
 
 	if (g_selfboot_cfg == 1) {
 		usb_status->bHeaderReceived = CFALSE;
 		usb_status->RxBuffAddr = (U8*)0xFFFF4000;
-		usb_status->iRxSize = (bl1_loadsize - romboot_loadsize);
+		usb_status->iRxSize = (bl1_loadsize + header_gap - romboot_loadsize);
 		g_selfboot_cfg = 0;
 	}
 
