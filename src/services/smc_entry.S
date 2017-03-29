@@ -20,6 +20,11 @@
 #define SRAM_BASEADDR	0xFFFF0000
 #define SRAM_SIZE	(32*1024)
 
+#define BL1_SMC_RUN_IMAGE               0x4
+#define ENTRY_POINT_INFO_PC_OFFSET      0x08
+#define ENTRY_POINT_INFO_ARGS_OFFSET    0x18
+#define MODE32_MASK             0xf
+
 .global smc_asm_handler
 
 /*
@@ -36,30 +41,34 @@ monitor_vectors:
         b       .          				// 10 -
         b       .                   			// 14 -
         b       .                   			// 18 -
-        b       smc_asm_monitor_fiq_handler		// 1C - FIQ Interrupt
+        b       .					// 1C -
 
 /*
  * (BL1) SMC Caller Handler
  */
 .global bl1_smc_handler
-.align 8
+.align
 .global smc_asm_handler
 smc_asm_handler:
 	stmfd	sp!, {r4-r12, lr}
-	bl	bl1_smc_handler
-	ldmfd	sp!, {r4-r12, lr}
-	movs 	pc, r14
+	cmp	r0, #BL1_SMC_RUN_IMAGE
+	bne	.
+	mrc     p15, 0, lr, c1, c1, 0
+	tst	lr, #(1 << 0)	// ARMv7 NS bit
+	bne	unexpected_smc_call	// if not call from secure
+	mov	r8, r1
+	ldmfd	r8!, {r0, r1}
+	mov	lr, r0
+	msr	spsr, r1
+	and	r0, r1, #MODE32_MASK
+	cmp	r0, #0x6		// ARMv7 monitor mode code
+	bne	unexpected_smc_call
+	ldmfd	r8!, {r0-r7}
+	movs	pc, lr		// run svc mode
 
-.align 8
-/* monitor mode - fiq handler */
-.global smc_asm_monitor_fiq_handler
-smc_asm_monitor_fiq_handler:
-	stmfd	sp!, {r0-r12, lr}
-	bl	smc_monitor_fiq_handler
-	ldmfd	sp!, {r0-r12, lr}
-//	movs 	pc, r14
-	subs 	pc, r14, #4
-
+unexpected_smc_call:
+	wfi
+	b	.
 /*
  *  Only Monitor Mode - Deoks
  */
@@ -80,18 +89,6 @@ monitor_mode_init:
         bic     r0, r0, #(BIT1_C|BIT1_M)            	// Clear C:2, M:0 bit to disable D Cache, MMU
         mcr     p15, 0, r0, c1, c0, 0               	// Write value back to CP15 System Control register
 
-	/* Secure, Monitor Mode - Set Stack Pointer */
-	mrc	p15, 0, r12, c0, c0, 5              	// Get our cpu id
-	and	r12, r12, #0xF                      	// Save CPU id
-        ldr     sp, =BASEADDR_SRAM
-        add     sp, sp, #INTERNAL_SRAM_SIZE		// Add to internal sram size.
-        sub     sp, sp, #0x800				// for monitor mode stack
-
-        mov     r1, #0x100
-        sub     r2, r12, #1
-        and     r2, r2, #3
-        mul     r1, r1, r2
-        sub     sp, sp, r1
 #if 0
 	/* -----------------------------------------
 	 * Only try to set SMP mode if not yet set
@@ -127,18 +124,18 @@ monitor_mode_init:
 
 	/* for pll change stable */
         mrc     p15, 0, r0, c1, c0, 0			// Read CP15 System Control register
-        orr     r11, r11, #(BIT1_V|BIT1_I|BIT1_Z)	// Clear V:13, I:12, Z:11 bit to disable High Vector, I-Cache, Branch Prediction
-        mcr     p15, 0, r11, c1, c0, 0
+        orr     r0, r0, #(BIT1_I|BIT1_Z)		// Set I:12, Z:11 bit to disable High Vector, I-Cache, Branch Prediction
+        mcr     p15, 0, r0, c1, c0, 0
 
 	/* Stack size set to monitor mode  */
         ldr     sp, =BASEADDR_SRAM
         add     sp, sp, #INTERNAL_SRAM_SIZE
 
-        mrc     p15, 0, r12, c0, c0, 5			// Get our cpu id
-        ands    r12, r12, #0xF				// Save CPU id
+        mrc     p15, 0, r0, c0, c0, 5			// Get our cpu id
+        ands    r0, r0, #0xF				// Save CPU id
 
 	mov     r1, #0x100
-	sub     r2, r12, #1
+	sub     r2, r0, #1
 	and     r2, r2, #3
 	mul     r1, r1, r2
 	sub     sp, sp, r1

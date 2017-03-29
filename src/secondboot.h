@@ -205,6 +205,7 @@ struct NX_SecondBootInfo
 	U32 PLLSPREAD[2];               // 0x06C ~ 0x070
 
 #if defined(ARCH_NXP4330) || defined(ARCH_S5P4418)
+#if 1 // Remove Features
 	U32 DVO[5];                     // 0x074 ~ 0x084
 
 	struct NX_DDRInitInfo DII;      // 0x088 ~ 0x0AC
@@ -219,26 +220,15 @@ struct NX_SecondBootInfo
 
 	U16 LvlTr_Mode;                 // 0x0C0 ~ 0x0C1
 	U16 FlyBy_Mode;                 // 0x0C2 ~ 0x0C3
-
-	U32 Stub[(0x1EC-0x0C4)/4];      // 0x0C4 ~ 0x1EC
 #endif
-#if defined(ARCH_NXP5430)
-	U32 DVO[9];                     // 0x074 ~ 0x094
+	U32 BL2_START;			// 0x0C4
+	U32 GateCycle;			// 0x0c8
+	U32 GateCode;			// 0x0cc
+	U32 RDvwmc;			// 0x0d0
+	U32 WRvwmc;			// 0x0d4
+	U32 EntryPoint;			// 0x0d8
 
-	struct NX_DDRInitInfo DII;      // 0x098 ~ 0x0BC
-
-#if defined(MEM_TYPE_DDR3)
-	struct NX_DDR3DEV_DRVDSInfo     DDR3_DSInfo;    // 0x0C0
-#endif
-#if defined(MEM_TYPE_LPDDR23)
-	struct NX_LPDDR3DEV_DRVDSInfo   LPDDR3_DSInfo;  // 0x0C0
-#endif
-	struct NX_DDRPHY_DRVDSInfo      PHY_DSInfo;     // 0x0C4 ~ 0x0CC
-
-	U16 LvlTr_Mode;                 // 0x0D0 ~ 0x0D1
-	U16 FlyBy_Mode;                 // 0x0D2 ~ 0x0D3
-
-	U32 Stub[(0x1EC-0x0D4)/4];      // 0x0D4 ~ 0x1EC
+	U32 Stub[(0x1EC-0x0dc)/4];      // 0x0dc ~ 0x1EC
 #endif
 
 	U32 MemTestAddr;                // 0x1EC

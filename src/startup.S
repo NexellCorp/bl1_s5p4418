@@ -90,75 +90,34 @@ reset_handler:
         bne     secondary_startup		// jump to secondary cpu
 #else	// Non-Secure Mode
 	/* Set the SVC Vector(VBAR) */
-	ldr	r0, =vectors
-	mcr	p15, 0, r0, c12, c0, 0		// set svc vector(VBAR)
+//	ldr	r0, =vectors
+//	mcr	p15, 0, r0, c12, c0, 0		// set svc vector(VBAR)
+
+	/* Secure, Monitor Mode - Set Stack Pointer */
+	mrc	p15, 0, r12, c0, c0, 5		// Get our cpu id
+	and	r12, r12, #0xF			// Save CPU id
+        ldr     sp, =BASEADDR_SRAM
+        add     sp, sp, #INTERNAL_SRAM_SIZE	// Add to internal sram size.
+        sub     sp, sp, #0x800			// for monitor mode stack
+
+        mov     r1, #0x100
+        sub     r2, r12, #1
+        and     r2, r2, #3
+        mul     r1, r1, r2
+        sub     sp, sp, r1
 
 	/* Set the initialization for PSCI (Monitor Mode) */
-	bl	monitor_mode_init
+//	bl	monitor_mode_init
 
-#if 0
-	/* GIC initialization settings for the Non-Secure change. */
-	bl	gic_disp_init
-#else
-	/* GIC secure part enable, route to non-secure */
-	mrc	p15, 4, r0, c15, c0, 0		// Read CBAR
-	mov     r1, #(0xB << 0)			// FIQ_En[3], EnableGrp1[1], EnableGrp0[0]
-	str	r1, [r0, #0x100]		// gicc enable
-	orr	r2, r0, #0x1000			// base of gicd
-	str     r1, [r2, #0x000]		// gicd secure enable
-
-        mov     r1, #0xFFFFFFFF
-	str	r1, [r0, #0x104]		// gicc - interrupt priority to best
-        str     r1, [r2, #0x084]		// gicd - interrupt route to non-secure
-        str     r1, [r2, #0x088]		// gicd - interrupt group
-        str     r1, [r2, #0x08C]		// gicd - interrupt group
-
-	mov	r1, #0xFFFF00FF			// gicd - interrupt secure-route
-        str     r1, [r2, #0x080]		// gicd - interrupat Group Register
-
-        ands    r12, r12, #0xF			// Save CPU id
-#endif
-
-	/*
-	 * Set the Non-Secure FPU
-	 * psw0523 add for fpu setting
-	 */
-	mrc	p15, 0, r0, c1, c1, 2
-	orr	r0, r0, #3 << 10		// enable fpu/neon
-	bic	r0, r0, #3 << 14		// temp
-	mcr	p15, 0, r0, c1, c1, 2
-
-	ldr 	r0, =(0xF << 20)
-	mcr 	p15, 0, r0, c1, c0, 2
-
-	mov	r3, #0x40000000
-	vmsr	fpexc, r3
-
-        mrc     p15, 0, r12, c0, c0, 5         	// Get our cpu id
-        ands    r12, r12, #0xF			// Save CPU id
-        bne     asm_main
 #endif // if defined(SECURE_MODE)
 
 	/* Release pad holding */
-	ldr     r0, =0xC0010800		// alive base address
+	ldr     r0, =0xC0010800			// alive base address
 	mov     r1, #0x01
 	str     r1, [r0, #0x00]			// open write gate
 //	mov     r1, #0x3C0
 	mov     r1, #0x3FC
 	str     r1, [r0, #0x9c]			// disable pad holding
-
-#if !defined(SECURE_MODE)
-	/* (tieoff) Setting for the PBUS Non-Secure change.*/
-	bl 	tieoff_set_secure
-
-	/*
-	 * Processor is in Secure Mode, when the FIQ occurs
-	 * in, which specifies the vector jump to Monitor Mode.
-	 */
-	mrc	p15, 0, r0, c1, c1, 0		// Read SCR into Rt
-	orr	r0, r0, #(1 << 2)		// SCR- FIQ Forward[2]
-	mcr	p15, 0, r0, c1, c1, 0		// Write Rt to SCR
-#endif
 
 	/* Set to zero, Clear SRAM */
         ldr     r1, =__bss_start__		// this is auto-relocated!
@@ -186,85 +145,46 @@ asm_main:
         bl      main			// save this in register for possible long jump
         b       exception_v
 #else	// Non-Secure Mode
-	/* Change to Secure -> Non-Secure */
-	bl	set_nonsecure_mode
+//	movs	r0, r12
 
+	bl	main			// save this in register for possible long jump
+	b	exception_v
+.global run_bl2
+run_bl2:
+	mov	r1, r0
+        bl      Invalidate_entire_branch_predictor
+	mov	r0, #0
+	bx	r1
+
+.global run_secure_svc
+run_secure_svc:
+	mov	r8, r0
         bl      Invalidate_entire_branch_predictor
         bl      InvalidateDataCache
+	mov	lr, r8
 
-	MOV     r0,  #0
-	MOV     r1,  #0
-	MOV     r2,  #0
-	MOV     r3,  #0
-	MOV     r4,  #0
-	MOV     r5,  #0
-	MOV     r6,  #0
-	MOV     r7,  #0
-	MOV     r8,  #0
-	MOV     r9,  #0
-	MOV     r10, #0
-	MOV     r11, #0
-	MOV     r12, #0
+	mov     r1,  #0
+	mov     r2,  #0
+	mov     r3,  #0
+	mov     r4,  #0
+	mov     r5,  #0
+	mov     r6,  #0
+	mov     r7,  #0
+	mov     r8,  #0
+	mov     r9,  #0
+	mov     r10, #0
+	mov     r11, #0
+	mov     r12, #0
 
+#if 0
 	/* switch to supervisor mode */
-#if 1
-	ldr	lr, =svc_start
-
-        mrc     p15, 0, r12, c0, c0, 5		// Get our cpu id
-        ands    r12, r12, #0xF			// Save CPU id
-        beq	cpux_fiq_en
-
-cpux_fiq_en:
-	mov	r0, #(Mode_SVC|I_Bit|F_Bit)	// CPU 1,2,3
-
-cpu0_fiq_en:
-	mov	r0, #(Mode_SVC|I_Bit)		// CPU 0
-
-	msr     SPSR_cxsf, r0
-	movs	pc, lr
-#else
-        mrc     p15, 0, r12, c0, c0, 5		//; Get our cpu id
-        ands    r12, r12, #0xF			//; Save CPU id
-        beq	cpux_fiq_en
-
-cpux_fiq_en:
-	mov	r0, #(Mode_SVC|I_Bit|F_Bit)	// CPU 1,2,3
-
-cpu0_fiq_en:
-	mov	r0, #(Mode_SVC|I_Bit)		// CPU 0
+//	mov	r0, #(Mode_SVC|I_Bit)		// CPU 0
+//	msr     SPSR_cxsf, r0
+//	mov	r0, #0
+//	movs	pc, lr
 #endif
-
-svc_start:
-	/*
-	 * For PLL Change Stable
-	 * Before the PLL (P, M, S) changes,
-	 * preventing the Bus access, enable
-	 * the I-Cache to fetch only the opcode.
-	 */
-        mrc     p15, 0, r0, c1, c0, 0		//; Read CP15 System Control register
-        orr     r0, r0, #(BIT1_V|BIT1_I|BIT1_Z)	//; Clear V:13, I:12, Z:11 bit to disable High Vector, I-Cache, Branch Prediction
-        mcr     p15, 0, r0, c1, c0, 0
-
-        /*
-         * Set stack pointer
-         */
-	mrc	p15, 0, r12, c0, c0, 5		//; Get our cpu id
-	and	r12, r12, #0xF			//; Save CPU id
-        ldr     sp, =BASEADDR_SRAM
-        add     sp, sp, #INTERNAL_SRAM_SIZE	//; Add to internal sram size.
-        sub     sp, sp, #0x400			//; for monitor mode stack
-
-        mov     r1, #0x100
-        sub     r2, r12, #1
-        and     r2, r2, #3
-        mul     r1, r1, r2
-        sub     sp, sp, r1
-
-        movs    r0, r12
-
-	blne	subcpu_boot
-        bleq    main                            //; save this in register for possible long jump
-        b       exception_v
+	bx	lr
+	b	.
 #endif	// #if defined(SECURE_MODE)
 
 #if defined(SECURE_MODE)
