@@ -26,7 +26,7 @@ void gic_sgi_caller(int cpu_id, int int_id)
 	char* dist_base = (char*)gicd_get_baseaddr();
 
 	int target_list = (0x0 << 24);		// Target List Filter [25:24]
-	int cpu_target  = (1 << (cpu_id + 16));	// CPU Interface Number
+	int cpu_target  = (cpu_id << 16);	// CPU Interface Number
 	int sgi_id 	= (int_id << 0);	// Gnerate Interrupt ID
 #if 0
 	int eoir	= 0;

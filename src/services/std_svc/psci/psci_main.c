@@ -62,7 +62,7 @@ void psci_set_sgi_caller(int cpu_id)
 	}
 #else	// Sequences that are usually used.
 	cpu_id = cpu_id;
-	s5p4418_cpuidle(0, (0 + 8));
+	s5p4418_cpuidle((1 << 0), 8);
 #endif
 }
 

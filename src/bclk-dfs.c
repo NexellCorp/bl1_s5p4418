@@ -42,12 +42,15 @@ int s5p4418_bclk_dfs_handler(void)
 	int cpu_id = armv7_get_cpuid();
 	int eoir = 0;
 
-	/* */
+	/* Cleat the GIC Pending */
 	eoir = gicc_get_iar(cpu_base);
 	gicc_set_eoir(cpu_base, eoir);
 
-	/* Sequenceal */
-	while(g_fiq_flag & (1 << cpu_id));
+	/* Sequenceal Unlock */
+	do {
+		/* waitng for event */
+		 __asm__ __volatile__ ("wfe");
+	} while(g_fiq_flag & (1 << cpu_id));
 
 	return 0;
 }
@@ -57,16 +60,10 @@ int s5p4418_bclk_dfs_handler(void)
  ******************************************************************************/
 static int cpu_up_force(void)
 {
-	int cpu_id = armv7_get_cpuid();
-	int id = 0;
-
 	/* Using the SGI(GIC), and calls to the wakeup of the CORE FIQ. */
-	for (id = 0; id < 4; id++) {
-		if (id != cpu_id) {
-			g_fiq_flag &= ~(1 << id);
-			delay_ms(0xFFFF);
-		}
-	}
+	g_fiq_flag = 0;
+	/* wake up cpux (send event) */
+	__asm__ __volatile__ ("sev");
 
 	return 0;
 }
@@ -78,18 +75,13 @@ static int cpu_up_force(void)
 static int cpu_down_force(void)
 {
 	int cpu_id = armv7_get_cpuid();
-	int id = 0;
 
 	g_smc_id = 0x82000009;
 
 	/* Using the SGI(GIC), and calls to the idle of the CORE FIQ. */
-	for (id = 0; id < 4; id++) {
-		if (id != cpu_id) {
-			g_fiq_flag |= (1 << id);
-			s5p4418_cpuidle(id, (id + SGI_IRQ_8));
-			delay_ms(0xFFFF);
-		}
-	}
+	g_fiq_flag = (0xF & ~(1 << cpu_id));
+	s5p4418_cpuidle(g_fiq_flag, SGI_IRQ_8);
+	delay_ms(0xFFFF);
 
 	return 0;
 }
