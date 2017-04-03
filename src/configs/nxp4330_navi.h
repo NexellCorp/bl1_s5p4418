@@ -22,7 +22,7 @@
 #include <freq.h>
 
 /* system clock macro */
-#define CONFIG_S5P_PLL0_FREQ			533
+#define CONFIG_S5P_PLL0_FREQ			800
 #define CONFIG_S5P_PLL1_FREQ			800
 #define CONFIG_S5P_PLL2_FREQ			614
 #define CONFIG_S5P_PLL3_FREQ			800
