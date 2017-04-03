@@ -170,7 +170,7 @@ bin:
 	$(Q)$(MAKEBIN) -O binary $(DIR_TARGETOUTPUT)/$(TARGET_NAME).elf $(DIR_TARGETOUTPUT)/$(TARGET_NAME).bin
 
 bingen:
-	./tools/bingen -c $(CHIPNAME) -i $(DIR_TARGETOUTPUT)/$(TARGET_NAME).bin -o $(DIR_TARGETOUTPUT)/bl1-emmcboot.bin -l 0xFFFF0000 -e 0xFFFF0000 -d SDMMC -u $(DEVICE_PORT) -a 0x8000
+	./tools/bingen -c $(CHIPNAME) -i $(DIR_TARGETOUTPUT)/$(TARGET_NAME).bin -o $(DIR_TARGETOUTPUT)/bl1-emmcboot.bin -l 0xFFFF0000 -e 0xFFFF0000 -d SDMMC -u $(DEVICE_PORT) -a 0x10200
 
 ifeq ($(OS),Windows_NT)
 	@if exist $(DIR_OBJOUTPUT)			\
