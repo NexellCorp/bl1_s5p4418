@@ -16,7 +16,7 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 #include "nx_pyrope.h"
- 
+
 #define SRAM_BASEADDR	0xFFFF0000
 #define SRAM_SIZE	(32*1024)
 
@@ -29,7 +29,7 @@
 
 /*
  * Monitor Mode - Exception Vetor table
- * 
+ *
  */
 .align 8
 .global monitor_vectors

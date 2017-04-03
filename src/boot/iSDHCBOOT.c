@@ -686,7 +686,7 @@ CBOOL __init NX_SDMMC_Init(SDXCBOOTSTATUS *pSDXCBootStatus)
 
 	ret = NX_SDMMC_GetClkParam(&clkInfo);
 	if (ret == CFALSE)
-		printf("get clock param fail.\r\n");
+		dprintf("get clock param fail.\r\n");
 #endif
 
 	// CLKGEN
