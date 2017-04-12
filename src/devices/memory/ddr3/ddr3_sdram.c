@@ -946,6 +946,28 @@ wr_err_ret:
 
 #endif  // #if (DDR_NEW_LEVELING_TRAINING == 1)
 
+
+/*************************************************************
+ * Secure Boot Process Policy
+ * This value calculates the memory base address according to Secure Boot.
+ *************************************************************/
+static void membase_calcurate(int* CS0, int* CS1)
+{
+	int size = g_ddr3_info.sdram_size;
+
+	/* check the memory total size */
+	if (size == 1024) {		// 1GB
+		*CS0 = (DDR3_CS0_BASEADDR + (0x31000000 >> 24));
+		*CS1 = (DDR3_CS1_BASEADDR + (0x31000000 >> 24));
+	} else if (size == 512) {	// 512MB
+		*CS0 = (DDR3_CS0_BASEADDR + (0x51000000 >> 24));
+		*CS1 = (DDR3_CS1_BASEADDR + (0x51000000 >> 24));
+	} else {			// 2GB or unknown
+		*CS0 = DDR3_CS0_BASEADDR;
+		*CS1 = DDR3_CS1_BASEADDR;
+	}
+}
+
 static int resetgen_sequence(void)
 {
 	int retry = 0x10;
@@ -989,6 +1011,8 @@ int ddr3_initialize(unsigned int is_resume)
 	unsigned int DDR_AL1, DDR_AL2;
 	unsigned int DDR3_LvlTr;
 	unsigned int temp;
+
+	int membase0, membase1;
 
 	is_resume = is_resume;
 
@@ -1254,14 +1278,17 @@ int ddr3_initialize(unsigned int is_resume)
 			(0x0    <<   3) |					// [    3] io_pd_con - I/O Powerdown Control in Low Power Mode(through LPI)
 			(0x0    <<   1));					// [ 2: 1] clk_ratio. Clock ratio of Bus clock to Memory clock. 0x0 = 1:1, 0x1~0x3 = Reserved
 
+	/* calcurate for memory base address */
+	membase_calcurate(&membase0, &membase1);
+
 	/* [Drex] Step 10. Memory Base Config */
 	mmio_write_32(&g_drex_reg->MEMBASECONFIG[0],
-			(DDR3_CS0_BASEADDR <<  16) |				// chip_base[26:16]. AXI Base Address. if 0x20 ==> AXI base addr of memory : 0x2000_0000
+			(membase0          <<  16) |				// chip_base[26:16]. AXI Base Address. if 0x20 ==> AXI base addr of memory : 0x2000_0000
 			(DDR3_CS_MEMMASK   <<   0));				// 256MB:0x7F0, 512MB: 0x7E0, 1GB:0x7C0, 2GB: 0x780, 4GB:0x700
 
 #if (DDR3_CS_NUM > 1)
 	mmio_write_32(&g_drex_reg->MEMBASECONFIG[1],
-			(DDR3_CS1_BASEADDR <<  16) |				// chip_base[26:16]. AXI Base Address. if 0x40 ==> AXI base addr of memory : 0x4000_0000, 16MB unit
+			(membase1          <<  16) |				// chip_base[26:16]. AXI Base Address. if 0x40 ==> AXI base addr of memory : 0x4000_0000, 16MB unit
 			(DDR3_CS_MEMMASK   <<   0));				// chip_mask[10:0]. 2048 - chip size
 #endif
 
