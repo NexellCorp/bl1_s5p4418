@@ -1244,6 +1244,7 @@ static int __init sdmmc_read(SDXCBOOTSTATUS *pSDXCBootStatus, unsigned int devad
  */
 unsigned int __init sdmmc_self_boot(void)
 {
+	unsigned int bl1_loadsize = *((unsigned int*)(0xFFFF0000 + 0x44));
 	struct NX_SecondBootInfo SBI;
 
 	SDXCBOOTSTATUS lSDXCBootStatus;
@@ -1264,7 +1265,7 @@ unsigned int __init sdmmc_self_boot(void)
 	SBI.DEVICEADDR
 		= BL1_SDMMCBOOT_DEVADDR + BL1_SDMMCBOOT_LOADSIZE;
 	SBI.LOADSIZE
-		= BL1_SDMMCBOOT_LOADSIZE - BL1_STACKSIZE;
+		= bl1_loadsize - BL1_SDMMCBOOT_LOADSIZE;
 	ret = sdmmc_read(pSDXCBootStatus,
 		SBI.DEVICEADDR, SBI.LOADADDR, SBI.LOADSIZE);
 
