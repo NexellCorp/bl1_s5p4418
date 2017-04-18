@@ -19,6 +19,7 @@
 
 #include <nx_usbotg.h>
 #include <iUSBBOOT.h>
+#include <nx_bootheader.h>
 
 #ifdef DEBUG
 #define dprintf(x, ...) printf(x, ...)
@@ -443,7 +444,7 @@ static void __init nx_usb_int_bulkout(USBBOOTSTATUS * pUSBBootStatus, struct NX_
 				pUSBBootStatus->RxBuffAddr    = (U8*)pTBI->LOADADDR;
 				pUSBBootStatus->iRxSize = pTBI->LOADSIZE;
 				printf("USB Load Address = 0x%08X Launch Address = 0x%08X, size = %d bytes\r\n",
-						(S32)pUSBBootStatus->RxBuffAddr , pTBI->LAUNCHADDR, pUSBBootStatus->iRxSize );
+						(S32)pUSBBootStatus->RxBuffAddr , pTBI->LAUNCHADDR, pUSBBootStatus->iRxSize);
 			}
 			else
 			{
@@ -876,3 +877,23 @@ int __init usb_self_boot(void)
 	return iUSBBOOT(&SBI);
 }
 #endif
+
+void secure_usbboot(struct NX_SecondBootInfo *tbi)
+{
+	struct nx_bootheader *tbl2;
+	int  loadaddr = 0xB0FE0000;
+	int* downaddr = 0;
+
+	/* for boot loader level 2 */
+	tbl2  = (struct nx_bootheader *)tbi->LOADADDR;
+	/* usb downloader adddrss for bl2 */
+	downaddr  = (int*)(&tbl2->tbbi._reserved3);
+	*downaddr = (int )(tbi->LOADADDR);
+
+	memcpy((void*)loadaddr, (void*)(tbl2), (tbl2->tbbi.loadsize
+		+ sizeof(struct nx_bootheader)));
+
+	/* set the bl2 load/launch address (fix) */
+	tbi->LOADADDR   = 0xB0FE0000;
+	tbi->LAUNCHADDR = 0xB0FE0400;
+}

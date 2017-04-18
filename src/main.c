@@ -159,6 +159,9 @@ void __init main(void)
 		case BOOT_FROM_USB:
 			SYSMSG("Loading from usb...\r\n");
 			ret = iUSBBOOT(pTBI);	// for USB boot
+#if (SUPPORT_KERNEL_3_4 == 0)
+			secure_usbboot(pTBI);
+#endif
 			break;
 #endif
 
@@ -175,6 +178,7 @@ void __init main(void)
 	ret = crc_check((void*)pTBI->LOADADDR, (unsigned int)pTBI->LOADSIZE
 			,(unsigned int)pTBI->DBI.SDMMCBI.CRC32);
 #endif
+
 	/* step 11. jump the next bootloader (thirdboot) */
 	if (ret) {
 		void (*pLaunch)(unsigned int, unsigned int)
