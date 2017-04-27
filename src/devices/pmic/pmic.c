@@ -19,6 +19,10 @@
 #include <sysheader.h>
 #include <pmic.h>
 
+/* External Function Define */
+extern void DMC_Delay(int milisecond);
+extern void pmic_board_init(void);
+
 void pmic_initalize(void)
 {
 	/* pmic (power managemnt ic) initialize */
