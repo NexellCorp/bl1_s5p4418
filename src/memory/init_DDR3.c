@@ -88,6 +88,43 @@ U32 g_GateCode;
 U32 g_RDvwmc;
 U32 g_WRvwmc;
 
+struct dram_device_info g_ddr3_info;
+
+static void get_dram_information(struct dram_device_info *me)
+{
+	int cs_num = pSBI->DII.ChipNum;
+	int byte = 8;
+
+	/* Nexell Step XX. Memory Address (for Write Training (DRAM)) */
+	me->bank_num	= (3);
+	me->row_num	= (pSBI->DII.ChipRow + 12);
+	me->column_num	= (pSBI->DII.ChipCol +  7);
+
+	me->column_size	= (1 << me->column_num)/byte;				// Unit : Byte
+	me->row_size	= (1 << me->row_num);
+	me->bank_size	= (me->row_size * me->column_size);
+	me->chip_size	= (((me->bank_size * (1 << me->bank_num))
+				* 16)/ 1024);					// Unit: Byte
+	me->cs_persize  = (me->chip_size * (32/16)) / 1024;			// Unit: MB
+	me->sdram_size	= (me->chip_size * (cs_num * 32 / 16)) / 1024;		// Unit: MB
+#if 0
+	MEMMSG("############## [SDRAM] Memory Specification ###############\r\n");
+	MEMMSG("[Bit] Bank Address   : %d \r\n", me->bank_num);
+	MEMMSG("[Bit] Column Address : %d \r\n", me->column_num);
+	MEMMSG("[Bit] Row Address    : %d \r\n", me->row_num);
+	MEMMSG("[Bit] Data Line      : %d \r\n", 16);
+	MEMMSG("[BYTE] Column    Size: %d \r\n", me->column_size);
+	MEMMSG("[BYTE] Row(Page) Size: %d \r\n", me->row_size);
+	MEMMSG("[BYTE] Bank      Size: %d \r\n", me->bank_size);
+#if 0
+//	MEMMSG("[MB]   Chip      Size: %d \r\n", (me->chip_size/1024));
+	MEMMSG("[MB]   CS Per    Size: %d \r\n", me->cs_persize);
+	MEMMSG("[MB]   SDRAM     Size: %d \r\n", me->sdram_size);
+#endif
+	MEMMSG("############################################################\r\n");
+#endif
+}
+
 void DMC_Delay(int milisecond)
 {
 	register volatile int count;
@@ -974,7 +1011,7 @@ CBOOL DDR_Read_DQ_Calibration(U32 isResume)
 	C_Offset = Offset;
 #endif // #if (DDR_READ_DQ_COMPENSATION_EN == 1)
 
-	if (isResume == 1) 
+	if (isResume == 1)
 		C_Offset = g_RDvwmc;
 	else
 		g_RDvwmc = C_Offset;
@@ -1185,7 +1222,7 @@ CBOOL DDR_Write_DQ_Calibration(U32 isResume)
 		ClearIO32( &pReg_Drex->WRTRA_CONFIG,    (0x1 << 0) );		// write_training_en[0] = 0
 
 		/* - Checking the calibration failure status.
-		  * - After setting PHY_CON5(0x14) to "0xC", check whether PHY_CON21 is zero or nor. 
+		  * - After setting PHY_CON5(0x14) to "0xC", check whether PHY_CON21 is zero or nor.
 		  *   If PHY_CON21(0x58) is zero, calibration is normally complete.
 		  */
 		WriteIO32(&pReg_DDRPHY->PHY_CON[5], VWM_FAIL_STATUS);      // readmodecon[7:0] = 0xC
@@ -1252,6 +1289,30 @@ wr_err_ret:
 #endif  // #if (DDR_WRITE_DQ_CALIB_EN == 1)
 #endif  // #if (DDR_NEW_LEVELING_TRAINING == 1)
 
+/*************************************************************
+ * Secure Boot Process Policy
+ * This value calculates the memory base address according to Secure Boot.
+ *************************************************************/
+static void membase_calcurate(int* CS0, int* CS1)
+{
+	int membase0 = 0x00;
+	int membase1 = (g_ddr3_info.cs_persize >> 24);
+	int size = g_ddr3_info.sdram_size;
+
+	/* check the memory total size */
+	if (size == 1024) {		// 1GB
+		*CS0 = (membase0 + (0x31000000 >> 24));
+		*CS1 = (membase1 + (0x31000000 >> 24));
+	} else if (size == 512) {	// 512MB
+		*CS0 = (membase0 + (0x51000000 >> 24));
+		*CS1 = (membase1 + (0x51000000 >> 24));
+	} else {			// 2GB or unknown
+		*CS0 = membase0;
+		*CS1 = membase1;
+	}
+	printf("MEMBASE0: 0x%08X, MEMBASE1: 0x%08X \r\n", *CS0, *CS1);
+}
+
 void init_DDR3(U32 isResume)
 {
 	union SDRAM_MR MR0, MR1, MR2, MR3;
@@ -1259,12 +1320,22 @@ void init_DDR3(U32 isResume)
 	U32 lock_div4;
 	U32 temp;
 
+	int membase0, membase1;
+	int chipmask, cs_persize;
+
 	MR0.Reg = 0;
 	MR1.Reg = 0;
 	MR2.Reg = 0;
 	MR3.Reg = 0;
 
 	MEMMSG("\r\nDDR3 POR Init Start\r\n");
+
+	/* Nexell Step XX. Get DRAM Information. */
+	get_dram_information((struct dram_device_info*)&g_ddr3_info);
+
+	/*Calculation to find the chip mask. */
+	cs_persize = (g_ddr3_info.cs_persize * 1024 * 1024);			// Unit : Byte
+	chipmask = (0x800 - (cs_persize >> 24));
 
 	// Step 1. reset (Min : 10ns, Typ : 200us)
 	ClearIO32(&pReg_RstCon->REGRST[0], (0x7 << 26));	//Reset Pin - High
@@ -1732,9 +1803,12 @@ void init_DDR3(U32 isResume)
 	ClearIO32( &pReg_Drex->PHYCONTROL[0],   (0x1    <<   3) );      // Force DLL Resyncronization
 
 
+	/* calcurate for memory base address */
+	membase_calcurate(&membase0, &membase1);
+
 	// Step 11. MemBaseConfig
 	WriteIO32( &pReg_Drex->MEMBASECONFIG[0],
-			(0x51        <<  16) |                   // chip_base[26:16]. AXI Base Address. if 0x20 ==> AXI base addr of memory : 0x2000_0000
+			(membase0        <<  16) |                   // chip_base[26:16]. AXI Base Address. if 0x20 ==> AXI base addr of memory : 0x2000_0000
 #if 0
 #if (CFG_NSIH_EN == 0)
 			(chip_mask  <<   0));                   // 256MB:0x7F0, 512MB: 0x7E0, 1GB:0x7C0, 2GB: 0x780, 4GB:0x700
@@ -1742,23 +1816,22 @@ void init_DDR3(U32 isResume)
 	(pSBI->DII.ChipMask <<   0));           // chip_mask[10:0]. 1GB:0x7C0, 2GB:0x780
 #endif
 #endif
-	(0x7E0 <<   0));
+	(chipmask <<   0));
 
 #if (CFG_NSIH_EN == 0)
 #if (_DDR_CS_NUM > 1)
 	{
 		WriteIO32( &pReg_Drex->MEMBASECONFIG[1],
-//			(chip_base1 <<  16) |               // chip_base[26:16]. AXI Base Address. if 0x40 ==> AXI base addr of memory : 0x4000_0000, 16MB unit
-			(0x040      <<  16) |               // chip_base[26:16]. AXI Base Address. if 0x40 ==> AXI base addr of memory : 0x4000_0000, 16MB unit
-			(chip_mask  <<   0));               // chip_mask[10:0]. 2048 - chip size
+//			(chip_base1 <<  16) |				// chip_base[26:16]. AXI Base Address. if 0x40 ==> AXI base addr of memory : 0x4000_0000, 16MB unit
+			(0x040      <<  16) |				// chip_base[26:16]. AXI Base Address. if 0x40 ==> AXI base addr of memory : 0x4000_0000, 16MB unit
+			(chip_mask  <<   0));				// chip_mask[10:0]. 2048 - chip size
 	}
 #endif
 #else
-	if(pSBI->DII.ChipNum > 1)
-	{
+	if (pSBI->DII.ChipNum > 1) {
 		WriteIO32( &pReg_Drex->MEMBASECONFIG[1],
-				(pSBI->DII.ChipBase <<  16) |       // chip_base[26:16]. AXI Base Address. if 0x40 ==> AXI base addr of memory : 0x4000_0000, 16MB unit
-				(pSBI->DII.ChipMask <<   0));       // chip_mask[10:0]. 2048 - chip size
+				(membase1 <<  16) |			// chip_base[26:16]. AXI Base Address. if 0x40 ==> AXI base addr of memory : 0x4000_0000, 16MB unit
+				(chipmask << 0));			// chip_mask[10:0]. 2048 - chip size
 	}
 #endif
 

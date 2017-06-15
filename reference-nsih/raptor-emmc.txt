@@ -49,7 +49,7 @@ FFFF0000 // 0x048 : Load Address for 2ndboot.
 FFFF0000 // 0x04C : Launch Address for 2ndboot.
 
 00000002 // 0x050
-03000000 // 0x054	Boot From USB	24bit position - 0: USB, 1: SPI, 2:NAND, 3: SDMMC, 4: SDFS
+03000000 // 0x054	Boot From SDMMC	24bit position - 0: USB, 1: SPI, 2:NAND, 3: SDMMC, 4: SDFS
 00000000 // 0x058
 
 //------------------------------------------------------------------------------
@@ -65,7 +65,7 @@ FFFF0000 // 0x04C : Launch Address for 2ndboot.
 
 00000601 // 0x074 : CPU		PLL1	/FCLK:800	/HCLK:200
 0000020B // 0x078 : BUS		PLL3	/BCLK:400	/PCLK:200
-00208000 // 0x07C : MEM		PLL0	/MDCLK:800	MCLK:800	/MBCLK:400	/MPCLK:200
+00208000 // 0x07C : MEM		PLL0	/MDCLK:800	/MCLK:800	/MBCLK:400	/MPCLK:200
 0000020B // 0x080 : GR3D	PLL3	/GR3DBCLK:400
 0000020B // 0x084 : MPEG	PLL3	/MPEGBCLK:400	/MPEGPCLK:200
 
@@ -73,8 +73,8 @@ FFFF0000 // 0x04C : Launch Address for 2ndboot.
 // MCU-D registers
 //------------------------------------------------------------------------------
 // Mem Controller Configuration
-03100201 // 0x088	/Chip Num:1	/Chip Row:14	/BusWidth:16	/Chip Col:10
-002007E0 // 0x08C	/Mem size:(2^14)x(2^10)x(8bank)x4, 4 => (32bit bus_width / 8bit)
+03100301 // 0x088	/Chip Num:1	/Chip Row:15	/BusWidth:16	/Chip Col:10
+004007C0 // 0x08C	/Mem size:(2^15)x(2^10)x(8bank)x4, 4 => (32bit bus_width / 8bit)
 06000B08 // 0x090	/CWL:8	/CL:11	/MR1_AL:0	/MR0_WR:6
 
 // DDR PHY delay timing Configuration
@@ -84,12 +84,12 @@ FFFF0000 // 0x04C : Launch Address for 2ndboot.
 // DDR AC Timing Configuration
 0000401B // 0x09C	/tPZQ:128000us
 00000618 // 0x0A0	/Refresh Interval:7.8us
-4036650E // 0x0A4	/tRFC:160ns(tCK)	/tRRD:7.5ns(tCK)	/tRP:13.75ns(tCK)	/tRCD:13.75ns(tCK)	/tRC:48.75ns(tCK)	/tRAS:35ns(tCK)
+6836650E // 0x0A4	/tRFC:260ns(tCK)	/tRRD:7.5ns(tCK)	/tRP:13.75ns(tCK)	/tRCD:13.75ns(tCK)	/tRC:48.75ns(tCK)	/tRAS:35ns(tCK)
 3631880B // 0x0A8	/tWTR:7.5ns(tCK)	/tWR:15ns(tCK)	/tRTP:7.5ns(tCK)
 41000A26 // 0x0AC	/tFAW:40ns(tCK)	/tXSR:256ns(tCK)	/tXP:24ns(tCK)	/tCKE:5ns(tCK)
 
 // DDR3 device - Drive strength value.
-00020102 // 0x0B0	[23:16] MR1_RTT_Nom - 001: RZQ/4, 010: RZQ/2, 011:	RZQ/6, 100: RZQ/12, 101: RZQ/8, [15:0] MR1_ODS - 0: RZQ/6, 1 :	RZQ/7, [7:0] MR2_RTT_WR - 0: ODT disable, 1: RZQ/4, 2: RZQ/2
+00020102 // 0x0B0	[23:16] MR1_RTT_Nom - 001: RZQ/4, 010: RZQ/2, 011:RZQ/6, 100: RZQ/12, 101: RZQ/8, [15:0] MR1_ODS - 0: RZQ/6, 1 :	RZQ/7, [7:0] MR2_RTT_WR - 0: ODT disable, 1: RZQ/4, 2: RZQ/2
 
 // DDR PHY Controller - Drive strength value.
 06060606 // 0x0B4	[31:24] Byte3, [23:16] Byte2, [15:8] Byte1, [7:0]Byte0 - 240ohm / (n + 1), n = (1 ~ 7)

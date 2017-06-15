@@ -125,4 +125,17 @@ union SDRAM_MR {
 	volatile U16 Reg;
 };
 
+struct dram_device_info {
+	unsigned char bank_num;
+	unsigned char row_num;
+	unsigned char column_num;
+
+	unsigned int column_size;
+	unsigned int row_size;
+	unsigned long bank_size;
+	unsigned long chip_size;
+	unsigned long cs_persize;
+	unsigned long sdram_size;
+};
+
 #endif	// __NX_DDR3_SDRAM_H__
