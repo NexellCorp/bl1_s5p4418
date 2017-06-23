@@ -1452,6 +1452,7 @@ int ddr3_initialize(unsigned int is_resume)
 	/* temporary code according to suspend/resume policy. */
 //	if (is_resume == 0) {
 	{
+	#if (DDR_GATE_LEVELING_EN == 1)
 		/*
 		   Step 32-2. Gate Leveling
 		  * (It should be used only for DDR3 (800Mhz))
@@ -1460,18 +1461,23 @@ int ddr3_initialize(unsigned int is_resume)
 			if (ddr_gate_leveling() < 0)
 				return -1;
 		}
+	#endif
 
+	#if (DDR_READ_DQ_CALIB_EN == 1)
 		/* Step 32-3. Read DQ Calibration */
 		if (DDR3_LvlTr & LVLTR_RD_CAL) {
 			if (ddr_read_dq_calibration() < 0)
 				return -1;
 		}
+	#endif
 
+	#if (DDR_WRITE_DQ_CALIB_EN == 1)
 		/* Step 32-5. Write DQ Calibration */
 		if (DDR3_LvlTr & LVLTR_WR_CAL) {
 			if (ddr_write_dq_calibration() < 0)
 				return -1;
 		}
+	#endif
 	}
 #endif	// Skip Training
 
