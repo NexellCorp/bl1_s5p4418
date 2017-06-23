@@ -32,7 +32,7 @@
 						((1 - 1) << DVO0_BITPOS)	 | \
 	                			((4 - 1) << DVO1_BITPOS))
 // BUSDVOREG
-#define CONFIG_S5P_PLLx_DVO1			((CLKSRC_PLL_3 << CLKSRC_BITPOS) | \
+#define CONFIG_S5P_PLLx_DVO1			((CLKSRC_PLL_0 << CLKSRC_BITPOS) | \
 	                			((2 - 1) << DVO0_BITPOS)	 | \
 	                			((2 - 1) << DVO1_BITPOS))
 // MEMDVOREG
@@ -42,12 +42,12 @@
 						((2 - 1) << DVO2_BITPOS) 	 | \
 						((2 - 1) << DVO3_BITPOS))
 
-#define CONFIG_S5P_PLLx_DVO3			((CLKSRC_PLL_3 << CLKSRC_BITPOS) | \
+#define CONFIG_S5P_PLLx_DVO3			((CLKSRC_PLL_0 << CLKSRC_BITPOS) | \
 						((2 - 1) << DVO0_BITPOS)	 | \
 						((2 - 1) << DVO1_BITPOS))
 
 
-#define CONFIG_S5P_PLLx_DVO4			((CLKSRC_PLL_3 << CLKSRC_BITPOS) | \
+#define CONFIG_S5P_PLLx_DVO4			((CLKSRC_PLL_0 << CLKSRC_BITPOS) | \
 						((2 - 1) << DVO0_BITPOS)	 | \
 						((2 - 1) << DVO1_BITPOS))
 
