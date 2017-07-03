@@ -67,6 +67,8 @@
 #include <nxp4330_navi.h>
 #elif defined(SMART_VOICE)
 #include <nxp4330_smart_voice.h>
+#elif defined(ZH_DRAGON)
+#include <nxp4330_zh_dragon.h>
 #endif
 #endif
 
