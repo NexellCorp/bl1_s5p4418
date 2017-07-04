@@ -101,6 +101,28 @@ static void get_dram_information(struct dram_device_info *me)
 #endif
 }
 
+#if (SUPPORT_KERNEL_3_4 == 0)
+void ddr3_save_information(void)
+{
+	unsigned int value = 0;
+
+	/*
+	  * memory infomration
+	  * (2bit << 16) | (4bit << 12) | (4bot << 8) | (3bit << 4)
+	  * | (1bit << 2) | (2bit << 0)
+	  */
+	value = ((CONFIG_DRAM_MR2_RTT_WR << 16) | (nCWL << 12) | (MR1_nAL << 8) |
+		(CONFIG_DRAM_MR1_RTT_Nom << 4) | (CONFIG_DRAM_MR1_ODS << 2) |
+		(DDR3_CS_NUM << 0));
+
+	mmio_write_32(&pReg_Alive->ALIVEPWRGATEREG, 1);
+
+	/* Save the Memory information for ATF suspend */
+	mmio_write_32(&pReg_Alive->ALIVESCRATCHRST6, 0xFFFFFFFF);
+	mmio_write_32(&pReg_Alive->ALIVESCRATCHSET6, value);
+}
+#endif
+
 void DMC_Delay(int milisecond)
 {
 	register volatile int count;
@@ -134,17 +156,16 @@ void enter_self_refresh(void)
 		nop();
 	}
 
-	/* Send PALL command */
+	/* Step 01. Send PALL Command */
 	send_directcmd(SDRAM_CMD_PALL, 0, (SDRAM_MODE_REG)CNULL, CNULL);
 #if (DDR3_CS_NUM > 1)
 	send_directcmd(SDRAM_CMD_PALL, 1, (SDRAM_MODE_REG)CNULL, CNULL);
 #endif
 	DMC_Delay(100);
 
-	/* ODT OFF */
+	/* Step 02. (DRAM) ODT OFF */
 	MR.Reg          = 0;
 	MR.MR2.RTT_WR   = 0; 							// 0: disable, 1: RZQ/4 (60ohm), 2: RZQ/2 (120ohm)
-//	MR.MR2.RTT_WR   = 2;							// 0: disable, 1: RZQ/4 (60ohm), 2: RZQ/2 (120ohm)
 	MR.MR2.SRT      = 0;							// self refresh normal range, if (ASR == 1) SRT = 0;
 	MR.MR2.ASR      = 1;							// auto self refresh enable
 	MR.MR2.CWL      = (nCWL - 5);
@@ -154,6 +175,7 @@ void enter_self_refresh(void)
 	send_directcmd(SDRAM_CMD_MRS, 1, SDRAM_MODE_REG_MR2, MR.Reg);
 #endif
 
+	/* Step 03. (DRAM) Set the Drive Strength */
 	MR.Reg          = 0;
 	MR.MR1.DLL      = 1;							// 0: Enable, 1 : Disable
 	MR.MR1.AL       = MR1_nAL;
@@ -173,54 +195,49 @@ void enter_self_refresh(void)
 	send_directcmd(SDRAM_CMD_MRS, 1, SDRAM_MODE_REG_MR1, MR.Reg);
 #endif
 
-	/* Enter self-refresh command */
+	/* Step 04. Enter Self-Refresh Command */
 	send_directcmd(SDRAM_CMD_REFS, 0, (SDRAM_MODE_REG)CNULL, CNULL);
 #if (DDR3_CS_NUM > 1)
 	send_directcmd(SDRAM_CMD_REFS, 1, (SDRAM_MODE_REG)CNULL, CNULL);
 #endif
 
-#if 1
+	/*  Step 05. Check the Busy State */
 	do {
 		nTemp = ( mmio_read_32(&g_drex_reg->CHIPSTATUS) & nChips );
 	} while( nTemp );
 
+	/* Step 06. Check the Sel-Refresh State (FSM) */
 	do {
 		nTemp = ( (mmio_read_32(&g_drex_reg->CHIPSTATUS) >> 8) & nChips );
 	} while( nTemp != nChips );
-#else
-
-	// for self-refresh check routine.
-	while( 1 ) {
-		nTemp = mmio_read_32(&g_drex_reg->CHIPSTATUS);
-		if (nTemp)
-			MEMMSG("ChipStatus = 0x%04x\r\n", nTemp);
-	}
-#endif
-
+#if 0
+	/* Step 07. Disable the Auto refresh Counter */
 	mmio_clear_32(&g_drex_reg->CONCONTROL,  (0x1 << 5));			// afre_en[5]. Auto Refresh Counter. Disable:0, Enable:1
+#endif
+	/* Step  08. Disable the Dynamic Clock */
 	mmio_set_32  (&g_drex_reg->MEMCONTROL,    (0x1 << 0));			// clk_stop_en[0] : Dynamic Clock Control   :: 1'b0  - Always running
 
-	DMC_Delay(1000 * 3);
 }
 
 void exit_self_refresh(void)
 {
 	union SDRAM_MR MR;
 
-	// Step 10    ACK, ACKB on
+	/* Step  01. Enable the Dynamic Clock */
 	mmio_clear_32(&g_drex_reg->MEMCONTROL,  (0x1 << 0));			// clk_stop_en[0] : Dynamic Clock Control   :: 1'b0  - Always running
 	DMC_Delay(10);
 
-	// Step 52 Auto refresh counter enable
+	/* Step 02. Enable the Auto refresh counter */
 	mmio_set_32(&g_drex_reg->CONCONTROL,    (0x1 << 5));			// afre_en[5]. Auto Refresh Counter. Disable:0, Enable:1
 	DMC_Delay(10);
 
-	/* Send PALL command */
+	/* Step 03. Send PALL command */
 	send_directcmd(SDRAM_CMD_PALL, 0, (SDRAM_MODE_REG)CNULL, CNULL);
 #if (DDR3_CS_NUM > 1)
 	send_directcmd(SDRAM_CMD_PALL, 1, (SDRAM_MODE_REG)CNULL, CNULL);
 #endif
 
+	/* Step 04. Set the Drive Strength */
 	MR.Reg          = 0;
 	MR.MR1.DLL      = 0;							// 0: Enable, 1 : Disable
 	MR.MR1.AL       = MR1_nAL;
@@ -239,7 +256,8 @@ void exit_self_refresh(void)
 #if (DDR3_CS_NUM > 1)
 	send_directcmd(SDRAM_CMD_MRS, 1, SDRAM_MODE_REG_MR1, MR.Reg);
 #endif
-	/* ODT On */
+
+	/* Step 05. Set the ODT On */
 	MR.Reg          = 0;
 	MR.MR2.RTT_WR   = CONFIG_DRAM_MR2_RTT_WR;
 	MR.MR2.SRT      = 0;							// self refresh normal range
@@ -251,13 +269,14 @@ void exit_self_refresh(void)
 	send_directcmd(SDRAM_CMD_MRS, 1, SDRAM_MODE_REG_MR2, MR.Reg);
 #endif
 
-	/* Exit self-refresh command */
+	/* Step 06. Exit the Self-Refresh Command */
 	send_directcmd(SDRAM_CMD_REFSX, 0, (SDRAM_MODE_REG)CNULL, CNULL);
 #if (DDR3_CS_NUM > 1)
 	send_directcmd(SDRAM_CMD_REFSX, 1, (SDRAM_MODE_REG)CNULL, CNULL);
 #endif
 
 #if 0
+	/* Step 07. Check the Self-Refresh State (FSM) */
 	while( mmio_read_32(&g_drex_reg->CHIPSTATUS) & (0xF << 8) ) {
 		nop();
 	}
