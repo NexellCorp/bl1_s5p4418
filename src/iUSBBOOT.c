@@ -19,6 +19,7 @@
 
 #include <nx_usbotg.h>
 #include <iUSBBOOT.h>
+#include <nx_bootheader.h>
 
 #ifdef DEBUG
 #define dprintf(x, ...) printf(x, ...)
@@ -819,3 +820,48 @@ CBOOL iUSBBOOT(struct NX_SecondBootInfo *pTBI)
 
 	return CTRUE;
 }
+
+static void *memcpy(void *dest, const void *src, int n)
+{
+	const char *s = src;
+	char *d = dest;
+
+	while (n--)
+		*d++ = *s++;
+
+	return dest;
+}
+
+#define BL2_LOADADDR	0xB0FE0000
+
+void bl2_usbboot(struct NX_SecondBootInfo *tbi)
+{
+	struct nx_bootheader *bl2;
+	char* image_addr = (tbi->LOADADDR + sizeof(struct nx_bootheader));
+	char* header_addr = (tbi->LOADADDR);
+	int* down_addr = 0;
+	int  encrypted = (pReg_ClkPwr->SYSRSTCONFIG & (1<<14));
+
+	if (encrypted) {
+		Decrypt((unsigned int *)header_addr, (unsigned int *)header_addr,
+			sizeof(struct nx_bootheader));
+	}
+
+	/* for boot loader level 2 */
+	bl2  = (struct nx_bootheader *)header_addr;
+	if (encrypted) {
+		Decrypt((unsigned int *)image_addr, (unsigned int *)image_addr,
+			bl2->tbbi.loadsize);
+	}
+	memcpy((void*)BL2_LOADADDR, (void*)bl2, bl2->tbbi.loadsize);
+
+	bl2  = (struct nx_bootheader *)BL2_LOADADDR;
+	/* usb downloader adddrss for bl2 */
+	down_addr  = (int*)(&bl2->tbbi._reserved3);
+	*down_addr = (int )(tbi->LOADADDR);
+
+	/* set the bl2 load/launch address (fix) */
+	tbi->LOADADDR   = BL2_LOADADDR;
+	tbi->LAUNCHADDR = (BL2_LOADADDR + sizeof(struct nx_bootheader));
+}
+

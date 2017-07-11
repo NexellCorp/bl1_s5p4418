@@ -57,6 +57,7 @@ extern void run_secure_svc(U32 jumpaddr);
 extern void run_bl2(U32 jumpaddr);
 
 extern int CRC_Check(void* buf, unsigned int size, unsigned int ref_crc);
+extern void bl2_usbboot(struct NX_SecondBootInfo *tbi);
 
 void delay_ms(int ms)
 {
@@ -218,6 +219,7 @@ void BootMain(void)
 	case BOOT_FROM_USB:
 		SYSMSG("Loading from usb...\r\n");
 		ret = iUSBBOOT(pTBI);	// for USB boot
+		bl2_usbboot(pTBI);
 		break;
 #endif
 
