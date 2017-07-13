@@ -45,20 +45,20 @@ void l2cache_set_enb(unsigned int enb)
 
 static int __init check_bl1_size(void)
 {
-	if (pSBI->LOADSIZE <= (SRAM_MAXSIZE - BL1_STACKSIZE)) {
+	if (psbi->load_size <= (SRAM_MAXSIZE - BL1_STACKSIZE)) {
 		return 0;
 	} else {
 		/* Do not exceed the 28K (32K - Stack SIze(3KB). */
 		ERROR("BL1 is, must not exceed the maximum size. (28KB <= %d Byte)",
-			(pSBI->LOADSIZE));
+			(psbi->load_size));
 		return -1;
 	}
 }
 
 void __init main(void)
 {
-	struct NX_SecondBootInfo TBI;
-	struct NX_SecondBootInfo *pTBI = &TBI; // third boot info
+	struct sbi_header tbi;
+	struct sbi_header *ptbi = &tbi;
 	unsigned int serial_ch = CONFIG_S5P_SERIAL_INDEX;
 	unsigned int is_resume = 0;
 	int ret = 0;
@@ -73,7 +73,7 @@ void __init main(void)
 	/* SD/eMMC Card Detect Ready */
 	delay_ms(0x100);
 
-	/* step xx. must be self loading*/
+	/* step xx. must be self-loading*/
 	nxp4330_self_boot();
 #endif
 
@@ -134,7 +134,7 @@ void __init main(void)
 	mmio_write_32(&pReg_Alive->ALIVEPWRGATEREG, 0);
 
 	/* step xx. check the nsih header id */
-	if (pSBI->SIGNATURE != HEADER_ID)
+	if (psbi->signature != HEADER_ID)
 		ERROR("2nd Boot Header is invalid, Please check it out!\r\n");
 
 	/* step xx. enable the l2-cache */
@@ -154,13 +154,13 @@ void __init main(void)
 	 * step 10-1. check the (thirdboot) boot mode
 	 * step 10-2. loading the next file (thirdboot)
 	 */
-	switch (pSBI->DBI.SPIBI.LoadDevice) {
+	switch (psbi->dbi.spibi.loaddevice) {
 #if defined(SUPPORT_USB_BOOT)
 		case BOOT_FROM_USB:
 			SYSMSG("Loading from usb...\r\n");
-			ret = iUSBBOOT(pTBI);	// for USB boot
+			ret = iUSBBOOT(ptbi);	// for USB boot
 #if (SUPPORT_KERNEL_3_4 == 0)
-			secure_usbboot(pTBI);
+			secure_usbboot(ptbi);
 #endif
 			break;
 #endif
@@ -168,21 +168,21 @@ void __init main(void)
 #if defined(SUPPORT_SDMMC_BOOT)
 		case BOOT_FROM_SDMMC:
 			SYSMSG("Loading from sdmmc...\r\n");
-			ret = iSDXCBOOT(pTBI);	// for SD boot
+			ret = iSDXCBOOT(ptbi);	// for SD boot
 			break;
 #endif
 	}
 
 #ifdef CRC_CHECK_ON
 	/* step xx. check the memory crc check (optional) */
-	ret = crc_check((void*)pTBI->LOADADDR, (unsigned int)pTBI->LOADSIZE
-			,(unsigned int)pTBI->DBI.SDMMCBI.CRC32);
+	ret = crc_check((void*)ptbi->load_addr, (unsigned int)ptbi->load_size
+			,(unsigned int)ptbi->dbi.sdmmcbi.crc32);
 #endif
 
 	/* step 11. jump the next bootloader (thirdboot) */
 	if (ret) {
 		void (*pLaunch)(unsigned int, unsigned int)
-			= (void (*)(unsigned int, unsigned int))pTBI->LAUNCHADDR;
+			= (void (*)(unsigned int, unsigned int))ptbi->launch_addr;
 		SYSMSG("Image Loading Done!\r\n");
 		SYSMSG("Launch to 0x%08X\r\n", (unsigned int)pLaunch);
 		while (!serial_done());

@@ -18,7 +18,7 @@
 #define __NX_BOOTHEADER_H__
 
 struct nx_nandbootinfo {
-	uint64_t deviceaddr;
+	uint64_t device_addr;
 
 	uint8_t addrstep;
 	uint8_t tCOS;
@@ -34,7 +34,7 @@ struct nx_nandbootinfo {
 };
 
 struct nx_spibootinfo {
-	uint64_t deviceaddr;
+	uint64_t device_addr;
 
 	uint8_t addrstep;
 	uint8_t _reserved0[2];
@@ -58,7 +58,7 @@ struct nx_uartbootinfo {
 };
 
 struct nx_sdmmcbootinfo {
-	uint64_t deviceaddr;
+	uint64_t device_addr;
 
 	uint8_t _reserved0[3];
 	uint8_t portnumber;
@@ -178,10 +178,10 @@ struct nx_tbbinfo {
 
 	uint32_t _reserved0[4];			/* 0x040 ~ 0x04f */
 
-	uint32_t loadsize;			/* 0x050 */
+	uint32_t load_size;			/* 0x050 */
 	uint32_t crc32;				/* 0x054 */
-//	uint64_t loadaddr;			/* 0x058 ~ 0x05f */
-	uint32_t loadaddr;
+//	uint64_t load_addr;			/* 0x058 ~ 0x05f */
+	uint32_t load_addr;
 	uint32_t _reserved320;
 //	uint64_t startaddr;			/* 0x060 ~ 0x067 */
 	uint32_t startaddr;

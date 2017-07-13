@@ -192,7 +192,7 @@ static void __init nx_usb_write_in_fifo(U32 ep, U8 *buf, S32 num)
  * CRC Check for modifications.
  * A global variable for a CRC check.
  * */
-static struct NX_SecondBootInfo __initdata *g_TBI;
+static struct sbi_header __initdata *g_TBI;
 static USBBOOTSTATUS __initdata *g_USBBootStatus;
 static unsigned int __initdata g_fcs = 0;
 
@@ -208,7 +208,7 @@ static void __init nx_usb_read_out_fifo(U32 ep, U8 *buf, S32 num)
 			g_fcs = iget_fcs(g_fcs, dwbuf[i]);
 	}
 	/* Save the CRC Check Value  */
-	g_TBI->DBI.SDMMCBI.CRC32 = g_fcs;
+	g_TBI->dbi.sdmmcbi.crc32 = g_fcs;
 }
 
 static void __init nx_usb_ep0_int_hndlr(USBBOOTSTATUS *pUSBBootStatus)
@@ -422,12 +422,12 @@ static void __init nx_usb_int_bulkin(USBBOOTSTATUS *pUSBBootStatus)
 		pUOReg->DCSR.DEPIR[BULK_IN_EP].DIEPCTL = (DEPCTL_SNAK|DEPCTL_BULK_TYPE);
 	}
 }
-static void __init nx_usb_int_bulkout(USBBOOTSTATUS * pUSBBootStatus, struct NX_SecondBootInfo * pTBI, U32 fifo_cnt_byte)
+static void __init nx_usb_int_bulkout(USBBOOTSTATUS * pUSBBootStatus, struct sbi_header * ptbi, U32 fifo_cnt_byte)
 {
 	U32 *pdwBuffer;
 
 	if(CTRUE != pUSBBootStatus->bHeaderReceived) {
-		pdwBuffer = (U32 *)pTBI;
+		pdwBuffer = (U32 *)ptbi;
 		nx_usb_read_out_fifo(BULK_OUT_EP, (U8 *)&pdwBuffer[pUSBBootStatus->iRxHeaderSize/4], fifo_cnt_byte);
 
 		if( (fifo_cnt_byte & 3) == 0 ) {
@@ -438,13 +438,13 @@ static void __init nx_usb_int_bulkout(USBBOOTSTATUS * pUSBBootStatus, struct NX_
 		}
 
 		if( 512 <= pUSBBootStatus->iRxHeaderSize ) {
-			if( pTBI->SIGNATURE == HEADER_ID )      // "NSIH"
+			if( ptbi->signature == HEADER_ID )      // "NSIH"
 			{
 				pUSBBootStatus->bHeaderReceived = CTRUE;
-				pUSBBootStatus->RxBuffAddr    = (U8*)pTBI->LOADADDR;
-				pUSBBootStatus->iRxSize = pTBI->LOADSIZE;
+				pUSBBootStatus->RxBuffAddr    = (U8*)ptbi->load_addr;
+				pUSBBootStatus->iRxSize = ptbi->load_size;
 				printf("USB Load Address = 0x%08X Launch Address = 0x%08X, size = %d bytes\r\n",
-						(S32)pUSBBootStatus->RxBuffAddr , pTBI->LAUNCHADDR, pUSBBootStatus->iRxSize);
+						(S32)pUSBBootStatus->RxBuffAddr , ptbi->launch_addr, pUSBBootStatus->iRxSize);
 			}
 			else
 			{
@@ -646,7 +646,7 @@ static S32 __init nx_usb_set_init(USBBOOTSTATUS *pUSBBootStatus)
 	return CTRUE;
 }
 
-static void __init nx_usb_pkt_receive(USBBOOTSTATUS *pUSBBootStatus, struct NX_SecondBootInfo *pTBI)
+static void __init nx_usb_pkt_receive(USBBOOTSTATUS *pUSBBootStatus, struct sbi_header *ptbi)
 {
 	U32 rx_status;
 	U32 fifo_cnt_byte;
@@ -664,7 +664,7 @@ static void __init nx_usb_pkt_receive(USBBOOTSTATUS *pUSBBootStatus, struct NX_S
 
 		if((rx_status & BULK_OUT_EP)&&(fifo_cnt_byte)) {
 			if (g_selfboot == 0)
-				nx_usb_int_bulkout(pUSBBootStatus, pTBI, fifo_cnt_byte);
+				nx_usb_int_bulkout(pUSBBootStatus, ptbi, fifo_cnt_byte);
 			#if defined(CHIPID_NXP4330)
 			else
 				nxp4330_usb_int_bulkout(pUSBBootStatus, fifo_cnt_byte);
@@ -728,7 +728,7 @@ static void __init nx_usb_transfer(USBBOOTSTATUS *pUSBBootStatus)
 	}
 }
 
-static void __init nx_udc_int_hndlr(USBBOOTSTATUS *pUSBBootStatus, struct NX_SecondBootInfo *pTBI)
+static void __init nx_udc_int_hndlr(USBBOOTSTATUS *pUSBBootStatus, struct sbi_header *ptbi)
 {
 	U32 int_status;
 	S32 tmp;
@@ -764,7 +764,7 @@ static void __init nx_udc_int_hndlr(USBBOOTSTATUS *pUSBBootStatus, struct NX_Sec
 		/* Read only register field */
 
 		pUOReg->GCSR.GINTMSK = INT_RESUME|INT_OUT_EP|INT_IN_EP|INT_ENUMDONE|INT_RESET|INT_SUSPEND;
-		nx_usb_pkt_receive(pUSBBootStatus, pTBI);
+		nx_usb_pkt_receive(pUSBBootStatus, ptbi);
 		pUOReg->GCSR.GINTMSK = INT_RESUME|INT_OUT_EP|INT_IN_EP|INT_ENUMDONE|INT_RESET|INT_SUSPEND|INT_RX_FIFO_NOT_EMPTY;
 	}
 
@@ -783,7 +783,7 @@ void __init udelay(U32 utime)
 		for (i = 106; i > 0; i--);
 }
 
-CBOOL __init iUSBBOOT(struct NX_SecondBootInfo *pTBI)
+CBOOL __init iUSBBOOT(struct sbi_header *ptbi)
 {
 	USBBOOTSTATUS USBBootStatus;
 	USBBOOTSTATUS *pUSBBootStatus = &USBBootStatus;
@@ -791,7 +791,7 @@ CBOOL __init iUSBBOOT(struct NX_SecondBootInfo *pTBI)
 	reset_con(RESETINDEX_OF_USB20OTG_MODULE_i_nRST, CFALSE); // reset negate
 
 	/* CRC Check for variables */
-	g_TBI = pTBI;
+	g_TBI = ptbi;
 
 	pReg_Tieoff->TIEOFFREG[12] &= ~0x3;					// scale mode ( 0: real silicon, 1: test simul, 2, 3)
 	pReg_Tieoff->TIEOFFREG[14] |= 3<<8;					// 8: enable, 9:phy word interface (0: 8 bit, 1: 16 bit)
@@ -847,7 +847,7 @@ CBOOL __init iUSBBOOT(struct NX_SecondBootInfo *pTBI)
 	pUSBBootStatus->bDownLoading = CTRUE;
 	while (pUSBBootStatus->bDownLoading) {
 		if (pUOReg->GCSR.GINTSTS & (WkUpInt|OEPInt|IEPInt|EnumDone|USBRst|USBSusp|RXFLvl)) {
-			nx_udc_int_hndlr(pUSBBootStatus, pTBI);
+			nx_udc_int_hndlr(pUSBBootStatus, ptbi);
 			pUOReg->GCSR.GINTSTS = 0xFFFFFFFF;
 		}
 	}
@@ -863,7 +863,7 @@ CBOOL __init iUSBBOOT(struct NX_SecondBootInfo *pTBI)
 //	printf("\r\n\nusb image download is done!\r\n\n");
 
 //	printf("USB Load Address = 0x%08X Launch Address = 0x%08X, size = %d bytes\r\n",
-//			pTBI->LOADADDR, pTBI->LAUNCHADDR, pTBI->LOADSIZE);
+//			ptbi->load_addr, ptbi->launch_addr, ptbi->load_size);
 
 	return CTRUE;
 }
@@ -871,29 +871,29 @@ CBOOL __init iUSBBOOT(struct NX_SecondBootInfo *pTBI)
 #if defined(CHIPID_NXP4330)
 int __init usb_self_boot(void)
 {
-	struct NX_SecondBootInfo SBI;
+	struct sbi_header SBI;
 	g_selfboot = g_selfboot_cfg = 1;
 
 	return iUSBBOOT(&SBI);
 }
 #endif
 
-void secure_usbboot(struct NX_SecondBootInfo *tbi)
+void secure_usbboot(struct sbi_header *tbi)
 {
 	struct nx_bootheader *tbl2;
 	int  loadaddr = 0xB0FE0000;
 	int* downaddr = 0;
 
 	/* for boot loader level 2 */
-	tbl2  = (struct nx_bootheader *)tbi->LOADADDR;
+	tbl2  = (struct nx_bootheader *)tbi->load_addr;
 	/* usb downloader adddrss for bl2 */
 	downaddr  = (int*)(&tbl2->tbbi._reserved3);
-	*downaddr = (int )(tbi->LOADADDR);
+	*downaddr = (int )(tbi->load_addr);
 
-	memcpy((void*)loadaddr, (void*)(tbl2), (tbl2->tbbi.loadsize
+	memcpy((void*)loadaddr, (void*)(tbl2), (tbl2->tbbi.load_size
 		+ sizeof(struct nx_bootheader)));
 
 	/* set the bl2 load/launch address (fix) */
-	tbi->LOADADDR   = 0xB0FE0000;
-	tbi->LAUNCHADDR = 0xB0FE0400;
+	tbi->load_addr   = 0xB0FE0000;
+	tbi->launch_addr= 0xB0FE0400;
 }

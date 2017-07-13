@@ -980,11 +980,11 @@ End:
 
 //------------------------------------------------------------------------------
 extern void Decrypt(U32 *SrcAddr, U32 *DestAddr, U32 Size);
-static CBOOL SDMMCBOOT(SDXCBOOTSTATUS *pSDXCBootStatus, struct NX_SecondBootInfo *pTBI) // U32 option )
+static CBOOL SDMMCBOOT(SDXCBOOTSTATUS *pSDXCBootStatus, struct sbi_header *ptbi) // U32 option )
 {
 #if !defined(SECURE_MODE)
 	unsigned int i;
-	struct nx_bootheader *ptbh = (struct nx_bootheader *)pTBI;
+	struct nx_bootheader *ptbh = (struct nx_bootheader *)ptbi;
 #endif
 	CBOOL	result = CFALSE;
 	register struct NX_SDMMC_RegisterSet * const pSDXCReg =
@@ -1002,10 +1002,10 @@ static CBOOL SDMMCBOOT(SDXCBOOTSTATUS *pSDXCBootStatus, struct NX_SecondBootInfo
 			;
 	}
 	printf("Load from :0x%08X Sector\r\n",
-			pSBI->DEVICEADDR / BLOCK_LENGTH);
+			psbi->device_addr / BLOCK_LENGTH);
 	result = NX_SDMMC_ReadSectors(pSDXCBootStatus,
-			pSBI->DEVICEADDR / BLOCK_LENGTH,
-			2, (U32 *)pTBI);
+			psbi->device_addr / BLOCK_LENGTH,
+			2, (U32 *)ptbi);
 	if(result == CFALSE) {
 		printf("cannot read boot header! SDMMC boot failure\r\n");
 		return result;
@@ -1013,24 +1013,24 @@ static CBOOL SDMMCBOOT(SDXCBOOTSTATUS *pSDXCBootStatus, struct NX_SecondBootInfo
 
 //#ifdef SECURE_ON
 	if (pReg_ClkPwr->SYSRSTCONFIG & 1 << 14)
-		Decrypt((U32 *)pTBI, (U32 *)pTBI, sizeof(struct nx_bootheader));
+		Decrypt((U32 *)ptbi, (U32 *)ptbi, sizeof(struct nx_bootheader));
 //#endif
-		if(pTBI->SIGNATURE != HEADER_ID ) {
-			dprintf("0x%08X\r\n3rd boot Sinature is wrong! SDMMC boot failure\r\n", pTBI->SIGNATURE);
+		if(ptbi->signature != HEADER_ID ) {
+			dprintf("0x%08X\r\n3rd boot Sinature is wrong! SDMMC boot failure\r\n", ptbi->signature);
 			return CFALSE;
 		}
 
 #if defined(SECURE_MODE)
 	dprintf("Load Addr :0x%08X,  Load Size :0x%08X,  Launch Addr :0x%08X\r\n",
-			pTBI->LOADADDR, pTBI->LOADSIZE, pTBI->LAUNCHADDR);
+			ptbi->load_addr, ptbi->load_size, ptbi->launch_addr);
 #endif
 
 #if !defined(SECURE_MODE)
 	printf("Load Addr :0x%08X,  Load Size :0x%08X,  Launch Addr :0x%08X\r\n",
-		ptbh->tbbi.loadaddr, ptbh->tbbi.loadsize, ptbh->tbbi.startaddr);
+		ptbh->tbbi.load_addr, ptbh->tbbi.load_size, ptbh->tbbi.startaddr);
 
-	U32 *src = (U32*)pTBI;
-	U32 *dst = (U32*)ptbh->tbbi.loadaddr;
+	U32 *src = (U32*)ptbi;
+	U32 *dst = (U32*)ptbh->tbbi.load_addr;
 	U32 *tb_load = dst;
 	for (i = 0; i < sizeof(struct nx_bootheader) / 4; i++)
 		*dst++ = *src++;
@@ -1040,21 +1040,21 @@ static CBOOL SDMMCBOOT(SDXCBOOTSTATUS *pSDXCBootStatus, struct NX_SecondBootInfo
 #endif
 #if defined(SECURE_MODE)
 	result = NX_SDMMC_ReadSectors(pSDXCBootStatus,
-			pSBI->DEVICEADDR / BLOCK_LENGTH + 1,
-			(pTBI->LOADSIZE + BLOCK_LENGTH - 1) / BLOCK_LENGTH,
-			(U32 *)pTBI->LOADADDR);
+			psbi->device_addr / BLOCK_LENGTH + 1,
+			(ptbi->load_size + BLOCK_LENGTH - 1) / BLOCK_LENGTH,
+			(U32 *)ptbi->load_addr);
 #else
 	result = NX_SDMMC_ReadSectors(pSDXCBootStatus,
-			pSBI->DEVICEADDR / BLOCK_LENGTH + 2,
-			(ptbh->tbbi.loadsize + (BLOCK_LENGTH - 1)) / BLOCK_LENGTH,
-			(U32 *)(ptbh->tbbi.loadaddr + BLOCK_LENGTH * 2));
-	pTBI->LAUNCHADDR = ptbh->tbbi.startaddr;
+			psbi->device_addr / BLOCK_LENGTH + 2,
+			(ptbh->tbbi.load_size + (BLOCK_LENGTH - 1)) / BLOCK_LENGTH,
+			(U32 *)(ptbh->tbbi.load_addr + BLOCK_LENGTH * 2));
+	ptbi->launch_addr = ptbh->tbbi.startaddr;
 #endif
 //#ifdef SECURE_ON
 	if (pReg_ClkPwr->SYSRSTCONFIG & 1 << 14)
-		Decrypt((U32 *)(ptbh->tbbi.loadaddr + sizeof(struct nx_bootheader)),
-			(U32 *)(ptbh->tbbi.loadaddr + sizeof(struct nx_bootheader)),
-			ptbh->tbbi.loadsize);
+		Decrypt((U32 *)(ptbh->tbbi.load_addr + sizeof(struct nx_bootheader)),
+			(U32 *)(ptbh->tbbi.load_addr + sizeof(struct nx_bootheader)),
+			ptbh->tbbi.load_size);
 //#endif
 
 	if (result == CFALSE) {
@@ -1207,7 +1207,7 @@ void NX_SDPADSetGPIO(U32 PortNum)
  * In fact, a function that reads the remaining data.
  */
 static int __init sdmmc_read(SDXCBOOTSTATUS *pSDXCBootStatus, unsigned int devaddr,
-	unsigned int loadaddr, unsigned int loadsize)
+	unsigned int load_addr, unsigned int load_size)
 {
 	register struct NX_SDMMC_RegisterSet * const pSDXCReg = pgSDXCReg[pSDXCBootStatus->SDPort];
 	unsigned int ret = CFALSE;
@@ -1219,7 +1219,7 @@ static int __init sdmmc_read(SDXCBOOTSTATUS *pSDXCBootStatus, unsigned int devad
 		}
 
 		ret = NX_SDMMC_ReadSectors(pSDXCBootStatus, devaddr/BLOCK_LENGTH,
-				(loadsize + BLOCK_LENGTH - 1)/BLOCK_LENGTH, (U32*)loadaddr);
+				(load_size + BLOCK_LENGTH - 1)/BLOCK_LENGTH, (U32*)load_addr);
 
 		if(ret == CFALSE) {
 //			printf("cannot read boot header! SDMMC boot failure\r\n");
@@ -1244,8 +1244,8 @@ static int __init sdmmc_read(SDXCBOOTSTATUS *pSDXCBootStatus, unsigned int devad
  */
 unsigned int __init sdmmc_self_boot(void)
 {
-	unsigned int bl1_loadsize = *((unsigned int*)(0xFFFF0000 + 0x44));
-	struct NX_SecondBootInfo SBI;
+	unsigned int bl1_load_size = *((unsigned int*)(0xFFFF0000 + 0x44));
+	struct sbi_header SBI;
 
 	SDXCBOOTSTATUS lSDXCBootStatus;
 	SDXCBOOTSTATUS *pSDXCBootStatus = &lSDXCBootStatus;
@@ -1259,15 +1259,15 @@ unsigned int __init sdmmc_self_boot(void)
 	NX_SDMMC_Init(pSDXCBootStatus);
 
 	/* Normal SD(eSD)/MMC ver 4.2 boot */
-	SBI.LOADADDR
+	SBI.load_addr
 		= BL1_SDRAMBOOT_LOADADDR + BL1_SDMMCBOOT_LOADSIZE;
-	SBI.DBI.SDMMCBI.PortNumber = pSDXCBootStatus->SDPort;
-	SBI.DEVICEADDR
+	SBI.dbi.sdmmcbi.portnumber = pSDXCBootStatus->SDPort;
+	SBI.device_addr
 		= BL1_SDMMCBOOT_DEVADDR + BL1_SDMMCBOOT_LOADSIZE;
-	SBI.LOADSIZE
-		= bl1_loadsize - BL1_SDMMCBOOT_LOADSIZE;
+	SBI.load_size
+		= bl1_load_size - BL1_SDMMCBOOT_LOADSIZE;
 	ret = sdmmc_read(pSDXCBootStatus,
-		SBI.DEVICEADDR, SBI.LOADADDR, SBI.LOADSIZE);
+		SBI.device_addr, SBI.load_addr, SBI.load_size);
 
 	NX_SDMMC_Close(pSDXCBootStatus);
 	NX_SDMMC_Terminate(pSDXCBootStatus);
@@ -1276,21 +1276,21 @@ unsigned int __init sdmmc_self_boot(void)
 }
 #endif	// #ifdef CHIPID_NXP4330
 
-U32 iSDXCBOOT(struct NX_SecondBootInfo *pTBI)
+U32 iSDXCBOOT(struct sbi_header *ptbi)
 {
 	CBOOL result = CFALSE;
 	SDXCBOOTSTATUS lSDXCBootStatus;
 	SDXCBOOTSTATUS *pSDXCBootStatus = &lSDXCBootStatus;
 
 #if defined(CHIPID_NXP4330)
-	pSBI->DBI.SDMMCBI.PortNumber = 0;
+	psbi->dbi.sdmmcbi.portnumber = 0;
 #endif
 
-	//	pSBI->DBI.SDMMCBI.PortNumber = 1;
-	//	pSBI->DEVICEADDR = 128 * 1024;
+	//	psbi->dbi.sdmmcbi.portnumber = 1;
+	//	psbi->device_addr = 128 * 1024;
 
-	NX_ASSERT(pSBI->DBI.SDMMCBI.PortNumber < 3);
-	pSDXCBootStatus->SDPort = pSBI->DBI.SDMMCBI.PortNumber;
+	NX_ASSERT(psbi->dbi.sdmmcbi.portnumber < 3);
+	pSDXCBootStatus->SDPort = psbi->dbi.sdmmcbi.portnumber;
 
 	NX_SDPADSetALT(pSDXCBootStatus->SDPort);
 
@@ -1298,7 +1298,7 @@ U32 iSDXCBOOT(struct NX_SecondBootInfo *pTBI)
 
 	//--------------------------------------------------------------------------
 	// Normal SD(eSD)/MMC ver 4.2 boot
-	result = SDMMCBOOT(pSDXCBootStatus, pTBI);
+	result = SDMMCBOOT(pSDXCBootStatus, ptbi);
 
 	NX_SDMMC_Close(pSDXCBootStatus);
 	NX_SDMMC_Terminate(pSDXCBootStatus);

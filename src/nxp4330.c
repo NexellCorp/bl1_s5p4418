@@ -35,7 +35,7 @@ int __init nxp4330_self_boot(void)
 	int ret = 0;
 
 	/* Make sure than the size loaded in Romboot, built size is large. */
-	if (pSBI->LOADSIZE > fix_bl1_size) {
+	if (psbi->load_size > fix_bl1_size) {
 		/* Check to boot type. */
 		switch (((boot_option) >> 0) & 0x7) {
 	#if defined(SUPPORT_SDMMC_BOOT)

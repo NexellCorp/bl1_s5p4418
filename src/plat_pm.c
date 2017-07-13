@@ -277,14 +277,14 @@ void s5p4418_resume(void)
 //	jumpkernel = (void (*)(U32))kernel_addr;
 	jumpkernel = (void (*)(U32))pReg_RTC->RTCSCRATCH;
 
-	pSBI->BL2_START = pReg_RTC->RTCSCRATCH;
+	psbi->bl2_start = pReg_RTC->RTCSCRATCH;
 #if 0
-	pSBI->GateCycle = mmio_read_32(&pReg_Alive->ALIVESCRATCHVALUE5);
-	pSBI->GateCode = mmio_read_32(&pReg_Alive->ALIVESCRATCHVALUE6);
-	pSBI->RDvwmc = mmio_read_32(&pReg_Alive->ALIVESCRATCHVALUE7);
-	pSBI->WRvwmc = mmio_read_32(&pReg_Alive->ALIVESCRATCHVALUE8);
+	psbi->GateCycle = mmio_read_32(&pReg_Alive->ALIVESCRATCHVALUE5);
+	psbi->GateCode = mmio_read_32(&pReg_Alive->ALIVESCRATCHVALUE6);
+	psbi->RDvwmc = mmio_read_32(&pReg_Alive->ALIVESCRATCHVALUE7);
+	psbi->WRvwmc = mmio_read_32(&pReg_Alive->ALIVESCRATCHVALUE8);
 #endif
-	pSBI->EntryPoint = kernel_addr;
+	psbi->entrypoint= kernel_addr;
 
 	mmio_write_32(&pReg_Alive->ALIVESCRATCHRSTREG, 0xFFFFFFFF);
 	mmio_write_32(&pReg_Alive->ALIVESCRATCHRST1, 0xFFFFFFFF);

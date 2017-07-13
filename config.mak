@@ -47,7 +47,7 @@ ifeq ($(CHIPNAME), nxp4330)
 #BOARD				?= lepus
 BOARD				?= navi
 #BOARD				?= smart_voice
-BOARD				?= zh_dragon
+#BOARD				?= zh_dragon
 else
 #BOARD				?= svt
 #BOARD				?= asb

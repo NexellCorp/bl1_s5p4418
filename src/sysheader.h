@@ -37,7 +37,7 @@
 #include <nx_uart.h>
 #include <nx_wdt.h>
 
-#include "secondboot.h"
+#include "bl1.h"
 #include <printf.h>
 #include <serial.h>
 #include <type.h>
@@ -163,10 +163,10 @@
 
 #if defined(__SET_GLOBAL_VARIABLES)
 
-struct NX_SecondBootInfo *const __initdata pSBI =
-    (struct NX_SecondBootInfo * const)BASEADDR_SRAM;
-struct NX_SecondBootInfo *const __initdata pTBI =
-    (struct NX_SecondBootInfo * const)BASEADDR_SRAM;
+struct sbi_header *const __initdata psbi =
+    (struct sbi_header * const)BASEADDR_SRAM;
+struct sbi_header *const __initdata ptbi =
+    (struct sbi_header * const)BASEADDR_SRAM;
 struct NX_GPIO_RegisterSet (*const __initdata pReg_GPIO)[1] =
     (struct NX_GPIO_RegisterSet (*const)[])PHY_BASEADDR_GPIOA_MODULE;
 struct NX_ALIVE_RegisterSet *const pReg_Alive =
@@ -191,8 +191,8 @@ struct NX_WDT_RegisterSet *const pReg_WDT =
 
 #else
 
-extern struct NX_SecondBootInfo *const __initdata pSBI; // second boot info
-extern struct NX_SecondBootInfo *const __initdata pTBI; // third boot info
+extern struct sbi_header *const __initdata psbi; // second boot info
+extern struct sbi_header *const __initdata ptbi; // third boot info
 extern struct NX_GPIO_RegisterSet (*const pReg_GPIO)[1];
 extern struct NX_ALIVE_RegisterSet *const pReg_Alive;
 extern struct NX_TIEOFF_RegisterSet *const __initdata pReg_Tieoff;

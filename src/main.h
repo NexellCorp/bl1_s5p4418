@@ -37,8 +37,8 @@ void simple_memtest(void);
  int standard_memtester(void);
 
 /* Extern Boot Mode Function */
-void secure_usbboot(struct NX_SecondBootInfo *tbi);
- int iUSBBOOT(struct NX_SecondBootInfo * pTBI);
- int iSDXCBOOT(struct NX_SecondBootInfo * pTBI);
+void secure_usbboot(struct sbi_header *tbi);
+ int iUSBBOOT(struct sbi_header * ptbi);
+ int iSDXCBOOT(struct sbi_header * ptbi);
 
 #endif

@@ -28,7 +28,7 @@
 #include <nx_tieoff.h>
 
 #include <nx_drex.h>
-#include "secondboot.h"
+#include "bl1.h"
 #endif
 
 //------------------------------------------------------------------------------
