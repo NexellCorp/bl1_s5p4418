@@ -288,6 +288,8 @@ void s5p4418_resume(void)
 				;
 			jumpkernel(CTRUE);
 		}
+	} else if (SUSPEND_FAILED_RESUME == signature) {
+		jumpkernel(CTRUE);
 	} else {
 		WARN("Suspend Signature is different\r\nRead Signature :0x%08X\r\n", signature);
 	}

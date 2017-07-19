@@ -93,7 +93,7 @@ void BootMain(void)
 	struct NX_SecondBootInfo *pTBI = &TBI; // third boot info
 	int ret = CFALSE;
 #if (CONFIG_SUSPEND_RESUME == 1)
-	U32 signature;
+	U32 signature, wakeup_status;
 #endif
 	U32 is_resume = 0;
 	U32 debug_ch = 0;
@@ -110,10 +110,11 @@ void BootMain(void)
 #if (CONFIG_SUSPEND_RESUME == 1)
 	WriteIO32(&pReg_Alive->ALIVEPWRGATEREG, 1);
 	signature = ReadIO32(&pReg_Alive->ALIVESCRATCHREADREG);
-	if ((SUSPEND_SIGNATURE == signature) &&
-			ReadIO32(&pReg_Alive->WAKEUPSTATUS)) {	
+	wakeup_status = (ReadIO32(&pReg_Alive->WAKEUPSTATUS) & 0xFF);
+	if ((SUSPEND_SIGNATURE == signature) &&	wakeup_status)
 		is_resume = 1;
-	}
+	else if (SUSPEND_FAILED_RESUME == signature)
+		is_resume = 1;
 #endif  //#if (CONFIG_SUSPEND_RESUME == 1)
 
 #if defined(INITPMIC_YES)
@@ -127,6 +128,9 @@ void BootMain(void)
 
 	/* Console initialize */
 	DebugInit(debug_ch);
+
+	NOTICE("signature: 0x%X, is_resume: %d \r\n", signature, is_resume);
+	NOTICE("wakeup_status: 0x%08X \r\n", wakeup_status);
 
 	/* Build information */
 	buildinfo();
@@ -156,7 +160,7 @@ void BootMain(void)
 	init_LPDDR3(is_resume);
 #endif
 	/* Exit to Self Refresh */
-	if (is_resume) 
+	if (is_resume)
 		exitSelfRefresh();
 
 	NOTICE("DDR3/LPDDR3 Init Done!\r\n");
