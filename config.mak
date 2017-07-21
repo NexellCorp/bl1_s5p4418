@@ -40,7 +40,6 @@ PMIC_ON				?= y
 CRC_CHECK			?= n
 
 # supported (thridboot) boot mode
-SUPPORT_USB_BOOT		?= n
 SUPPORT_SDMMC_BOOT		?= y
 
 ifeq ($(CHIPNAME), nxp4330)
@@ -161,6 +160,9 @@ CFLAGS				+=	-g -Wall					\
 					-DMEMTYPE_$(shell echo $(MEMTYPE) | tr a-z A-Z)	\
 					-D_2NDBOOT_MODE					\
 					-D$(shell echo $(BOARD) | tr a-z A-Z)
+
+# default boot-device type
+CFLAGS				+= -DSUPPORT_USB_BOOT
 
 # arm mode - secure/non-secure
 ifeq ($(ARM_SECURE), y)

@@ -270,4 +270,6 @@ void NX_SDPADSetALT(U32 PortNum);
 
 void NX_SDPADSetGPIO(U32 PortNum);
 
+ int iSDXCBOOT(struct sbi_header * ptbi);
+
 #endif  // __NX_SDHCBOOT_H__

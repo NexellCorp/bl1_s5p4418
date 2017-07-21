@@ -22,7 +22,7 @@
 #define ROMBOOT_SYSCONFIG		0xC001027C
 
 extern unsigned int __init sdmmc_self_boot(void);
-extern int __init usb_self_boot(void);
+extern int __init self_load_usbdown(void);
 
 /*
  * NXP4330 a part to overcome the limitations
@@ -43,12 +43,9 @@ int __init nxp4330_self_boot(void)
 				ret = sdmmc_self_boot();
 				break;
 	#endif
-
-	#if defined(SUPPORT_USB_BOOT)
 			case ROMBOOT_FROM_USB:
-				ret = usb_self_boot();
+				ret = self_load_usbdown();
 				break;
-	#endif
 		}
 	}
 

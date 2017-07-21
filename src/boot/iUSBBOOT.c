@@ -15,7 +15,7 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-#include "sysheader.h"
+#include <sysheader.h>
 
 #include <nx_usbotg.h>
 #include <iUSBBOOT.h>
@@ -32,6 +32,7 @@ static int __initdata g_selfboot = 0;
 static int __initdata g_selfboot_cfg = 0;
 #endif
 
+extern void Decrypt(U32 *SrcAddr, U32 *DestAddr, U32 Size);
 extern U32 iget_fcs(U32 fcs, U32 data);
 
 void reset_con(unsigned int device_num, int enable);
@@ -433,7 +434,7 @@ static void __init nx_usb_int_bulkout(USBBOOTSTATUS * pUSBBootStatus, struct sbi
 		if( (fifo_cnt_byte & 3) == 0 ) {
 			pUSBBootStatus->iRxHeaderSize += fifo_cnt_byte;
 		} else {
-			printf("ERROR : Header Packet Size must be aligned on 32-bits.\r\n");
+			dprintf("ERROR : Header Packet Size must be aligned on 32-bits.\r\n");
 			pUOReg->DCSR.DEPOR[BULK_OUT_EP].DOEPCTL |= DEPCTL_STALL;
 		}
 
@@ -443,7 +444,7 @@ static void __init nx_usb_int_bulkout(USBBOOTSTATUS * pUSBBootStatus, struct sbi
 				pUSBBootStatus->bHeaderReceived = CTRUE;
 				pUSBBootStatus->RxBuffAddr    = (U8*)ptbi->load_addr;
 				pUSBBootStatus->iRxSize = ptbi->load_size;
-				printf("USB Load Address = 0x%08X Launch Address = 0x%08X, size = %d bytes\r\n",
+				dprintf("USB Load Address = 0x%08X Launch Address = 0x%08X, size = %d bytes\r\n",
 						(S32)pUSBBootStatus->RxBuffAddr , ptbi->launch_addr, pUSBBootStatus->iRxSize);
 			}
 			else
@@ -468,7 +469,7 @@ static void __init nx_usb_int_bulkout(USBBOOTSTATUS * pUSBBootStatus, struct sbi
 		pUSBBootStatus->iRxSize -= fifo_cnt_byte;
 
 		if (pUSBBootStatus->iRxSize <= 0) {
-			printf("Download completed!\r\n");
+			dprintf("Download completed!\r\n");
 
 			pUSBBootStatus->bDownLoading = CFALSE;
 			pUSBBootStatus->bHeaderReceived = CFALSE;
@@ -492,7 +493,7 @@ static void __init nxp4330_usb_int_bulkout(USBBOOTSTATUS * usb_status, U32 fifo_
 	unsigned int header_gap	= 512;
 
 	if (g_selfboot_cfg == 1) {
-		usb_status->bHeaderReceived = CFALSE;
+		usb_status->bHeaderReceived = 0;
 		usb_status->RxBuffAddr = (U8*)0xFFFF4000;
 		usb_status->iRxSize = (bl1_loadsize + header_gap - romboot_loadsize);
 		g_selfboot_cfg = 0;
@@ -506,8 +507,8 @@ static void __init nxp4330_usb_int_bulkout(USBBOOTSTATUS * usb_status, U32 fifo_
 	usb_status->iRxSize -= fifo_cnt_byte;
 
 	if (usb_status->iRxSize <= 0) {
-		usb_status->bDownLoading = CFALSE;
-		usb_status->bHeaderReceived = CFALSE;
+		usb_status->bDownLoading = 0;
+		usb_status->bHeaderReceived = 0;
 		g_selfboot = 0;
 	}
 
@@ -562,12 +563,12 @@ static S32 __init nx_usb_set_init(USBBOOTSTATUS *pUSBBootStatus)
 	/* Set if Device is High speed or Full speed */
 	if (((status & 0x6) >> 1) == USB_HIGH) {
 		pUSBBootStatus->speed = USB_HIGH;
-		printf("High Speed Detection\r\n");
+		dprintf("High Speed Detection\r\n");
 	} else if (((status & 0x6) >> 1) == USB_FULL) {
 		pUSBBootStatus->speed = USB_FULL;
-		printf("Full Speed Detection\r\n");
+		dprintf("Full Speed Detection\r\n");
 	} else {
-		printf("**** Error:Neither High_Speed nor Full_Speed\r\n");
+		dprintf("**** Error:Neither High_Speed nor Full_Speed\r\n");
 		return CFALSE;
 	}
 
@@ -842,7 +843,7 @@ CBOOL __init iUSBBOOT(struct sbi_header *ptbi)
 	pUSBBootStatus->speed = USB_HIGH;
 	pUSBBootStatus->ep0_state = EP0_STATE_INIT;
 
-//	printf("2ndboot usb boot ready!\r\n");
+//	dprintf("2ndboot usb boot ready!\r\n");
 
 	pUSBBootStatus->bDownLoading = CTRUE;
 	while (pUSBBootStatus->bDownLoading) {
@@ -860,16 +861,21 @@ CBOOL __init iUSBBOOT(struct sbi_header *ptbi)
 	pReg_Tieoff->TIEOFFREG[13] |= 3<<7;                     //POR_ENB=1, POR=1
 	reset_con(RESETINDEX_OF_USB20OTG_MODULE_i_nRST, CTRUE);  // reset on
 
-//	printf("\r\n\nusb image download is done!\r\n\n");
+//	dprintf("\r\n\nusb image download is done!\r\n\n");
 
-//	printf("USB Load Address = 0x%08X Launch Address = 0x%08X, size = %d bytes\r\n",
+//	dprintf("USB Load Address = 0x%08X Launch Address = 0x%08X, size = %d bytes\r\n",
 //			ptbi->load_addr, ptbi->launch_addr, ptbi->load_size);
 
 	return CTRUE;
 }
 
+int normal_usbboot(struct sbi_header *tbi)
+{
+	return iUSBBOOT(tbi);
+}
+
 #if defined(CHIPID_NXP4330)
-int __init usb_self_boot(void)
+int __init self_load_usbdown(void)
 {
 	struct sbi_header SBI;
 	g_selfboot = g_selfboot_cfg = 1;
@@ -878,22 +884,40 @@ int __init usb_self_boot(void)
 }
 #endif
 
-void secure_usbboot(struct sbi_header *tbi)
+int bl2_usbboot(struct sbi_header *tbi)
 {
-	struct nx_bootheader *tbl2;
-	int  loadaddr = 0xB0FE0000;
-	int* downaddr = 0;
+	struct nx_bootheader *bl2;
+	char *image_addr, *header_addr;
+	int* down_addr = 0;
+	int  encrypted = (int)(pReg_ClkPwr->SYSRSTCONFIG & (1<<14));
+
+	if (iUSBBOOT(tbi) == 0)
+		return -1;
+
+	image_addr  = (char*)(tbi->load_addr
+				+ sizeof(struct nx_bootheader));
+	header_addr = (char*)(tbi->load_addr);
+	if (encrypted) {
+		Decrypt((unsigned int *)header_addr, (unsigned int *)header_addr,
+			sizeof(struct nx_bootheader));
+	}
 
 	/* for boot loader level 2 */
-	tbl2  = (struct nx_bootheader *)tbi->load_addr;
-	/* usb downloader adddrss for bl2 */
-	downaddr  = (int*)(&tbl2->tbbi._reserved3);
-	*downaddr = (int )(tbi->load_addr);
+	bl2  = (struct nx_bootheader *)header_addr;
+	if (encrypted) {
+		Decrypt((unsigned int *)image_addr, (unsigned int *)image_addr,
+			bl2->tbbi.load_size);
+	}
+	memcpy((void*)BL2_LOADADDR, (void*)bl2, bl2->tbbi.load_size);
 
-	memcpy((void*)loadaddr, (void*)(tbl2), (tbl2->tbbi.load_size
-		+ sizeof(struct nx_bootheader)));
+	bl2  = (struct nx_bootheader *)BL2_LOADADDR;
+	/* usb downloader adddrss for bl2 */
+	down_addr  = (int*)(&bl2->tbbi._reserved3);
+	*down_addr = (int )(tbi->load_addr);
 
 	/* set the bl2 load/launch address (fix) */
-	tbi->load_addr   = 0xB0FE0000;
-	tbi->launch_addr= 0xB0FE0400;
+	tbi->load_addr   = BL2_LOADADDR;
+	tbi->launch_addr = (BL2_LOADADDR + sizeof(struct nx_bootheader));
+
+	return 1;
 }

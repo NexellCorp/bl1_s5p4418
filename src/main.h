@@ -37,8 +37,6 @@ void simple_memtest(void);
  int standard_memtester(void);
 
 /* Extern Boot Mode Function */
-void secure_usbboot(struct sbi_header *tbi);
- int iUSBBOOT(struct sbi_header * ptbi);
- int iSDXCBOOT(struct sbi_header * ptbi);
+void plat_load(struct sbi_header *tbi);
 
 #endif

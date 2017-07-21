@@ -61,7 +61,6 @@ void __init main(void)
 	struct sbi_header *ptbi = &tbi;
 	unsigned int serial_ch = CONFIG_S5P_SERIAL_INDEX;
 	unsigned int is_resume = 0;
-	int ret = 0;
 
 	/* setp 01. set the ema for sram and instruction-cache */
 	cache_setup_ema();
@@ -149,46 +148,6 @@ void __init main(void)
 #elif defined(SIMPLE_MEMTEST)
 	simple_memtest();
 #endif
-
-	/*
-	 * step 10-1. check the (thirdboot) boot mode
-	 * step 10-2. loading the next file (thirdboot)
-	 */
-	switch (psbi->dbi.spibi.loaddevice) {
-#if defined(SUPPORT_USB_BOOT)
-		case BOOT_FROM_USB:
-			SYSMSG("Loading from usb...\r\n");
-			ret = iUSBBOOT(ptbi);	// for USB boot
-#if (SUPPORT_KERNEL_3_4 == 0)
-			secure_usbboot(ptbi);
-#endif
-			break;
-#endif
-
-#if defined(SUPPORT_SDMMC_BOOT)
-		case BOOT_FROM_SDMMC:
-			SYSMSG("Loading from sdmmc...\r\n");
-			ret = iSDXCBOOT(ptbi);	// for SD boot
-			break;
-#endif
-	}
-
-#ifdef CRC_CHECK_ON
-	/* step xx. check the memory crc check (optional) */
-	ret = crc_check((void*)ptbi->load_addr, (unsigned int)ptbi->load_size
-			,(unsigned int)ptbi->dbi.sdmmcbi.crc32);
-#endif
-
-	/* step 11. jump the next bootloader (thirdboot) */
-	if (ret) {
-		void (*pLaunch)(unsigned int, unsigned int)
-			= (void (*)(unsigned int, unsigned int))ptbi->launch_addr;
-		SYSMSG("Image Loading Done!\r\n");
-		SYSMSG("Launch to 0x%08X\r\n", (unsigned int)pLaunch);
-		while (!serial_done());
-		pLaunch(0, 4330);
-	}
-
-	ERROR("Image Loading Failure Try to USB boot\r\n");
-	while (!serial_done());
+	/* step 10. loads and launches for the next boot-loader. */
+	plat_load(ptbi);
 }

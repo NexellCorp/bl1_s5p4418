@@ -12,6 +12,7 @@ SECTIONS
 		obj/smc_entry*.o (.text)
 		obj/armv7_libs*.o (.text)
 		obj/non_secure*.o (.text)
+		obj/nxp4330*.o (.text)
 		obj/iUSBBOOT*.o (.text)
 		obj/iSDHCBOOT*.o (.text)
 		*(.init.text)

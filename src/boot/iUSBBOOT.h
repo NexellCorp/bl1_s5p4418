@@ -392,5 +392,7 @@ typedef struct __attribute__((aligned(4))) tag_USBBOOTSTATUS
 	const U8*	ConfigDescriptor;
 } USBBOOTSTATUS;
 
+ int normal_usbboot(struct sbi_header *tbi);
+ int bl2_usbboot(struct sbi_header *tbi);
 
 #endif	// __NX_OTG_HS_H__

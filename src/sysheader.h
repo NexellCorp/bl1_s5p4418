@@ -152,6 +152,8 @@
 #define SRAM_MAXSIZE				(32*1024)
 #define BL1_STACKSIZE				(3072)
 
+#define BL2_LOADADDR				0xB0FE0000
+
 #define __section(S)	__attribute__ ((__section__(#S)))
 #define __init		__section(.init.text)
 #define __initdata	__section(.init.data)

@@ -29,7 +29,7 @@ LDFLAGS		=	-Bstatic							\
 SYS_OBJS	+=	startup.o armv7_libs.o clock.o clkpwr.o main.o subcpu.o		\
 			plat_pm.o ema.o resetcon.o gpio.o serial.o libstd.o gic.o	\
 			${MEMTYPE}_sdram.o memory.o crc.o build_info.o printf.o		\
-			board_${BOARD}.o nxp4330.o
+			board_${BOARD}.o nxp4330.o plat_load.o iUSBBOOT.o
 
 ifeq ($(ARM_SECURE), n)
 SYS_OBJS	+=	non_secure.o smc_entry.o smc_handler.o sip_main.o std_svc_setup.o	\
@@ -42,11 +42,6 @@ SYS_OBJS	+=	CRYPTO.o
 
 ifeq ($(PMIC_ON),y)
 SYS_OBJS	+=	i2c_gpio.o pmic.o nxe1500.o nxe2000.o mp8845.o axp228.o
-endif
-
-ifeq ($(SUPPORT_USB_BOOT),y)
-CFLAGS		+= -DSUPPORT_USB_BOOT
-SYS_OBJS	+=	iUSBBOOT.o
 endif
 
 ifeq ($(SUPPORT_SDMMC_BOOT),y)

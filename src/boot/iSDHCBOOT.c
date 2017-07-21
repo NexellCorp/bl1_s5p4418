@@ -1276,7 +1276,7 @@ unsigned int __init sdmmc_self_boot(void)
 }
 #endif	// #ifdef CHIPID_NXP4330
 
-U32 iSDXCBOOT(struct sbi_header *ptbi)
+int iSDXCBOOT(struct sbi_header *ptbi)
 {
 	CBOOL result = CFALSE;
 	SDXCBOOTSTATUS lSDXCBootStatus;
