@@ -18,9 +18,6 @@
 #include <sysheader.h>
 
 extern void subcpu_wfi(void);
-#if !defined(SECURE_MODE)
-extern void (*g_psci_ep)();
-#endif
 
 #define CPU_BRINGUP_CHECK   	(1)
 #define CPU_ALIVE_FLAG_ADDR	0xC0010238
@@ -54,17 +51,12 @@ int subcpu_on_start(unsigned int cpu_id)
 
 void subcpu_boot(unsigned int cpu_id)
 {
-#if defined(SECURE_MODE)
 	volatile unsigned int *flag
 		= (unsigned int *)CPU_ALIVE_FLAG_ADDR;
 	putchar('0' + cpu_id);
 	*flag = 1;
 
 	subcpu_wfi();
-#else
-	cpu_id = cpu_id;
-	g_psci_ep();
-#endif
 }
 
 void subcpu_bringup(void)

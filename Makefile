@@ -32,10 +32,7 @@ SYS_OBJS	+=	startup.o armv7_libs.o clock.o clkpwr.o main.o subcpu.o		\
 			board_${BOARD}.o nxp4330.o plat_load.o iUSBBOOT.o
 
 ifeq ($(ARM_SECURE), n)
-SYS_OBJS	+=	non_secure.o smc_entry.o smc_handler.o sip_main.o std_svc_setup.o	\
-			arm_topology.o psci_system_off.o psci_off.o psci_on.o 			\
-			psci_suspend.o psci_common.o psci_main.o bclk-dfs.o arm_gic.o		\
-			dpc.o
+SYS_OBJS	+=	non_secure.o
 endif
 
 SYS_OBJS	+=	CRYPTO.o

@@ -245,6 +245,7 @@ secondary_startup:
 
         mov     r0, r12
         b       subcpu_boot
+#endif
 
 /* waiting for core 1, 2, 3 */
 .global subcpu_wfi
@@ -261,7 +262,6 @@ subcpu_wfi:
         bxne    r3					// if valid address, get jump.
 //	streq   r2, [r0]					// restore power gating status
         beq     subcpu_wfi
-#endif
 
 .align 8
 .global system_sleep
