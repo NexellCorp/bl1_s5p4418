@@ -981,6 +981,12 @@ static void membase_calcurate(int* CS0, int* CS1)
 	} else if (size == 512) {	// 512MB
 		*CS0 = (DDR3_CS0_BASEADDR + (0x51000000 >> 24));
 		*CS1 = (DDR3_CS1_BASEADDR + (0x51000000 >> 24));
+	} else if (size == 256) {	// 256MB
+		*CS0 = (DDR3_CS0_BASEADDR + (0x61000000 >> 24));
+		*CS1 = (DDR3_CS1_BASEADDR + (0x61000000 >> 24));
+	} else if (size == 128) {	// 128MB
+		*CS0 = (DDR3_CS0_BASEADDR + (0x69000000 >> 24));
+		*CS1 = (DDR3_CS1_BASEADDR + (0x69000000 >> 24));
 	} else {			// 2GB or unknown
 		*CS0 = DDR3_CS0_BASEADDR;
 		*CS1 = DDR3_CS1_BASEADDR;
