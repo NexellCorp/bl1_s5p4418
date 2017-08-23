@@ -71,6 +71,8 @@
 #include <nxp4330_zh_dragon.h>
 #elif defined(DAUDIO)
 #include <nxp4330_daudio.h>
+#elif defined(FF_VOICE)
+#include <nxp4330_ff_voice.h>
 #endif
 #endif
 
