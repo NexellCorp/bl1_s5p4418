@@ -69,6 +69,8 @@
 #include <nxp4330_smart_voice.h>
 #elif defined(ZH_DRAGON)
 #include <nxp4330_zh_dragon.h>
+#elif defined(ZH_BLACKDRAGON)
+#include <nxp4330_zh_blackdragon.h>
 #elif defined(DAUDIO)
 #include <nxp4330_daudio.h>
 #elif defined(FF_VOICE)
