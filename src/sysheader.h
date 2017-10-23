@@ -75,6 +75,8 @@
 #include <nxp4330_daudio.h>
 #elif defined(FF_VOICE)
 #include <nxp4330_ff_voice.h>
+#elif defined(CLOVA)
+#include <nxp4330_clova.h>
 #endif
 #endif
 
