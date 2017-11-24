@@ -94,7 +94,7 @@ void BootMain(void)
 	struct NX_SecondBootInfo *pTBI = &TBI; // third boot info
 	int ret = CFALSE;
 #if (CONFIG_SUSPEND_RESUME == 1)
-	U32 signature, wakeup_status;
+	U32 signature, wakeup_status, reset_status = 0;
 #endif
 	U32 is_resume = 0;
 	U32 debug_ch = 0;
@@ -112,10 +112,13 @@ void BootMain(void)
 	WriteIO32(&pReg_Alive->ALIVEPWRGATEREG, 1);
 	signature = ReadIO32(&pReg_Alive->ALIVESCRATCHREADREG);
 	wakeup_status = (ReadIO32(&pReg_Alive->WAKEUPSTATUS) & 0xFF);
-	if ((SUSPEND_SIGNATURE == signature) &&	wakeup_status)
-		is_resume = 1;
-	else if (SUSPEND_FAILED_RESUME == signature)
-		is_resume = 1;
+	if (SUSPEND_SIGNATURE == signature) {
+		reset_status = ReadIO32(&pReg_ClkPwr->RESETSTATUS);
+		// normal-wakeup or watchdog-reset
+		if ((wakeup_status != 0) || ((reset_status >> 2) & 0x1))
+			is_resume = 1;
+	}
+
 #endif  //#if (CONFIG_SUSPEND_RESUME == 1)
 
 #if defined(INITPMIC_YES)
@@ -131,7 +134,8 @@ void BootMain(void)
 	DebugInit(debug_ch);
 
 	NOTICE("signature: 0x%X, is_resume: %d \r\n", signature, is_resume);
-	NOTICE("wakeup_status: 0x%08X \r\n", wakeup_status);
+	NOTICE("wakeup_status: 0x%08X, reset_status: 0x%08X \r\n",
+			wakeup_status, reset_status);
 
 	/* Build information */
 	buildinfo();

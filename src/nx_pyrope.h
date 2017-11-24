@@ -82,7 +82,6 @@
 
 #define SUSPEND_SIGNATURE       (0x50575200)    /* PWR (ASCII) */
 #define USBREBOOT_SIGNATURE     (0x85836666)
-#define SUSPEND_FAILED_RESUME	(0x87654321)
 
 
 #define SDFSBOOT                2
