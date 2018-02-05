@@ -91,7 +91,11 @@ void __init main(void)
 #if defined(PMIC_ON)
 	pmic_initalize();
 #endif
+#ifdef QUICKBOOT
+	DMC_Delay(0x1000);
+#else
 	DMC_Delay(0xFFFFF);
+#endif
 
 	/* step 03. clock(pll) intialize */
 	clock_initialize();
@@ -116,6 +120,10 @@ void __init main(void)
 
 	/* step 06. memory initialize */
 	memory_initialize(is_resume);
+
+#ifdef QUICKBOOT
+	printf("BL1 --> %s/%s\r\n", __DATE__, __TIME__);
+#endif
 
 	/* step 08-1. set the system bus configuration */
 #if (CONFIG_BUS_RECONFIG == 1)

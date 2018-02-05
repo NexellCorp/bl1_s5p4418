@@ -23,7 +23,11 @@
 
 /* (sd/emmc) configuration */
 #define CONFIG_S5P_SDMMC_SRCCLK			2
+#ifdef QUICKBOOT
+#define CONFIG_S5P_SDMMC_CLOCK			100000000
+#else
 #define CONFIG_S5P_SDMMC_CLOCK			25000000
+#endif
 
 #ifdef NX_DEBUG
 #define dprintf         printf
@@ -1001,8 +1005,10 @@ static CBOOL SDMMCBOOT(SDXCBOOTSTATUS *pSDXCBootStatus, struct sbi_header *ptbi)
 		while (pSDXCReg->CTRL & NX_SDXC_CTRL_FIFORST)
 			;
 	}
+#ifndef QUICKBOOT
 	printf("Load from :0x%08X Sector\r\n",
 			psbi->device_addr / BLOCK_LENGTH);
+#endif
 	result = NX_SDMMC_ReadSectors(pSDXCBootStatus,
 			psbi->device_addr / BLOCK_LENGTH,
 			2, (U32 *)ptbi);
@@ -1026,8 +1032,10 @@ static CBOOL SDMMCBOOT(SDXCBOOTSTATUS *pSDXCBootStatus, struct sbi_header *ptbi)
 #endif
 
 #if !defined(SECURE_MODE)
+#ifndef QUICKBOOT
 	printf("Load Addr :0x%08X,  Load Size :0x%08X,  Launch Addr :0x%08X\r\n",
 		ptbh->tbbi.load_addr, ptbh->tbbi.load_size, ptbh->tbbi.startaddr);
+#endif
 
 	U32 *src = (U32*)ptbi;
 	U32 *dst = (U32*)ptbh->tbbi.load_addr;

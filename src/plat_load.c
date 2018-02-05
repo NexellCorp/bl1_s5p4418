@@ -36,7 +36,9 @@ static void plat_launch(struct sbi_header *ptbi)
 
 	SYSMSG("Image Loading Done!\r\n");
 	SYSMSG("Launch to 0x%08X\r\n", (unsigned int)pLaunch);
+#ifndef QUICKBOOT
 	while (!serial_done());
+#endif
 	pLaunch(0, 4330);
 
 	ERROR("Image Loading Failure Try to USB boot\r\n");
