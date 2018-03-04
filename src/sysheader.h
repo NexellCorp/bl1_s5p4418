@@ -77,6 +77,8 @@
 #include <nxp4330_ff_voice.h>
 #elif defined(CLOVA)
 #include <nxp4330_clova.h>
+#elif defined(SVM)
+#include <nxp4330_svm.h>
 #endif
 #endif
 
