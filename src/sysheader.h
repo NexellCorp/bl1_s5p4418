@@ -79,6 +79,8 @@
 #include <nxp4330_clova.h>
 #elif defined(SVM)
 #include <nxp4330_svm.h>
+#elif defined(CLUSTER)
+#include <nxp4330_cluster.h>
 #endif
 #endif
 

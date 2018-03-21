@@ -48,6 +48,7 @@ BOARD				?= navi
 #BOARD				?= smart_voice
 #BOARD				?= zh_dragon
 #BOARD				?= svm
+#BOARD                          ?= cluster
 else
 #BOARD				?= svt
 #BOARD				?= asb
