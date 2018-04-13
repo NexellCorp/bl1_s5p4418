@@ -81,6 +81,8 @@
 #include <nxp4330_svm.h>
 #elif defined(CLUSTER)
 #include <nxp4330_cluster.h>
+#elif defined(ALLO_DISPLAY)
+#include <nxp4330_allo_display.h>
 #endif
 #endif
 
@@ -93,6 +95,8 @@
 #include <s5p4418_svt.h>
 #elif defined(RAPTOR)
 #include <s5p4418_raptor.h>
+#elif defined(ALLO_DISPLAY)
+#include <nxp4330_allo_display.h>
 #else
 #include <s5p4418_general.h>
 #endif
