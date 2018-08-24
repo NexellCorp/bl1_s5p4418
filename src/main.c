@@ -70,7 +70,9 @@ void __init main(void)
 
 #if defined(CHIPID_NXP4330)
 	/* SD/eMMC Card Detect Ready */
+#ifndef QUICKBOOT
 	delay_ms(0x100);
+#endif
 
 	/* step xx. must be self-loading*/
 	nxp4330_self_boot();
@@ -108,7 +110,9 @@ void __init main(void)
 		WARN("NSIH Version(or File) Mismatch...!!\r\n");
 
 	/* step xx. display the clock information */
+#ifndef QUICKBOOT
 	clock_information();
+#endif
 
 #if defined(SECURE_MODE)
 	/* step 05. set the secondary-core */
@@ -116,7 +120,9 @@ void __init main(void)
 #endif
 
 	/* step xx. display the ema(extra margin adjustments) information.  */
+#ifndef QUICKBOOT
 	ema_information();
+#endif
 
 	/* step 06. memory initialize */
 	memory_initialize(is_resume);
