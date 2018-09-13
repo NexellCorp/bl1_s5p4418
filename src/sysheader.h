@@ -83,6 +83,8 @@
 #include <nxp4330_cluster.h>
 #elif defined(ALLO_DISPLAY)
 #include <nxp4330_allo_display.h>
+#elif defined(CONVERGENCE_SVMC)
+#include <nxp4330_convergence_svmc.h>
 #endif
 #endif
 

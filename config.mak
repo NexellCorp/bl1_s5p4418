@@ -49,6 +49,7 @@ BOARD				?= navi
 #BOARD				?= zh_dragon
 #BOARD				?= svm
 #BOARD                          ?= cluster
+#BOARD                          ?= convergence_svmc
 else
 #BOARD				?= svt
 #BOARD				?= asb
