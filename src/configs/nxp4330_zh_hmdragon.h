@@ -24,8 +24,22 @@
 /* system clock macro */
 #define CONFIG_S5P_PLL0_FREQ			600
 #define CONFIG_S5P_PLL1_FREQ			800
-#define CONFIG_S5P_PLL2_FREQ			614
+#define CONFIG_S5P_PLL2_FREQ			677
 #define CONFIG_S5P_PLL3_FREQ			800
+
+#ifdef QUICKBOOT
+#ifdef MMC_AS_100
+#define CONFIG_S5P_SDMMC_CLOCK          100000000
+#endif
+#ifdef MMC_AS_50
+#define CONFIG_S5P_SDMMC_CLOCK          50000000
+#endif
+#ifdef MMC_AS_25
+#define CONFIG_S5P_SDMMC_CLOCK          25000000
+#endif
+#else
+#define CONFIG_S5P_SDMMC_CLOCK          25000000
+#endif
 
 // CPUDVOREG
 #define CONFIG_S5P_PLLx_DVO0			((CLKSRC_PLL_1 << CLKSRC_BITPOS) | \

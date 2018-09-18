@@ -20,6 +20,8 @@
 #include <sysheader.h>
 #include <main.h>
 //#include <memtester.h>
+extern void DMC_Delay(int milisecond);
+
 
 void delay_ms(int ms)
 {
@@ -91,12 +93,17 @@ void __init main(void)
 
 	/* step 02. set the pmic(power management ic) */
 #if defined(PMIC_ON)
+#ifndef PMIC_CANCEL
 	pmic_initalize();
 #endif
-#ifdef QUICKBOOT
-	DMC_Delay(0x1000);
-#else
+#endif
+
+#ifndef QUICKBOOT
 	DMC_Delay(0xFFFFF);
+#endif
+
+#ifdef ZH_HMDRAGON
+	gpio_board_init();
 #endif
 
 	/* step 03. clock(pll) intialize */
@@ -128,7 +135,11 @@ void __init main(void)
 	memory_initialize(is_resume);
 
 #ifdef QUICKBOOT
-	printf("BL1 --> %s/%s\r\n", __DATE__, __TIME__);
+#ifdef PMIC_CANCEL
+	printf("\r\nBL1\r\n");
+#else
+	printf("\r\nBL1 M:%d/P:%d\r\n", (int)(CONFIG_S5P_SDMMC_CLOCK/1000000),CONFIG_S5P_PLL1_FREQ);
+#endif
 #endif
 
 	/* step 08-1. set the system bus configuration */

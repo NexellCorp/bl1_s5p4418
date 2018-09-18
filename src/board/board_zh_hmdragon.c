@@ -79,5 +79,7 @@ void gpio_board_init(void)
 
 	/* CAM_POWER_EN(max9286) */
 	/* board_set_gpio(gpio_b, 27, 1, 1); */
+
+	return;
 }
 

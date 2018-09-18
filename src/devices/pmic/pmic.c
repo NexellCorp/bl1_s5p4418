@@ -27,5 +27,7 @@ void pmic_initalize(void)
 {
 	/* pmic (power managemnt ic) initialize */
 	pmic_board_init();
+#ifndef QUICKBOOT_2
 	DMC_Delay(100 * 1000);
+#endif
 }

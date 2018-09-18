@@ -23,12 +23,6 @@
 
 /* (sd/emmc) configuration */
 #define CONFIG_S5P_SDMMC_SRCCLK			2
-#ifdef QUICKBOOT
-#define CONFIG_S5P_SDMMC_CLOCK			100000000
-#else
-#define CONFIG_S5P_SDMMC_CLOCK			25000000
-#endif
-
 #ifdef NX_DEBUG
 #define dprintf         printf
 #else
@@ -695,7 +689,7 @@ CBOOL __init NX_SDMMC_Init(SDXCBOOTSTATUS *pSDXCBootStatus)
 
 	// CLKGEN
 	pSDClkGenReg->CLKENB = NX_PCLKMODE_ALWAYS<<3 | NX_BCLKMODE_DYNAMIC<<0;
-#if 0
+#ifdef QUICKBOOT // Modified For Quickboot
 	pSDClkGenReg->CLKGEN[0] = (pSDClkGenReg->CLKGEN[0] & ~(0x7<<2 | 0xFF<<5))
 		| (SDXC_CLKGENSRC<<2)				// set clock source
 		| ((SDXC_CLKGENDIV-1)<<5)			// set clock divisor
@@ -722,7 +716,7 @@ CBOOL __init NX_SDMMC_Init(SDXCBOOTSTATUS *pSDXCBootStatus)
 		0<<0;				// drive clock delay
 
 	pSDXCReg->CLKSRC = 0; // prescaler 0
-#if 0
+#ifdef QUICKBOOT // Modified For Quickboot
 	pSDXCReg->CLKDIV = (SDXC_CLKDIV>>1);    //	2*n divider (0 : bypass)
 #else
 	pSDXCReg->CLKDIV = (clkInfo.nClkGenDiv >> 1);
@@ -994,10 +988,23 @@ static CBOOL SDMMCBOOT(SDXCBOOTSTATUS *pSDXCBootStatus, struct sbi_header *ptbi)
 	register struct NX_SDMMC_RegisterSet * const pSDXCReg =
 		pgSDXCReg[pSDXCBootStatus->SDPort];
 
+#ifdef MMC_REINIT
 	if (CFALSE == NX_SDMMC_Open(pSDXCBootStatus)) {
 		printf("Cannot Detect SDMMC\r\n");
 		return CFALSE;
 	}
+#else
+    if (CFALSE == NX_SDMMC_IdentifyCard(pSDXCBootStatus)) {
+        printf("Card Identify Failure\r\n");
+        return CFALSE;
+    }
+    if (CFALSE == NX_SDMMC_SetClock(pSDXCBootStatus, CTRUE, CONFIG_S5P_SDMMC_CLOCK))
+        return CFALSE;
+
+    if (CFALSE == NX_SDMMC_SelectCard(pSDXCBootStatus))
+        return CFALSE;
+#endif
+
 	if (0 == (pSDXCReg->STATUS & NX_SDXC_STATUS_FIFOEMPTY)) {
 		dprintf("FIFO Reset!!!\r\n");
 		pSDXCReg->CTRL = NX_SDXC_CTRL_FIFORST;	// Reset the FIFO.
@@ -1016,11 +1023,10 @@ static CBOOL SDMMCBOOT(SDXCBOOTSTATUS *pSDXCBootStatus, struct sbi_header *ptbi)
 		printf("cannot read boot header! SDMMC boot failure\r\n");
 		return result;
 	}
-
-//#ifdef SECURE_ON
+#ifdef SECURE_ON
 	if (pReg_ClkPwr->SYSRSTCONFIG & 1 << 14)
 		Decrypt((U32 *)ptbi, (U32 *)ptbi, sizeof(struct nx_bootheader));
-//#endif
+#endif
 		if(ptbi->signature != HEADER_ID ) {
 			dprintf("0x%08X\r\n3rd boot Sinature is wrong! SDMMC boot failure\r\n", ptbi->signature);
 			return CFALSE;
@@ -1058,12 +1064,12 @@ static CBOOL SDMMCBOOT(SDXCBOOTSTATUS *pSDXCBootStatus, struct sbi_header *ptbi)
 			(U32 *)(ptbh->tbbi.load_addr + BLOCK_LENGTH * 2));
 	ptbi->launch_addr = ptbh->tbbi.startaddr;
 #endif
-//#ifdef SECURE_ON
+#ifdef SECURE_ON
 	if (pReg_ClkPwr->SYSRSTCONFIG & 1 << 14)
 		Decrypt((U32 *)(ptbh->tbbi.load_addr + sizeof(struct nx_bootheader)),
 			(U32 *)(ptbh->tbbi.load_addr + sizeof(struct nx_bootheader)),
 			ptbh->tbbi.load_size);
-//#endif
+#endif
 
 	if (result == CFALSE) {
 		printf("Image Read Failure\r\n");
@@ -1277,8 +1283,10 @@ unsigned int __init sdmmc_self_boot(void)
 	ret = sdmmc_read(pSDXCBootStatus,
 		SBI.device_addr, SBI.load_addr, SBI.load_size);
 
+#ifdef MMC_REINIT
 	NX_SDMMC_Close(pSDXCBootStatus);
 	NX_SDMMC_Terminate(pSDXCBootStatus);
+#endif
 
 	return ret;
 }
@@ -1302,7 +1310,9 @@ int iSDXCBOOT(struct sbi_header *ptbi)
 
 	NX_SDPADSetALT(pSDXCBootStatus->SDPort);
 
+#ifdef MMC_REINIT
 	NX_SDMMC_Init(pSDXCBootStatus);
+#endif
 
 	//--------------------------------------------------------------------------
 	// Normal SD(eSD)/MMC ver 4.2 boot
