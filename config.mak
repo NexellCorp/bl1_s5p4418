@@ -50,6 +50,7 @@ BOARD				?= navi
 #BOARD				?= svm
 #BOARD                          ?= cluster
 #BOARD                          ?= convergence_svmc
+#BOARD                          ?= con_svma
 else
 #BOARD				?= svt
 #BOARD				?= asb

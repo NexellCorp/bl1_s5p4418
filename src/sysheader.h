@@ -85,6 +85,8 @@
 #include <nxp4330_allo_display.h>
 #elif defined(CONVERGENCE_SVMC)
 #include <nxp4330_convergence_svmc.h>
+#elif defined(CON_SVMA)
+#include <nxp4330_con_svma.h>
 #endif
 #endif
 

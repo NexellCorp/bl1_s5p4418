@@ -33,7 +33,7 @@
 /************************************************
   * SVT Board (PMIC: NXE2000, MP8845)  - Reference 2016.04.05
   * ARM		: 1.25V
-  * CORE	: 1.2V
+  * CORE	: 1.2V --> 1.0
   * DDR		: 1.5V
   * DDR_IO	: 1.5V
   ************************************************/
@@ -47,7 +47,8 @@ void pmic_board_init(void)
 	data[0] = nxe2000_get_dcdc_step(NXE2000_DEF_DDC1_VOL);
 	nxe2000_write(NXE2000_REG_DC1VOL, data, 1);
 
-	data[0] = nxe2000_get_dcdc_step(NXE2000_DEF_DDC2_VOL);
+	/* apply Q100 condition CORE(DCDC2) voltage : 1.1V --> 1.0V */
+	data[0] = nxe2000_get_dcdc_step(NXE2000_DEF_DDC2_VOL - 100000);
 	nxe2000_write(NXE2000_REG_DC2VOL, data, 1);
 
 	data[0] = nxe2000_get_dcdc_step(NXE2000_DEF_DDC4_VOL);
