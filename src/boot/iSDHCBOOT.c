@@ -23,6 +23,11 @@
 
 /* (sd/emmc) configuration */
 #define CONFIG_S5P_SDMMC_SRCCLK			2
+
+#ifndef CONFIG_S5P_SDMMC_CLOCK
+#define CONFIG_S5P_SDMMC_CLOCK			50000000
+#endif
+
 #ifdef NX_DEBUG
 #define dprintf         printf
 #else
