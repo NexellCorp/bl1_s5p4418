@@ -51,6 +51,7 @@ BOARD				?= navi
 #BOARD                          ?= cluster
 #BOARD                          ?= convergence_svmc
 #BOARD                          ?= con_svma
+#BOARD                          ?= convergence_daudio
 else
 #BOARD				?= svt
 #BOARD				?= asb

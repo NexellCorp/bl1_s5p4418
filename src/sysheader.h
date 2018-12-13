@@ -89,6 +89,8 @@
 #include <nxp4330_convergence_svmc.h>
 #elif defined(CON_SVMA)
 #include <nxp4330_con_svma.h>
+#elif defined(CONVERGENCE_DAUDIO)
+#include <nxp4330_convergence_daudio.h>
 #endif
 #endif
 
