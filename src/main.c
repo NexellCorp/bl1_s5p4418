@@ -93,9 +93,7 @@ void __init main(void)
 
 	/* step 02. set the pmic(power management ic) */
 #if defined(PMIC_ON)
-#ifndef PMIC_CANCEL
 	pmic_initalize();
-#endif
 #endif
 
 #ifndef QUICKBOOT
