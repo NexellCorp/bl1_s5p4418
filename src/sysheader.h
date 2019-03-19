@@ -91,6 +91,10 @@
 #include <nxp4330_con_svma.h>
 #elif defined(CONVERGENCE_DAUDIO)
 #include <nxp4330_convergence_daudio.h>
+#elif defined(SLT)
+#include <nxp4330_slt.h>
+#elif defined(VTK)
+#include <nxp4330_vtk.h>
 #endif
 #endif
 
