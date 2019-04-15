@@ -45,9 +45,11 @@ int memory_initialize(int is_resume)
 		lpddr3_initialize(0);
 #endif
 
+#if (CONFIG_SUSPEND_RESUME == 1)
 	/* step xx. exit the (sdram) self-refresh  */
 	if (is_resume)
 		exit_self_refresh();
+#endif
 
 	SYSMSG("Memory Initialize Done! (%d:%d)\r\n\n", ret, is_resume);
 

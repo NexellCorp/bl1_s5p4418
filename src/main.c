@@ -86,6 +86,7 @@ void __init main(void)
 #endif
 
 	mmio_write_32(&pReg_Alive->ALIVEPWRGATEREG, 1);
+
 #if (CONFIG_SUSPEND_RESUME == 1)
 	/* step xx. check the suspend, resume */
 	is_resume = s5p4418_resume_check();
@@ -110,12 +111,12 @@ void __init main(void)
 	/* step 04. serial console(uartX) initialize. */
 	serial_init(serial_ch);
 
+#ifndef QUICKBOOT
 	/* step xx. build information. version, build time and date */
 	if (build_information() < 0)
 		WARN("NSIH Version(or File) Mismatch...!!\r\n");
 
 	/* step xx. display the clock information */
-#ifndef QUICKBOOT
 	clock_information();
 #endif
 
