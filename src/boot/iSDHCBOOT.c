@@ -981,6 +981,148 @@ End:
 	return result;
 }
 
+
+#ifdef OTA_AB_UPDATE
+void __init NX_SDMMC_Read1Sector_misc(SDXCBOOTSTATUS *pSDXCBootStatus, U32 SectorNum, U32 *tempBuf)
+{
+        unsigned int result = -1;
+	U32	status;
+	NX_SDMMC_COMMAND cmd;
+	register struct NX_SDMMC_RegisterSet *const pSDXCReg = pgSDXCReg[pSDXCBootStatus->SDPort];
+
+	while (pSDXCReg->STATUS & (1 << 9 | 1 << 10)); // wait while data busy or data transfer busy
+
+	//--------------------------------------------------------------------------
+	// wait until 'Ready for data' is set and card is in transfer state.
+	do {
+		cmd.cmdidx	= SEND_STATUS;
+		cmd.arg		= pSDXCBootStatus->rca;
+		cmd.flag	= NX_SDXC_CMDFLAG_STARTCMD | NX_SDXC_CMDFLAG_CHKRSPCRC | NX_SDXC_CMDFLAG_SHORTRSP;
+		status = NX_SDMMC_SendCommand( pSDXCBootStatus, &cmd );
+		if( NX_SDMMC_STATUS_NOERROR != status )
+			goto End;
+	} while( !((cmd.response[0] & (1<<8)) && (((cmd.response[0]>>9)&0xF)==4)) );
+
+	// Set byte count
+	pSDXCReg->BYTCNT = BLOCK_LENGTH;
+
+	//--------------------------------------------------------------------------
+	// Send Command
+	cmd.cmdidx	= READ_SINGLE_BLOCK;
+	cmd.flag	= NX_SDXC_CMDFLAG_STARTCMD | NX_SDXC_CMDFLAG_WAITPRVDAT | NX_SDXC_CMDFLAG_CHKRSPCRC | NX_SDXC_CMDFLAG_SHORTRSP
+			| NX_SDXC_CMDFLAG_BLOCK | NX_SDXC_CMDFLAG_RXDATA;
+
+	cmd.arg		= (pSDXCBootStatus->bHighCapacity) ? SectorNum : SectorNum*BLOCK_LENGTH;
+
+	status = NX_SDMMC_SendCommand( pSDXCBootStatus, &cmd );
+	if( NX_SDMMC_STATUS_NOERROR != status )
+		goto End;
+
+	//--------------------------------------------------------------------------
+	// Read data
+	if( CTRUE == NX_SDMMC_ReadSectorData( pSDXCBootStatus, 1, tempBuf ) ) {
+            result = 1;
+	}
+
+End:
+	if( CFALSE == result ) {
+		cmd.cmdidx	= STOP_TRANSMISSION;
+		cmd.arg		= 0;
+		cmd.flag	= NX_SDXC_CMDFLAG_STARTCMD | NX_SDXC_CMDFLAG_CHKRSPCRC | NX_SDXC_CMDFLAG_SHORTRSP | NX_SDXC_CMDFLAG_STOPABORT;
+		NX_SDMMC_SendCommandInternal( pSDXCBootStatus, &cmd );
+
+		if(0 == (pSDXCReg->STATUS & NX_SDXC_STATUS_FIFOEMPTY)) {
+			pSDXCReg->CTRL = NX_SDXC_CTRL_FIFORST;				// Reest the FIFO.
+			while( pSDXCReg->CTRL & NX_SDXC_CTRL_FIFORST );		// Wait until the FIFO reset is completed.
+		}
+	}
+}
+
+struct andr_slot_metadata {
+	u8 priority : 4;
+	u8 tries_remaining : 3;
+	u8 successful_boot : 1;
+	u8 verity_corrupted : 1;
+	u8 reserved : 7;
+} __attribute__ ((packed, aligned(2)));
+//} __packed;
+
+struct andr_bl_control {
+	char slot_suffix[4];
+	u32 magic;
+	u8 version;
+	u8 nb_slot : 3;
+	u8 recovery_tries_remaining : 3;
+	u8 reserved0[2];
+	struct andr_slot_metadata slot_info[4];
+	u8 reserved1[8];
+	u32 crc32_le;
+} __attribute__ ((packed, aligned(4)));
+//} __packed;
+
+static int ab_compare_slots(const struct andr_slot_metadata *a,
+			    const struct andr_slot_metadata *b)
+{
+	if (a->priority != b->priority)
+		return b->priority - a->priority;
+
+	if (a->successful_boot != b->successful_boot)
+		return b->successful_boot - a->successful_boot;
+
+	if (a->tries_remaining != b->tries_remaining)
+		return b->tries_remaining - a->tries_remaining;
+
+	return 0;
+}
+
+static int ab_select_slot(U32 *tempBuf)
+{
+        struct andr_bl_control *abc = (struct andr_bl_control*)tempBuf;
+        int slot = -1;
+        int i = 0;
+
+       	if (abc->magic != ANDROID_BOOT_CTRL_MAGIC) {
+        	printf("[BL1]ANDROID: Unknown A/B metadata: %.8x\r\n", abc->magic);
+		return -1;
+	}
+#if defined(NX_DEBUG)
+        printf("[bl1][%s] ----- Slot Select INFO -----\r\n", __func__);
+        printf("[bl1][%s] abc->slot_suffix  = %s\r\n",   __func__, abc->slot_suffix );
+        printf("[bl1][%s] abc->magic        = 0x%x\r\n", __func__, abc->magic       );
+        printf("[bl1][%s] abc->nb_slot      = %d\r\n",   __func__, abc->nb_slot     );
+        printf("[bl1][%s] abc->crc32_le     = 0x%x\r\n", __func__, abc->crc32_le    );
+        printf("[bl1][%s] ----------------------------\r\n", __func__);
+#endif
+	for (i = 0; i < abc->nb_slot; ++i) {
+		if (abc->slot_info[i].verity_corrupted ||
+		    !abc->slot_info[i].tries_remaining) {
+			printf("[BL1]ANDROID: unbootable slot %d tries: %d, corrupt: %d\r\n",
+                               i, abc->slot_info[i].tries_remaining,
+                               abc->slot_info[i].verity_corrupted);
+			continue;
+		}
+		printf("[BL1]ANDROID: bootable slot %d pri: %d, tries: %d, corrupt: %d, successful: %d\r\n",
+			i, abc->slot_info[i].priority,
+                        abc->slot_info[i].tries_remaining,
+			abc->slot_info[i].verity_corrupted,
+			abc->slot_info[i].successful_boot);
+
+		if (slot < 0 || ab_compare_slots(&abc->slot_info[i], &abc->slot_info[slot]) < 0) {
+                        slot = i;
+		}
+	}
+
+	if (slot >= 0 && !abc->slot_info[slot].successful_boot) {
+		printf("[BL1]ANDROID: Attempting slot %d, tries remaining %d\r\n",
+		       slot,
+		       abc->slot_info[slot].tries_remaining);
+		abc->slot_info[slot].tries_remaining--;
+	}
+
+        return slot;
+}
+#endif //OTA_AB_UPDATE
+
 //------------------------------------------------------------------------------
 extern void Decrypt(U32 *SrcAddr, U32 *DestAddr, U32 Size);
 static CBOOL SDMMCBOOT(SDXCBOOTSTATUS *pSDXCBootStatus, struct sbi_header *ptbi) // U32 option )
@@ -1017,7 +1159,42 @@ static CBOOL SDMMCBOOT(SDXCBOOTSTATUS *pSDXCBootStatus, struct sbi_header *ptbi)
 		while (pSDXCReg->CTRL & NX_SDXC_CTRL_FIFORST)
 			;
 	}
+
+#ifdef OTA_AB_UPDATE
+        int ab_select = 0;
+        U32 tempBuf[BLOCK_LENGTH+4] = {0,};
+        U32 boot_slot_ab_addr_offset = (U32)((U32)&(ptbh->tbbi.boot_slot_ab) - (U32)&(ptbh->tbbi));
+
+	NX_SDMMC_Read1Sector_misc(pSDXCBootStatus,
+                                  (MISC_SDMMC_DEVADDR + MISC_SDMMC_SLOT_OFFSET)/BLOCK_LENGTH,
+                                  tempBuf);
+        ab_select = ab_select_slot(tempBuf);
+
+#if defined(NX_DEBUG)
+        //Check misc READ data
+        int iii = 0;
+        printf("[bl1]==== misc 32byte read====\r\n");
+        for(iii = 0; iii < 32; iii++) {
+            if(iii % 8 == 0) {
+                printf("\r\n");
+                printf("0x%08x : ", &tempBuf[iii]);
+            }
+            printf("0x%08x ", tempBuf[iii]);
+        }
+        printf("\r\n");
+#endif
+        if (ab_select == OTA_AB_UPDATE_SUFFIX_A) {
+            psbi->device_addr = BL1_SDMMCBOOT_BOOTLOADER_A;   // Sector 0x81
+            printf("[bl1] ========== Slot selct A ==========\r\n");
+        }
+        else {  //OTA_AB_UPDATE_SUFFIX_B
+            psbi->device_addr = BL1_SDMMCBOOT_BOOTLOADER_B;   // Sector 0x9608;
+            printf("[bl1] ========== Slot selct B ==========\r\n");
+        }
+#endif //OTA_AB_UPDATE
+
 #ifndef QUICKBOOT
+        printf("Load from :0x%08X Addr\r\n", psbi->device_addr);
 	printf("Load from :0x%08X Sector\r\n",
 			psbi->device_addr / BLOCK_LENGTH);
 #endif
@@ -1038,13 +1215,13 @@ static CBOOL SDMMCBOOT(SDXCBOOTSTATUS *pSDXCBootStatus, struct sbi_header *ptbi)
 		}
 
 #if defined(SECURE_MODE)
-	dprintf("Load Addr :0x%08X,  Load Size :0x%08X,  Launch Addr :0x%08X\r\n",
+	dprintf("SECURE - Load Addr :0x%08X,  Load Size :0x%08X,  Launch Addr :0x%08X\r\n",
 			ptbi->load_addr, ptbi->load_size, ptbi->launch_addr);
 #endif
 
 #if !defined(SECURE_MODE)
 #ifndef QUICKBOOT
-	printf("Load Addr :0x%08X,  Load Size :0x%08X,  Launch Addr :0x%08X\r\n",
+	printf("NON_SECURE - Load Addr :0x%08X,  Load Size :0x%08X,  Launch Addr :0x%08X\r\n",
 		ptbh->tbbi.load_addr, ptbh->tbbi.load_size, ptbh->tbbi.startaddr);
 #endif
 
@@ -1055,8 +1232,23 @@ static CBOOL SDMMCBOOT(SDXCBOOTSTATUS *pSDXCBootStatus, struct sbi_header *ptbi)
 		*dst++ = *src++;
 
 	dst = tb_load;
-
 #endif
+
+#ifdef OTA_AB_UPDATE
+        //For BL2 notify selected slot A or B
+        U32 *dst_ab = (U32*)ptbh->tbbi.load_addr;
+
+        if (ab_select == OTA_AB_UPDATE_SUFFIX_A) {
+                *(dst_ab + boot_slot_ab_addr_offset/4) = (U32)OTA_AB_UPDATE_BL2_MSG_A;
+        }
+        else {
+                *(dst_ab + boot_slot_ab_addr_offset/4) = (U32)OTA_AB_UPDATE_BL2_MSG_B;
+        }
+#if defined(NX_DEBUG)
+        printf("[bl1] slot marking for BL2 = 0x%x\r\n", *(dst_ab + boot_slot_ab_addr_offset/4));
+#endif
+#endif
+
 #if defined(SECURE_MODE)
 	result = NX_SDMMC_ReadSectors(pSDXCBootStatus,
 			psbi->device_addr / BLOCK_LENGTH + 1,
@@ -1069,13 +1261,16 @@ static CBOOL SDMMCBOOT(SDXCBOOTSTATUS *pSDXCBootStatus, struct sbi_header *ptbi)
 			(U32 *)(ptbh->tbbi.load_addr + BLOCK_LENGTH * 2));
 	ptbi->launch_addr = ptbh->tbbi.startaddr;
 #endif
+
+       	printf("psbi->device_addr = 0x%08X\r\n", psbi->device_addr);
+        printf("ptbi->launch_addr = 0x%08X\r\n", ptbi->launch_addr);
+
 #ifdef SECURE_ON
 	if (pReg_ClkPwr->SYSRSTCONFIG & 1 << 14)
 		Decrypt((U32 *)(ptbh->tbbi.load_addr + sizeof(struct nx_bootheader)),
 			(U32 *)(ptbh->tbbi.load_addr + sizeof(struct nx_bootheader)),
 			ptbh->tbbi.load_size);
 #endif
-
 	if (result == CFALSE) {
 		printf("Image Read Failure\r\n");
 	}
