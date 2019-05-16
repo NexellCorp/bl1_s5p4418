@@ -78,9 +78,6 @@ SECURE_ON			?= n
 # arm mode - secure/non-secure
 ARM_SECURE			?= n
 
-# OTA AB update support
-OTA_AB_UPDATE                   ?= n
-
 # cross-tool pre-header
 ifeq ($(OS),Windows_NT)
 CROSS_COMPILE_TOP		?=
@@ -175,11 +172,6 @@ CFLAGS				+= -DSUPPORT_USB_BOOT
 # arm mode - secure/non-secure
 ifeq ($(ARM_SECURE), y)
 CFLAGS				+=	-DSECURE_MODE
-endif
-
-# OTA AB update support
-ifeq ($(OTA_AB_UPDATE), y)
-CFLAGS				+=	-DOTA_AB_UPDATE
 endif
 
 # supported kernel version (3.18-4.3/4.1-4.4)

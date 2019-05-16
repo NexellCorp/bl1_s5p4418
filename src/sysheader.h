@@ -172,21 +172,6 @@
 
 #define BL1_SDRAMBOOT_LOADADDR			(0xFFFF0000)
 #define BL1_SDMMCBOOT_DEVADDR			(0x200)
-
-#ifdef OTA_AB_UPDATE
-#define ANDROID_BOOT_CTRL_MAGIC                 0x42414342
-#define ANDROID_BOOT_CTRL_VERSION 1
-
-#define BL1_SDMMCBOOT_BOOTLOADER_A	        (0x10200)  //loader-emmc.img start address. See,partmap.txt
-#define BL1_SDMMCBOOT_BOOTLOADER_B		(0x4D0200) //loader-emmc.img start address. See,partmap.txt
-#define MISC_SDMMC_DEVADDR                      (0xA9090000) //See, partmap.txt
-#define MISC_SDMMC_SLOT_OFFSET                  (0x800)
-#define OTA_AB_UPDATE_SUFFIX_A                  (0)
-#define OTA_AB_UPDATE_SUFFIX_B                  (1)
-#define OTA_AB_UPDATE_BL2_MSG_A                 (0xAAAAAAAA)
-#define OTA_AB_UPDATE_BL2_MSG_B                 (0xBBBBBBBB)
-#endif //OTA_AB_UPDATE
-
 #define BL1_SDMMCBOOT_LOADSIZE			(16*1024)
 #define SRAM_MAXSIZE				(32*1024)
 #define BL1_STACKSIZE				(3072)
