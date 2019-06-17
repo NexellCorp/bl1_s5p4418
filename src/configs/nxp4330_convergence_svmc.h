@@ -23,7 +23,7 @@
 
 /* system clock macro */
 #define CONFIG_S5P_PLL0_FREQ			600
-#define CONFIG_S5P_PLL1_FREQ			800 //1200
+#define CONFIG_S5P_PLL1_FREQ			800
 #define CONFIG_S5P_PLL2_FREQ			614
 #define CONFIG_S5P_PLL3_FREQ			614
 
@@ -52,13 +52,12 @@
 						((2 - 1) << DVO1_BITPOS))
 
 /* sdram lpddr3 configuration */
-#define CONFIG_DDR3_MEMCLK			800				// 533, 666, 800
+#define CONFIG_DDR3_MEMCLK			800	// 533, 666, 800
 
-#define CONFIG_DDR3_CS_NUM			 2				// 1 : 1CS, 2: 2CS
-#define CONFIG_DDR3_BANK_NUM			 3				// 3: 8 Bank
+#define CONFIG_DDR3_CS_NUM			2	// 1 : 1CS, 2: 2CS
+#define CONFIG_DDR3_BANK_NUM			3	// 3: 8 Bank
 #define CONFIG_DDR3_ROW_NUM			15
 #define CONFIG_DDR3_COLUMN_NUM			10
-
 #define CONFIG_DDR3_BUS_WIDTH			16
 
 /* The memory chip size was calculated. */
@@ -86,9 +85,9 @@
  * AP Strength: 48Ohm
  * AP ODT: 120Ohm
  */
-#define CONFIG_DRAM_MR1_ODS			0				// MR1_ODS - 0: RZQ/6, 1 : RZQ/7
-#define CONFIG_DRAM_MR1_RTT_Nom			2				// MR1_RTT_Nom - 001: RZQ/4, 010: RZQ/2, 011: RZQ/6, 100: RZQ/12, 101: RZQ/8
-#define CONFIG_DRAM_MR2_RTT_WR			1 //0 				// MR2_RTT_WR - 0: ODT disable, 1: RZQ/4, 2: RZQ/2
+#define CONFIG_DRAM_MR1_ODS			0	// MR1_ODS - 0: RZQ/6, 1 : RZQ/7
+#define CONFIG_DRAM_MR1_RTT_Nom			2	// MR1_RTT_Nom - 001: RZQ/4, 010: RZQ/2, 011: RZQ/6, 100: RZQ/12, 101: RZQ/8
+#define CONFIG_DRAM_MR2_RTT_WR			2	// MR2_RTT_WR - 0: ODT disable, 1: RZQ/4, 2: RZQ/2
 
 /* memory controller(dphy) drive strengh configuration  */
 /* This field is not really used */
@@ -101,14 +100,14 @@
 #define CONFIG_DPHY_DRVDS_CS			6
 #define CONFIG_DPHY_DRVDS_CA			6
 
-#define CONFIG_DPHY_ZQ_DDS			4
-#define CONFIG_DPHY_ZQ_ODT			1
+#define CONFIG_DPHY_ZQ_DDS			5
+#define CONFIG_DPHY_ZQ_ODT			2
 
 /* ddr3 leveling & training configuration */
-#define CONFIG_DDR3_WRITE_LVL_EN		0				// 0: Disable, 1: Enable
-#define CONFIG_DDR3_READ_DQ_EN			0				// 0: Disable, 1: Enable
-#define CONFIG_DDR3_WRITE_DQ_EN			0				// 0: Disable, 1: Enable
-#define CONFIG_DDR3_GATE_LVL_EN			1				// 0: Disable, 1: Enable
+#define CONFIG_DDR3_WRITE_LVL_EN		0	/* 0: Disable, 1: Enable */
+#define CONFIG_DDR3_READ_DQ_EN			1	/* 0: Disable, 1: Enable */
+#define CONFIG_DDR3_WRITE_DQ_EN			1	/* 0: Disable, 1: Enable */
+#define CONFIG_DDR3_GATE_LVL_EN			1	/* 0: Disable, 1: Enable */
 
 #define CONFIG_DDR3_LVLTR_EN			(CONFIG_DDR3_WRITE_LVL_EN << 0) |	\
 						(CONFIG_DDR3_GATE_LVL_EN  << 2)	|	\
