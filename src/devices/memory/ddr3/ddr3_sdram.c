@@ -334,7 +334,7 @@ unsigned int GetVWMC_Compensation(unsigned int Code)
 
 #if 0
 	for (inx = 0; inx < 4; inx++)
-		printf( "Sorted Value[%d] = %d\r\n", inx, offsetr[inx] );
+		MEMMSG( "Sorted Value[%d] = %d\r\n", inx, offsetr[inx] );
 #endif
 
 	if (OffSet[1] > OffSet[2]) {
@@ -602,21 +602,21 @@ void read_dq_calibration_information(void)
 		}
 	}
 #endif
-	printf("\r\n##### Read DQ Calibration - Information #####\r\n");
+	MEMMSG("\r\n##### Read DQ Calibration - Information #####\r\n");
 
-	printf("Read DQ Calibration %s!! \r\n",
+	MEMMSG("Read DQ Calibration %s!! \r\n",
 			(DQ_FailStatus == 0) ? "Success" : "Failed" );
 
 	if (DQ_FailStatus == 0) {
 	#if 0	// Display Type
 		for(slice = 0; slice < max_slice; slice++)
-			printf("VWML0: %d, VWMC0: %d, VWML0: %d, Deskew0: %d \r\n",
+			MEMMSG("VWML0: %d, VWMC0: %d, VWML0: %d, Deskew0: %d \r\n",
 					VWML[slice], VWMC[slice], VWMR[slice], Deskew[slice]);
 	#else
 		unsigned int Range;
 		for(slice = 0; slice < max_slice; slice++) {
 			Range = VWMR[slice] - VWML[slice];
-			printf("SLICE%2d: %2d ~ %2d ~ %2d (Range: %2d)(Deskew: %2d) \r\n",
+			MEMMSG("SLICE%2d: %2d ~ %2d ~ %2d (Range: %2d)(Deskew: %2d) \r\n",
 					slice, VWML[slice], VWMC[slice], VWMR[slice],
 					Range, Deskew[slice]);
 		}
@@ -625,13 +625,13 @@ void read_dq_calibration_information(void)
 
 	#if 0	// Each Byte
 		for(Lane = 0; Lane < MaxLane; Lane) {
-			printf("Lane Number : %d \r\n", Lane );
+			MEMMSG("Lane Number : %d \r\n", Lane );
 			for(slice = 0; slice < max_slice; slice++)
 				MEMMSG("DQ%d : %d \r\n", slice, RDCenter[slice]);
 		}
 	#endif
 	}
-	printf("#############################################\r\n");
+	MEMMSG("#############################################\r\n");
 
 }
 #endif
@@ -804,34 +804,34 @@ void write_dq_calibration_information(void)
 			Deskew[slice] = (DQ_Calibration >> (slice*8)) & 0xFF;
 	}
 
-	printf("\r\n#### Write DQ Calibration - Information ####\r\n");
+	MEMMSG("\r\n#### Write DQ Calibration - Information ####\r\n");
 
-	printf("Write DQ Calibration %s!! \r\n",
+	MEMMSG("Write DQ Calibration %s!! \r\n",
 			(DQ_FailStatus == 0) ? "Success" : "Failed" );
 
 	if (DQ_FailStatus == 0) {
 	#if 0	// Display Type
 		for(slice = 0; slice < max_slice; slice++)
-			printf("VWML0: %d, VWMC0: %d, VWML0: %d, Deskew0: %d \r\n",
+			MEMMSG("VWML0: %d, VWMC0: %d, VWML0: %d, Deskew0: %d \r\n",
 					VWML[slice], VWMC[slice], VWMR[slice], Deskew[slice]);
 	#else
 		unsigned int Range;
 		for(slice = 0; slice < max_slice; slice++) {
 			Range = VWMR[slice] - VWML[slice];
-			printf("SLICE%2d: %2d ~ %2d ~ %2d (Range: %2d)(Deskew: %2d) \r\n",
+			MEMMSG("SLICE%2d: %2d ~ %2d ~ %2d (Range: %2d)(Deskew: %2d) \r\n",
 					slice, VWML[slice], VWMC[slice], VWMR[slice],
 					Range, Deskew[slice]);
 		#if 0
 			if ((VWMC[slice] == 0) || (VWML[slice] == 0)
 				|| (VWMR[slice] == 0)) {
-				printf("Write Mem Cal Fuck!! \r\n");
+				MEMMSG("Write Mem Cal Fuck!! \r\n");
 				while(1);
 			}
 		#endif
 		}
 	#endif
 	}
-	printf("############################################\r\n");
+	MEMMSG("############################################\r\n");
 }
 #endif
 
