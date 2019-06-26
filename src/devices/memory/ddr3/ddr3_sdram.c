@@ -1496,6 +1496,8 @@ int ddr3_initialize(unsigned int is_resume)
 		}
 	#endif
 
+	DMC_Delay(100);
+
 	#if (DDR_WRITE_DQ_CALIB_EN == 1)
 		/* Step 32-5. Write DQ Calibration */
 		if (DDR3_LvlTr & LVLTR_WR_CAL) {
