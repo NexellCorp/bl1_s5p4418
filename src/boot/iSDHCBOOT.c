@@ -1101,7 +1101,7 @@ static int ab_select_slot(U32 *tempBuf)
                                abc->slot_info[i].verity_corrupted);
 			continue;
 		}
-		printf("[BL1]ANDROID: bootable slot %d pri: %d, tries: %d, corrupt: %d, successful: %d\r\n",
+		dprintf("[BL1]ANDROID: bootable slot %d pri: %d, tries: %d, corrupt: %d, successful: %d\r\n",
 			i, abc->slot_info[i].priority,
                         abc->slot_info[i].tries_remaining,
 			abc->slot_info[i].verity_corrupted,
@@ -1113,7 +1113,7 @@ static int ab_select_slot(U32 *tempBuf)
 	}
 
 	if (slot >= 0 && !abc->slot_info[slot].successful_boot) {
-		printf("[BL1]ANDROID: Attempting slot %d, tries remaining %d\r\n",
+		dprintf("[BL1]ANDROID: Attempting slot %d, tries remaining %d\r\n",
 		       slot,
 		       abc->slot_info[slot].tries_remaining);
 		abc->slot_info[slot].tries_remaining--;
@@ -1185,11 +1185,11 @@ static CBOOL SDMMCBOOT(SDXCBOOTSTATUS *pSDXCBootStatus, struct sbi_header *ptbi)
 #endif
         if (ab_select == OTA_AB_UPDATE_SUFFIX_A) {
             psbi->device_addr = BL1_SDMMCBOOT_BOOTLOADER_A;   // Sector 0x81
-            printf("[bl1] ========== Slot selct A ==========\r\n");
+            dprintf("[bl1] ========== Slot selct A ==========\r\n");
         }
         else {  //OTA_AB_UPDATE_SUFFIX_B
             psbi->device_addr = BL1_SDMMCBOOT_BOOTLOADER_B;   // Sector 0x9608;
-            printf("[bl1] ========== Slot selct B ==========\r\n");
+            dprintf("[bl1] ========== Slot selct B ==========\r\n");
         }
 #endif //OTA_AB_UPDATE
 

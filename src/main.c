@@ -110,12 +110,12 @@ void __init main(void)
 	/* step 04. serial console(uartX) initialize. */
 	serial_init(serial_ch);
 
+#ifndef QUICKBOOT
 	/* step xx. build information. version, build time and date */
 	if (build_information() < 0)
 		WARN("NSIH Version(or File) Mismatch...!!\r\n");
 
 	/* step xx. display the clock information */
-#ifndef QUICKBOOT
 	clock_information();
 #endif
 
@@ -134,7 +134,7 @@ void __init main(void)
 
 #ifdef QUICKBOOT
 #ifdef PMIC_CANCEL
-	printf("\r\nBL1\r\n");
+	printf("BL1\r\n");
 #else
 	printf("\r\nBL1 M:%d/P:%d\r\n", (int)(CONFIG_S5P_SDMMC_CLOCK/1000000),CONFIG_S5P_PLL1_FREQ);
 #endif
