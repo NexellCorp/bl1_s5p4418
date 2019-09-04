@@ -111,6 +111,9 @@ void __init main(void)
 	/* step 04. serial console(uartX) initialize. */
 	serial_init(serial_ch);
 
+	/* step xx. enable the l2-cache */
+	l2cache_set_enb(CTRUE);
+
 #ifndef QUICKBOOT
 	/* step xx. build information. version, build time and date */
 	if (build_information() < 0)
@@ -159,9 +162,6 @@ void __init main(void)
 	/* step xx. check the nsih header id */
 	if (psbi->signature != HEADER_ID)
 		ERROR("2nd Boot Header is invalid, Please check it out!\r\n");
-
-	/* step xx. enable the l2-cache */
-	l2cache_set_enb(CTRUE);
 
 	/* step xx. s5p4418 - moudle resetgen (for kernel4.4) */
 	common_resetgen();
