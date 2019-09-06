@@ -20,15 +20,15 @@
 
 /* External Function */
 #if (CONFIG_SUSPEND_RESUME == 1)
+#define RESETSTATUS_POWER_ON_RESET 0x01
+#define RESETSTATUS_GPIO_RESET 0x02
+#define RESETSTATUS_WATCHDOG_RESET 0x04
+#define RESETSTATUS_SOFTWARE_RESET 0x08
+
 extern void enter_self_refresh(void);
 extern unsigned int __calc_crc(void *addr, int len);
 extern void DMC_Delay(int milisecond);
-#endif
 
-/* External Variable */
-extern volatile int g_subcpu_num;
-extern volatile int g_cpu_kill_num;
-#if (CONFIG_SUSPEND_RESUME == 1)
 extern unsigned int  g_GateCycle;
 extern unsigned int  g_GateCode;
 extern unsigned int  g_RDvwmc;
@@ -239,26 +239,27 @@ void s5p4418_reset_cpu(void)
 }
 
 #if (CONFIG_SUSPEND_RESUME == 1)
-extern U32  g_GateCycle;
-extern U32  g_GateCode;
-extern U32  g_RDvwmc;
-extern U32  g_WRvwmc;
-
-extern void enter_self_refresh(void);
-extern U32 calc_crc(void *addr, int len);
-extern void DMC_Delay(int milisecond);
-
 int s5p4418_resume_check(void)
 {
-	int signature;
+	U32 signature = 0;
+	U32 wakeup_status = 0;
+	U32 reset_status = 0;
 	int is_resume = 0;		// 0: no resume, 1:resume
 
 	/* Get resume information. */
 	signature = mmio_read_32(&pReg_Alive->ALIVESCRATCHREADREG);
-	if ((SUSPEND_SIGNATURE == signature) &&
-			mmio_read_32(&pReg_Alive->WAKEUPSTATUS)) {
-		is_resume = 1;
+
+	if (SUSPEND_SIGNATURE == signature) {
+		wakeup_status = mmio_read_32(&pReg_Alive->WAKEUPSTATUS);
+		reset_status = mmio_read_32(&pReg_ClkPwr->RESETSTATUS);
+		if ((wakeup_status !=0) || (reset_status & RESETSTATUS_WATCHDOG_RESET))
+			is_resume = 1;
 	}
+
+	NOTICE("bl1 signature : 0x%08X \r\n", signature);
+	NOTICE("bl1 wakeup_status : 0x%08X \r\n", wakeup_status);
+	NOTICE("bl1 reset_status : 0x%08X \r\n", reset_status);
+	NOTICE("bl1 is_resume : 0x%08X \r\n", is_resume);
 
 	return is_resume;
 }
@@ -291,6 +292,15 @@ void s5p4418_resume(void)
 	mmio_write_32(&pReg_Alive->ALIVESCRATCHRST2, 0xFFFFFFFF);
 	mmio_write_32(&pReg_Alive->ALIVESCRATCHRST3, 0xFFFFFFFF);
 	mmio_write_32(&pReg_Alive->ALIVESCRATCHRST4, 0xFFFFFFFF);
+
+	NOTICE("bl1 SUSPEND_SIGNATURE : 0x%08X \r\n", SUSPEND_SIGNATURE);
+	NOTICE("bl1 signature : 0x%08X \r\n", signature);
+	NOTICE("bl1 kernel_addr : 0x%08X \r\n", kernel_addr);
+	NOTICE("bl1 ref_crc : 0x%08X \r\n", ref_crc);
+	NOTICE("bl1 mem : 0x%08X \r\n", mem);
+	NOTICE("bl1 len : 0x%08X \r\n", len);
+	NOTICE("bl1 jumpkernel : 0x%08X \r\n", jumpkernel);
+	NOTICE("bl1 bl2_start : 0x%08X \r\n", psbi->bl2_start);
 
 	if (SUSPEND_SIGNATURE == signature) {
 		unsigned int crc = calc_crc((void *)mem, len);

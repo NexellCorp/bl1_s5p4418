@@ -39,7 +39,13 @@ static void plat_launch(struct sbi_header *ptbi)
 #ifndef QUICKBOOT
 	while (!serial_done());
 #endif
+
+#if defined(SECURE_MODE)
 	pLaunch(0, 4330);
+#else
+	psbi->bl2_start = ptbi->launch_addr;
+	run_bl2(ptbi->launch_addr);
+#endif
 
 	ERROR("Image Loading Failure Try to USB boot\r\n");
 	while (!serial_done());
