@@ -97,6 +97,15 @@ extern "C"
 		NX_GPIO_INT_GPIO31	= 31	///<	GPIO 31 Interrupt
 	};
 
+	enum
+	{
+		NX_GPIO_GROUP_A		= 0,
+		NX_GPIO_GROUP_B 	= 1,
+		NX_GPIO_GROUP_C 	= 2,
+		NX_GPIO_GROUP_D 	= 3,
+		NX_GPIO_GROUP_E 	= 4
+	};
+
 	/// @brief	GPIO interrupt mode
 	typedef enum
 	{
