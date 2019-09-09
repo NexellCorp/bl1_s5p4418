@@ -23,6 +23,10 @@
 extern void DMC_Delay(int milisecond);
 
 
+#if defined(VIPTEST)
+void capture_emul(void);
+#endif
+
 void delay_ms(int ms)
 {
 	int i, k;
@@ -171,6 +175,10 @@ void __init main(void)
 	standard_memtester();
 #elif defined(SIMPLE_MEMTEST)
 	simple_memtest();
+#endif
+
+#if defined(VIPTEST)
+	capture_emul();
 #endif
 	/* step 10. loads and launches for the next boot-loader. */
 	plat_load(ptbi);
