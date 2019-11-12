@@ -25,8 +25,8 @@
 #define ARM_VOLTAGE_CONTROL_SKIP		0
 
 #define NXE2000_I2C_GPIO_GRP 			3				// GPIOD
-#define NXE2000_I2C_SCL 			2				// SCL : GPIOD02
-#define NXE2000_I2C_SDA 			3				// SDA: GPIOD03
+#define NXE2000_I2C_SCL 			6				// SCL : GPIOD06
+#define NXE2000_I2C_SDA 			7				// SDA: GPIOD07
 #define NXE2000_I2C_SCL_ALT 			0				// SCL: ALT0
 #define NXE2000_I2C_SDA_ALT			0				// SDA: ALT 0
 
