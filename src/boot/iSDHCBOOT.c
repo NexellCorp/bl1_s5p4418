@@ -1315,7 +1315,7 @@ int iSDXCBOOT(struct sbi_header *ptbi)
 
 	NX_SDPADSetALT(pSDXCBootStatus->SDPort);
 
-#ifdef MMC_REINIT
+#if defined (MMC_REINIT) || defined (SVT_REF)
 	NX_SDMMC_Init(pSDXCBootStatus);
 #endif
 
