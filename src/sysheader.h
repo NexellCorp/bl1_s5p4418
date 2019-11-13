@@ -99,8 +99,8 @@
 #include <s5p4418_avn_ref.h>
 #elif defined(DRONE)
 #include <s5p4418_drone.h>
-#elif defined(SVT)
-#include <s5p4418_svt.h>
+#elif defined(SVT_REF)
+#include <s5p4418_svt_ref.h>
 #elif defined(RAPTOR)
 #include <s5p4418_raptor.h>
 #elif defined(ALLO_DISPLAY)

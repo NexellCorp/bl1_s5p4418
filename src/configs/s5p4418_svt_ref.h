@@ -1,6 +1,6 @@
 /*
- * Copyright (C) 2016  Nexell Co., Ltd.
- * Author: DeokJin, Lee <truevirtue@nexell.co.kr>
+ * Copyright (C) 2019  Nexell Co., Ltd.
+ * Author: Ken Kim <kenkim@nexell.co.kr>
  *
  * This program is free software; you can redistribute it and/or
  * modify it under the terms of the GNU General Public License
@@ -29,12 +29,12 @@
 
 // CPUDVOREG
 #define CONFIG_S5P_PLLx_DVO0			((CLKSRC_PLL_1 << CLKSRC_BITPOS) | \
-						((1 - 1) << DVO0_BITPOS)	 | \
-	                			((4 - 1) << DVO1_BITPOS))
+                        ((1 - 1) << DVO0_BITPOS)	 | \
+                        ((4 - 1) << DVO1_BITPOS))
 // BUSDVOREG
 #define CONFIG_S5P_PLLx_DVO1			((CLKSRC_PLL_0 << CLKSRC_BITPOS) | \
-	                			((2 - 1) << DVO0_BITPOS)	 | \
-	                			((2 - 1) << DVO1_BITPOS))
+                        ((2 - 1) << DVO0_BITPOS)	 | \
+                        ((2 - 1) << DVO1_BITPOS))
 // MEMDVOREG
 #define CONFIG_S5P_PLLx_DVO2			((CLKSRC_PLL_3 << CLKSRC_BITPOS) | \
 						((1 - 1) << DVO0_BITPOS)	 | \
