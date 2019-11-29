@@ -1,6 +1,6 @@
 /*
- * Copyright (C) 2019  Nexell Co., Ltd.
- * Author: Ken Kim <kenkim@nexell.co.kr>
+ * Copyright (C) 2016  Nexell Co., Ltd.
+ * Author: DeokJin, Lee <truevirtue@nexell.co.kr>
  *
  * This program is free software; you can redistribute it and/or
  * modify it under the terms of the GNU General Public License
@@ -27,7 +27,7 @@
 #define NXE2000_I2C_GPIO_GRP 			3				// GPIOD
 #define NXE2000_I2C_SCL 			6				// SCL : GPIOD06
 #define NXE2000_I2C_SDA 			7				// SDA: GPIOD07
-#define NXE2000_I2C_SCL_ALT 		0				// SCL: ALT0
+#define NXE2000_I2C_SCL_ALT 			0				// SCL: ALT0
 #define NXE2000_I2C_SDA_ALT			0				// SDA: ALT 0
 
 /************************************************
