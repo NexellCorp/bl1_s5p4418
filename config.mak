@@ -83,7 +83,7 @@ ifeq ($(OS),Windows_NT)
 CROSS_COMPILE_TOP		?=
 CROSS_COMPILE			?= $(CROSS_COMPILE_TOP)arm-none-eabi-
 else
-CROSS_COMPILE_TOP		?=
+CROSS_COMPILE_TOP		?= /opt/android/arm-eabi-4.8/bin/
 CROSS_COMPILE			?= $(CROSS_COMPILE_TOP)arm-eabi-
 endif
 
