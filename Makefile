@@ -79,7 +79,7 @@ $(DIR_OBJOUTPUT)/%.o: src/%.S
 ###################################################################################################
 $(DIR_OBJOUTPUT)/%.o: src/boot/%.c
 	@echo [compile....$<]
-	$(Q)$(CC) -MMD $< -c -o $@ $(CFLAGS) $(SYS_INCLUDES)
+	$(Q) $(CC) -MMD $< -c -o $@ $(CFLAGS) $(SYS_INCLUDES)
 ###################################################################################################
 $(DIR_OBJOUTPUT)/%.o: src/devices/%.c
 	@echo [compile....$<]
@@ -152,16 +152,15 @@ else
 	fi;
 endif
 
-link:
+link: $(SYS_OBJS_LIST)
 	@echo [link.... $(DIR_TARGETOUTPUT)/$(TARGET_NAME).elf]
-
 	$(Q)$(CC) $(SYS_OBJS_LIST) $(LDFLAGS) -o $(DIR_TARGETOUTPUT)/$(TARGET_NAME).elf
 
-bin:
+bin: link
 	@echo [binary.... $(DIR_TARGETOUTPUT)/$(TARGET_NAME).bin]
 	$(Q)$(MAKEBIN) -O binary $(DIR_TARGETOUTPUT)/$(TARGET_NAME).elf $(DIR_TARGETOUTPUT)/$(TARGET_NAME).bin
 
-bingen:
+bingen: bin
 	./tools/bingen -c $(CHIPNAME) -i $(DIR_TARGETOUTPUT)/$(TARGET_NAME).bin -o $(DIR_TARGETOUTPUT)/bl1-emmcboot.bin -l 0xFFFF0000 -e 0xFFFF0000 -d SDMMC -u $(DEVICE_PORT) -a 0x10200
 
 ifeq ($(OS),Windows_NT)
