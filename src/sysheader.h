@@ -65,6 +65,8 @@
 #include <nxp4330_lepus.h>
 #elif defined(NAVI)
 #include <nxp4330_navi.h>
+#elif defined(VTK)
+#include <nxp4330_vtk.h>
 #elif defined(SMART_VOICE)
 #include <nxp4330_smart_voice.h>
 #elif defined(ZH_DRAGON)
