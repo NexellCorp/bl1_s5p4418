@@ -22,10 +22,17 @@
 #include <freq.h>
 
 /* system clock macro */
+#ifdef	Q100
+#define CONFIG_S5P_PLL0_FREQ			600
+#define CONFIG_S5P_PLL1_FREQ			800
+#define CONFIG_S5P_PLL2_FREQ			614
+#define CONFIG_S5P_PLL3_FREQ			800
+#else
 #define CONFIG_S5P_PLL0_FREQ			800
 #define CONFIG_S5P_PLL1_FREQ			800
 #define CONFIG_S5P_PLL2_FREQ			614
-#define CONFIG_S5P_PLL3_FREQ			614
+#define CONFIG_S5P_PLL3_FREQ			800
+#endif /*Q100*/
 
 // CPUDVOREG
 #define CONFIG_S5P_PLLx_DVO0			((CLKSRC_PLL_1 << CLKSRC_BITPOS) | \
@@ -36,7 +43,7 @@
 	                			((2 - 1) << DVO0_BITPOS)	 | \
 	                			((2 - 1) << DVO1_BITPOS))
 // MEMDVOREG
-#define CONFIG_S5P_PLLx_DVO2			((CLKSRC_PLL_1 << CLKSRC_BITPOS) | \
+#define CONFIG_S5P_PLLx_DVO2			((CLKSRC_PLL_3 << CLKSRC_BITPOS) | \
 						((1 - 1) << DVO0_BITPOS)	 | \
 						((1 - 1) << DVO1_BITPOS) 	 | \
 						((2 - 1) << DVO2_BITPOS) 	 | \

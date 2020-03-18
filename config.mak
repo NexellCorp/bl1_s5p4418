@@ -221,3 +221,8 @@ CFLAGS += -DPMIC_CANCEL
 
 CFLAGS += -DMMC_REINIT
 endif
+
+# if PRODUCT_CAR=true enable Q100
+ifeq ($(PRODUCT_CAR), true)
+CFLAGS	+= -DQ100
+endif
