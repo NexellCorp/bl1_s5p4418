@@ -153,8 +153,8 @@ else
 endif
 
 startup:
-	@echo [compile....startup.S]
-	$(Q)$(CC) -MMD src/startup.S -c -o $@ $(ASFLAG) $(CFLAGS) $(SYS_INCLUDES)
+	@echo [compile....startup.S first !!!]
+	$(Q)$(CC) -MMD src/startup.S -c -o $(DIR_OBJOUTPUT)/startup.o $(ASFLAG) $(CFLAGS) $(SYS_INCLUDES)
 
 link: $(SYS_OBJS_LIST)
 	@echo [link.... $(DIR_TARGETOUTPUT)/$(TARGET_NAME).elf]
