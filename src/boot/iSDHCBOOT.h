@@ -26,23 +26,6 @@
 //#define VERBOSE
 //#define NX_DEBUG
 
-#if 1
-#define SDXC_CLKGENSRC				(2)		// PLL0 = 800 MHz (0, 1, 2)
-#define SDXC_CLKGENDIV				(4)		// PLL0 / 2 / 2 = 200 MHz
-#if 0
-#define SDXC_CLKGENDIV_400KHZ		(250)	// PLL0 / 250 / 2 = 1600KHz
-#define SDXC_CLKDIV					(4)		// 50MHz, 400KHz
-#else
-#define SDXC_CLKGENDIV_400KHZ		(125)	// PLL0 / 125 / 2 = 3200KHz
-#define SDXC_CLKDIV					(8)		// 25MHz, 400KHz
-#endif
-#else
-#define SDXC_CLKGENSRC				(2)		// PLL2 = 96 MHz (0, 1, 2)
-#define SDXC_CLKGENDIV				(2)		// PLL2 / 2 / 2 = 24 MHz
-#define SDXC_CLKGENDIV_400KHZ		(120)	// PLL2 / 120 / 2 = 400KHz
-#define	SDXC_CLKDIV					(0)
-#endif
-
 #define BLOCK_LENGTH				(512)
 
 #define NX_SDMMC_TIMEOUT			(0x100000)

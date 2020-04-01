@@ -21,11 +21,21 @@
 #include "iSDHCBOOT.h"
 #include <nx_bootheader.h>
 
-/* (sd/emmc) configuration */
-#define CONFIG_S5P_SDMMC_SRCCLK			2
-
-#ifndef CONFIG_S5P_SDMMC_CLOCK
-#define CONFIG_S5P_SDMMC_CLOCK			50000000
+// Modified For mmc clkgen and sd clokc
+#if defined(MMC_AS_100)
+#define SDXC_CLKGENSRC			(1)		// PLL(0, 1, 2) = 800 MHz
+#define SDXC_CLKGENDIV			(4)		// PLL1 / 2 / 2 = 200 MHz
+#define SDXC_CLKDIV			(1)		// 2 : 50MHz, 1 : 100MHz
+#define SDXC_CLKDIV_400KHZ		(250)		// PLL0 / 250 / 2 = 1600KHz
+#define CONFIG_S5P_SDMMC_CLOCK		50000000
+#define CONFIG_S5P_SDMMC_CMD_CLOCK	400000
+#else /* MMC_AS_50 */
+#define SDXC_CLKGENSRC			(1)		// PLL(0, 1, 2) = 800 MHz
+#define SDXC_CLKGENDIV			(4)		// PLL1 / 2 / 2 = 200 MHz
+#define SDXC_CLKDIV			(2)		// 2 : 50MHz, 1 : 100MHz
+#define SDXC_CLKDIV_400KHZ		(250)		// PLL0 / 250 / 2 = 1600KHz
+#define CONFIG_S5P_SDMMC_CLOCK		50000000
+#define CONFIG_S5P_SDMMC_CMD_CLOCK	400000
 #endif
 
 #ifdef NX_DEBUG
@@ -64,6 +74,9 @@ typedef struct {
 	U32 nClkGenDiv;
 } NX_CLKINFO_SDMMC;
 
+static NX_CLKINFO_SDMMC clkInfo;
+static CBOOL fixedPLL;
+
 CBOOL __init NX_SDMMC_GetClkParam( NX_CLKINFO_SDMMC *pClkInfo )
 {
 	U32 srcFreq;
@@ -101,6 +114,27 @@ exit_getparam:
 }
 #endif
 
+CBOOL __init NX_SDMMC_FindPLL800()
+{
+	CBOOL ret = CFALSE;;
+
+	if (CONFIG_S5P_PLL0_FREQ == 800) {
+		clkInfo.nPllNum = 0;
+		ret = CTRUE;
+	} else if (CONFIG_S5P_PLL1_FREQ == 800) {
+		clkInfo.nPllNum = 1;
+		ret = CTRUE;
+	} else if (CONFIG_S5P_PLL2_FREQ == 800) {
+		clkInfo.nPllNum = 2;
+		ret = CTRUE;
+	} else {
+		clkInfo.nPllNum = SDXC_CLKGENSRC;
+		ret = CFALSE;
+	}
+
+	return ret;
+}
+
 //------------------------------------------------------------------------------
 //static CBOOL	NX_SDMMC_SetClock( SDXCBOOTSTATUS * pSDXCBootStatus, CBOOL enb, U32 divider )
 static CBOOL __init NX_SDMMC_SetClock( SDXCBOOTSTATUS * pSDXCBootStatus, CBOOL enb, U32 nFreq )
@@ -108,7 +142,6 @@ static CBOOL __init NX_SDMMC_SetClock( SDXCBOOTSTATUS * pSDXCBootStatus, CBOOL e
 	volatile U32 timeout;
 	register struct NX_SDMMC_RegisterSet * const pSDXCReg = pgSDXCReg[pSDXCBootStatus->SDPort];
 	register struct NX_CLKGEN_RegisterSet * const pSDClkGenReg = pgSDClkGenReg[pSDXCBootStatus->SDPort];
-	NX_CLKINFO_SDMMC clkInfo;
 	CBOOL ret;
 
 #if defined(VERBOSE)
@@ -151,25 +184,35 @@ static CBOOL __init NX_SDMMC_SetClock( SDXCBOOTSTATUS * pSDXCBootStatus, CBOOL e
 	pSDXCReg->CLKENA |= NX_SDXC_CLKENA_LOWPWR;	// low power mode & clock disable
 
 	pSDClkGenReg->CLKENB = NX_PCLKMODE_ALWAYS<<3 | NX_BCLKMODE_DYNAMIC<<0;
-#if 0
-	pSDClkGenReg->CLKGEN[0] = (pSDClkGenReg->CLKGEN[0] & ~(0x7<<2 | 0xFF<<5))
-		| (SDXC_CLKGENSRC<<2)				// set clock source
-		| ((divider-1)<<5)					// set clock divisor
-		| (0UL<<1);							// set clock invert
-#else
 
-	clkInfo.nPllNum = CONFIG_S5P_SDMMC_SRCCLK;
+	fixedPLL = NX_SDMMC_FindPLL800();
 	clkInfo.nFreqHz = nFreq;
-	ret = NX_SDMMC_GetClkParam( &clkInfo );
-	if (ret == CTRUE) {
-		pSDClkGenReg->CLKGEN[0] = (pSDClkGenReg->CLKGEN[0] & ~(0x7<<2 | 0xFF<<5))
-			| (clkInfo.nPllNum<<2)			// set clock source
-			| ((clkInfo.nClkGenDiv-1)<<5)	// set clock divisor
-			| (0UL<<1);						// set clock invert
 
-		pSDXCReg->CLKDIV = (clkInfo.nClkDiv>>1);    //  2*n divider (0 : bypass)
+	if (fixedPLL == CTRUE) {
+		pSDClkGenReg->CLKGEN[0] = (pSDClkGenReg->CLKGEN[0] &
+					   ~(0x7<<2 | 0xFF<<5))
+			| (clkInfo.nPllNum<<2)		// set clock source
+			| ((SDXC_CLKGENDIV-1)<<5)	// set clock divisor
+			| (0UL<<1);			// set clock invert
+
+		if (nFreq == CONFIG_S5P_SDMMC_CMD_CLOCK){
+			pSDXCReg->CLKDIV = (SDXC_CLKDIV_400KHZ>>1);	// 2*n divider (0 : bypass)
+		} else {
+			pSDXCReg->CLKDIV = (SDXC_CLKDIV>>1);		// 2*n divider (0 : bypass)
+		}
+	} else {
+		ret = NX_SDMMC_GetClkParam( &clkInfo );
+		if (ret == CTRUE) {
+			pSDClkGenReg->CLKGEN[0] = (pSDClkGenReg->CLKGEN[0] &
+						   ~(0x7<<2 | 0xFF<<5))
+				| (clkInfo.nPllNum<<2)		// set clock source
+				| ((clkInfo.nClkGenDiv-1)<<5)	// set clock divisor
+				| (0UL<<1);			// set clock invert
+
+			pSDXCReg->CLKDIV = (clkInfo.nClkDiv>>1);    //  2*n divider (0 : bypass)
+		}
 	}
-#endif
+
 	pSDClkGenReg->CLKENB |= 0x1UL<<2;			// clock generation enable
 	pSDXCReg->CLKENA &= ~NX_SDXC_CLKENA_LOWPWR;	// normal power mode
 	//--------------------------------------------------------------------------
@@ -681,11 +724,10 @@ CBOOL __init NX_SDMMC_Init(SDXCBOOTSTATUS *pSDXCBootStatus)
 	register struct NX_CLKGEN_RegisterSet *const pSDClkGenReg =
 		pgSDClkGenReg[pSDXCBootStatus->SDPort];
 #if 1
-	NX_CLKINFO_SDMMC clkInfo;
 	CBOOL ret;
 
-	clkInfo.nPllNum = CONFIG_S5P_SDMMC_SRCCLK;
-	clkInfo.nFreqHz = CONFIG_S5P_SDMMC_CLOCK;
+	fixedPLL = NX_SDMMC_FindPLL800();
+	clkInfo.nFreqHz = CONFIG_S5P_SDMMC_CMD_CLOCK;
 
 	ret = NX_SDMMC_GetClkParam(&clkInfo);
 	if (ret == CFALSE)
@@ -694,17 +736,19 @@ CBOOL __init NX_SDMMC_Init(SDXCBOOTSTATUS *pSDXCBootStatus)
 
 	// CLKGEN
 	pSDClkGenReg->CLKENB = NX_PCLKMODE_ALWAYS<<3 | NX_BCLKMODE_DYNAMIC<<0;
-#ifdef QUICKBOOT // Modified For Quickboot
-	pSDClkGenReg->CLKGEN[0] = (pSDClkGenReg->CLKGEN[0] & ~(0x7<<2 | 0xFF<<5))
-		| (SDXC_CLKGENSRC<<2)				// set clock source
-		| ((SDXC_CLKGENDIV-1)<<5)			// set clock divisor
-		| (0UL<<1);							// set clock invert
-#else
-	pSDClkGenReg->CLKGEN[0] = (pSDClkGenReg->CLKGEN[0] & ~(0x7<<2 | 0xFF<<5))
-		| (clkInfo.nPllNum<<2)				// set clock source
-		| ((clkInfo.nClkGenDiv-1)<<5)		// set clock divisor
-		| (0UL<<1);							// set clock invert
-#endif
+	if (fixedPLL == CTRUE) {
+		pSDClkGenReg->CLKGEN[0] = (pSDClkGenReg->CLKGEN[0] &
+					   ~(0x7<<2 | 0xFF<<5))
+			| (clkInfo.nPllNum<<2)			// set clock source
+			| ((SDXC_CLKGENDIV-1)<<5)		// set clock divisor
+			| (0UL<<1);				// set clock invert
+	} else {
+		pSDClkGenReg->CLKGEN[0] = (pSDClkGenReg->CLKGEN[0] &
+					   ~(0x7<<2 | 0xFF<<5))
+			| (clkInfo.nPllNum<<2)			// set clock source
+			| ((clkInfo.nClkGenDiv-1)<<5)		// set clock divisor
+			| (0UL<<1);				// set clock invert
+	}
 	pSDClkGenReg->CLKENB |= 0x1UL << 2; // clock generation enable
 
 	reset_con(SDResetNum[pSDXCBootStatus->SDPort], CTRUE);  // reset on
@@ -715,17 +759,23 @@ CBOOL __init NX_SDMMC_Init(SDXCBOOTSTATUS *pSDXCBootStatus)
 	//	pSDXCReg->UHS_REG |= 1<<0;		// for DDR mode
 
 	pSDXCReg->CLKENA = NX_SDXC_CLKENA_LOWPWR;	// low power mode & clock disable
-	pSDXCReg->CLKCTRL = 0<<24 |				// sample clock phase shift 0:0 1:90 2:180 3:270
-		2<<16 |				// drive clock phase shift 0:0 1:90 2:180 3:270
-		0<<8 |				// sample clock delay
-		0<<0;				// drive clock delay
-
 	pSDXCReg->CLKSRC = 0; // prescaler 0
-#ifdef QUICKBOOT // Modified For Quickboot
-	pSDXCReg->CLKDIV = (SDXC_CLKDIV>>1);    //	2*n divider (0 : bypass)
-#else
-	pSDXCReg->CLKDIV = (clkInfo.nClkGenDiv >> 1);
-#endif
+
+	if (fixedPLL == CTRUE) {
+		pSDXCReg->CLKCTRL = 2<<24 |		// sample clock phase shift 0:0 1:90 2:180 3:270
+			3<<16 |				// drive clock phase shift 0:0 1:90 2:180 3:270
+			0<<8 |				// sample clock delay
+			0<<0;				// drive clock delay
+
+		pSDXCReg->CLKDIV = (SDXC_CLKDIV_400KHZ >>1);	// 2*n divider (0 : bypass)
+	} else {
+		pSDXCReg->CLKCTRL = 0<<24 |		// sample clock phase shift 0:0 1:90 2:180 3:270
+			2<<16 |				// drive clock phase shift 0:0 1:90 2:180 3:270
+			0<<8 |				// sample clock delay
+			0<<0;				// drive clock delay
+
+		pSDXCReg->CLKDIV = (clkInfo.nClkGenDiv >> 1);
+	}
 
 	pSDXCReg->CTRL &= ~(NX_SDXC_CTRL_DMAMODE_EN | NX_SDXC_CTRL_READWAIT);	// fifo mode, not read wait(only use sdio mode)
 	// Reset the controller & DMA interface & FIFO

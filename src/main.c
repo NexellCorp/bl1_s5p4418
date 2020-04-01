@@ -70,6 +70,9 @@ void __init main(void)
 	/* step xx. check to binary(bl1) size */
 	check_bl1_size();
 
+	/* step xx. clock(pll) intialize */
+	clock_initialize();
+
 #if defined(CHIPID_NXP4330)
 	/* SD/eMMC Card Detect Ready */
 #ifndef QUICKBOOT
@@ -104,9 +107,6 @@ void __init main(void)
 #ifdef ZH_HMDRAGON
 	gpio_board_init();
 #endif
-
-	/* step 03. clock(pll) intialize */
-	clock_initialize();
 
 	/* step 04. serial console(uartX) initialize. */
 	serial_init(serial_ch);
