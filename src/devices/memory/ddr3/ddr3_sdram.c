@@ -1299,7 +1299,7 @@ int ddr3_initialize(unsigned int is_resume)
 			(0xFFF  <<  16) |					// [27:16] timeout_level0
 			(0x1    <<  12) |					// [14:12] rd_fetch
 			(0x1    <<   8) |					// [    8] empty
-			(0x1    <<   5) |					// [    5] aref_en - Auto Refresh Counter. Disable:0, Enable:1
+			(0x0    <<   5) |					// [    5] aref_en - Auto Refresh Counter. Disable:0, Enable:1
 			(0x0    <<   3) |					// [    3] io_pd_con - I/O Powerdown Control in Low Power Mode(through LPI)
 			(0x0    <<   1));					// [ 2: 1] clk_ratio. Clock ratio of Bus clock to Memory clock. 0x0 = 1:1, 0x1~0x3 = Reserved
 
